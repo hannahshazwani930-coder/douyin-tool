@@ -1,7 +1,10 @@
 import streamlit as st
 from openai import OpenAI
 import time
-from concurrent.futures import ThreadPoolExecutor 
+from concurrent.futures import ThreadPoolExecutor
+from PIL import Image, ImageDraw, ImageFont # 引入图像处理库
+import io
+import os
 
 # ==========================================
 # 0. 核心配置
@@ -13,123 +16,33 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 注入 CSS：修复按钮文字颜色 + 极致 UI
+# 注入 CSS
 st.markdown("""
 <style>
-    /* 1. 全局字体与背景 */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    
-    .stApp { 
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
-        background-color: #f8fafc; 
-    }
-    
-    /* 2. 布局容器 */
-    div.block-container {
-        max-width: 90% !important;
-        min-width: 90% !important;
-        background-color: #ffffff;
-        padding: 3rem !important;
-        margin: 2rem auto !important;
-        border-radius: 16px;
-        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); 
-    }
-
-    /* 3. 侧边栏 */
-    [data-testid="stSidebar"] { 
-        background-color: #ffffff; 
-        border-right: 1px solid #f1f5f9; 
-    }
-    
-    /* 4. 工作台卡片 */
-    [data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 24px;
-        position: relative;
-        transition: all 0.3s ease;
-    }
-    [data-testid="stVerticalBlockBorderWrapper"]:hover {
-        border-color: #cbd5e1;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    }
-    
-    /* 5. 标题与文字颜色控制 */
+    .stApp { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #f8fafc; }
+    div.block-container { max-width: 90% !important; min-width: 90% !important; background-color: #ffffff; padding: 3rem !important; margin: 2rem auto !important; border-radius: 16px; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); }
+    [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #f1f5f9; }
+    [data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; transition: all 0.3s ease; }
+    [data-testid="stVerticalBlockBorderWrapper"]:hover { border-color: #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
     h1 { color: #0f172a !important; font-weight: 800 !important; margin-bottom: 1.5rem !important; }
     h2, h3, h4, h5 { color: #334155 !important; font-weight: 700 !important; }
-    
-    /* 普通文本颜色 (但不影响按钮) */
     .stMarkdown p, label { color: #475569 !important; }
-    
-    /* 6. 按钮极致美化 */
-    div.stButton > button {
-        border-radius: 8px; font-weight: 600; height: 40px; transition: all 0.2s;
-    }
-    
-    /* (A) 次级按钮 (灰色) */
-    div.stButton > button:not([kind="primary"]) {
-        background-color: #f1f5f9; 
-        color: #475569 !important; /* 深灰字 */
-        border: 1px solid transparent;
-    }
-    div.stButton > button:not([kind="primary"]):hover {
-        background-color: #e0f2fe; 
-        color: #0284c7 !important; /* 悬浮变蓝 */
-        border-color: #bae6fd;
-    }
-    
-    /* (B) 主按钮 (蓝色) - 🔥核心修复🔥 */
-    div.stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-        border: none;
-    }
-    /* 强制主按钮内的所有文字变白 */
-    div.stButton > button[kind="primary"] * {
-        color: #ffffff !important; 
-    }
-    div.stButton > button[kind="primary"]:hover {
-        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); 
-        transform: translateY(-1px);
-    }
-
-    /* 7. 输入框修复 */
-    .stTextArea textarea, .stTextInput input {
-        border-radius: 8px;
-        border: 1px solid #cbd5e1;
-        background-color: #f8fafc !important; 
-        color: #1e293b !important;            
-        caret-color: #2563eb;                 
-        font-weight: 500;
-        -webkit-text-fill-color: #1e293b !important;
-        transition: border 0.2s, box-shadow 0.2s;
-    }
-    .stTextArea textarea:focus, .stTextInput input:focus {
-        background-color: #ffffff !important;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-    }
+    div.stButton > button { border-radius: 8px; font-weight: 600; height: 40px; transition: all 0.2s; }
+    div.stButton > button:not([kind="primary"]) { background-color: #f1f5f9; color: #475569 !important; border: 1px solid transparent; }
+    div.stButton > button:not([kind="primary"]):hover { background-color: #e0f2fe; color: #0284c7 !important; border-color: #bae6fd; }
+    div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); border: none; }
+    div.stButton > button[kind="primary"] * { color: #ffffff !important; }
+    div.stButton > button[kind="primary"]:hover { box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); transform: translateY(-1px); }
+    .stTextArea textarea, .stTextInput input { border-radius: 8px; border: 1px solid #cbd5e1; background-color: #f8fafc !important; color: #1e293b !important; caret-color: #2563eb; font-weight: 500; -webkit-text-fill-color: #1e293b !important; transition: border 0.2s, box-shadow 0.2s; }
+    .stTextArea textarea:focus, .stTextInput input:focus { background-color: #ffffff !important; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
     ::placeholder { color: #94a3b8 !important; opacity: 1; }
-
-    /* 8. 空状态占位符 */
-    .empty-state-box {
-        height: 200px;
-        background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc);
-        background-size: 20px 20px;
-        border: 2px dashed #e2e8f0; border-radius: 12px;
-        display: flex; align-items: center; justify-content: center;
-        color: #94a3b8; font-weight: 500; flex-direction: column; gap: 10px;
-    }
-
-    /* 选题卡片 */
-    .idea-card {
-        background-color: #f0f9ff; border-left: 4px solid #0ea5e9;
-        padding: 15px; margin-bottom: 10px; border-radius: 4px; color: #334155;
-    }
-
+    .empty-state-box { height: 200px; background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc); background-size: 20px 20px; border: 2px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 500; flex-direction: column; gap: 10px; }
+    .idea-card { background-color: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 15px; margin-bottom: 10px; border-radius: 4px; color: #334155; }
     .login-spacer { height: 10vh; }
-    
+    /* 海报上传区域美化 */
+    [data-testid="stFileUploader"] { background-color: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 20px; text-align: center;}
+    [data-testid="stImage"] { border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -395,8 +308,96 @@ def page_brainstorm():
             if idea.strip():
                 st.markdown(f"<div class='idea-card'>{idea}</div>", unsafe_allow_html=True)
 
+# --- 🔥 E. 新增功能：海报生成 (PIL实现) ---
+def page_poster_gen():
+    st.markdown("## 🎨 剧名海报生成")
+    st.caption("上传原海报，自动在底部添加新剧名横幅，覆盖原有信息。")
+    st.markdown("---")
 
-# --- E. 个人中心 ---
+    with st.container(border=True):
+        c1, c2 = st.columns([1, 1], gap="large")
+        with c1:
+            uploaded_file = st.file_uploader("📤 上传原剧海报 (支持 JPG/PNG)", type=["jpg", "jpeg", "png"])
+        with c2:
+            new_title = st.text_input("🎬 输入新的推广别名", placeholder="例如：重生之我在豪门当保姆")
+            
+            # 字体选择逻辑
+            font_path = "font.ttf" # 默认寻找当前目录下的 font.ttf
+            font_status = "✅ 已检测到自定义字体 (font.ttf)" if os.path.exists(font_path) else "⚠️ 未检测到 font.ttf，将使用系统默认字体（中文可能显示为方框）"
+            st.caption(font_status)
+
+            generate_btn = st.button("✨ 生成新海报", type="primary", use_container_width=True, disabled=(not uploaded_file or not new_title))
+
+    if generate_btn and uploaded_file and new_title:
+        try:
+            with st.spinner("正在绘制海报..."):
+                # 1. 打开图片
+                image = Image.open(uploaded_file).convert("RGBA")
+                width, height = image.size
+                
+                # 2. 创建绘图对象
+                draw = ImageDraw.Draw(image)
+                
+                # 3. 定义底部横幅区域 (高度为总高度的 15%)
+                banner_height = int(height * 0.15)
+                banner_y_start = height - banner_height
+                
+                # 绘制半透明黑色横幅背景 (覆盖原文字)
+                # (左上x, 左上y, 右下x, 右下y), fill=(R,G,B,Alpha)
+                draw.rectangle(
+                    [(0, banner_y_start), (width, height)],
+                    fill=(0, 0, 0, 200) # 黑色，200透明度
+                )
+                
+                # 4. 加载字体
+                font_size = int(banner_height * 0.5) # 字号为横幅高度的一半
+                try:
+                    if os.path.exists(font_path):
+                        font = ImageFont.truetype(font_path, font_size)
+                    else:
+                        # 如果没有自定义字体，尝试加载系统默认字体（效果差）
+                        font = ImageFont.load_default() 
+                        st.toast("⚠️ 使用了默认字体，中文可能无法显示，请上传 font.ttf", icon="⚠️")
+                except Exception as e:
+                     st.error(f"字体加载失败: {e}")
+                     font = ImageFont.load_default()
+
+                # 5. 计算文字位置使其居中
+                # 获取文字的边界框 (left, top, right, bottom)
+                text_bbox = draw.textbbox((0, 0), new_title, font=font)
+                text_width = text_bbox[2] - text_bbox[0]
+                text_height = text_bbox[3] - text_bbox[1]
+
+                text_x = (width - text_width) / 2
+                # 垂直居中公式：横幅起始Y + (横幅高度 - 文字高度) / 2 - 文字顶部基线偏移
+                text_y = banner_y_start + (banner_height - text_height) / 2 - text_bbox[1]
+
+                # 6. 绘制白色文字
+                draw.text((text_x, text_y), new_title, font=font, fill=(255, 255, 255, 255))
+                
+                # 7. 显示结果
+                st.markdown("### ✨ 生成结果")
+                st.image(image, use_column_width=True)
+                
+                # 8. 提供下载按钮
+                # 将图片保存到内存 buffer
+                buf = io.BytesIO()
+                image.convert("RGB").save(buf, format="JPEG", quality=95)
+                byte_im = buf.getvalue()
+                
+                st.download_button(
+                    label="⬇️ 下载海报图片",
+                    data=byte_im,
+                    file_name=f"poster_{int(time.time())}.jpg",
+                    mime="image/jpeg",
+                    type="primary"
+                )
+
+        except Exception as e:
+            st.error(f"海报生成失败: {e}")
+
+
+# --- F. 个人中心 ---
 def page_account():
     st.markdown("## 👤 我的账户")
     st.markdown("---")
@@ -421,16 +422,17 @@ with st.sidebar:
     
     menu_option = st.radio(
         "导航",
-        ["📝 文案改写", "💡 爆款选题库", "🎭 创建别名", "🏷️ 账号起名", "👤 我的账户"],
+        ["📝 文案改写", "💡 爆款选题库", "🎭 创建别名", "🎨 海报生成", "🏷️ 账号起名", "👤 我的账户"],
         index=0, label_visibility="collapsed"
     )
     
     st.markdown("---")
     with st.container(border=True):
-        st.info("系统已优化：彻底修复文字输入看不见的问题。", icon="✅")
+        st.info("全新功能上线：\n🎨 **海报生成**：一键替换剧名，批量做图神器！", icon="🎉")
 
 if menu_option == "📝 文案改写": page_rewrite()
 elif menu_option == "💡 爆款选题库": page_brainstorm()
 elif menu_option == "🎭 创建别名": page_alias_creation()
+elif menu_option == "🎨 海报生成": page_poster_gen()
 elif menu_option == "🏷️ 账号起名": page_naming()
 elif menu_option == "👤 我的账户": page_account()

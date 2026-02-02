@@ -15,7 +15,7 @@ if password != "888888":
 # --- 2. 核心功能代码 ---
 # 从环境变量获取 API Key (为了安全，不要直接把Key写在代码里)
 # 如果本地运行报错，请确保你设置了环境变量，或者临时在这里填入 Key
-api_key = st.secrets["sk-c5894bf59c73499290d2fb2e11c3f989"]
+api_key = st.secrets["DEEPSEEK_API_KEY"]
 base_url = "https://api.deepseek.com"
 
 if not api_key:
@@ -56,5 +56,6 @@ if st.button("生成文案"):
             st.success("生成成功！")
 
             st.text_area("结果", value=result, height=300)
+
 
 

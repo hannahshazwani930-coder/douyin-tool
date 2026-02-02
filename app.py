@@ -13,44 +13,45 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 注入 CSS：盒子布局 (Boxed Layout) + 修正按钮颜色
+# 注入 CSS：90% 自适应流体布局
 st.markdown("""
 <style>
-    /* 1. 全局背景：浅灰色，制造空间感 */
+    /* 1. 全局背景 */
     .stApp { 
         font-family: 'Helvetica Neue', Arial, sans-serif; 
         background-color: #f0f2f5; 
     }
     
-    /* 2. 核心：内容区域变成一张“白纸”，居中悬浮 */
+    /* 🔥 核心修改：宽度设置为 90% 🔥 */
     div.block-container {
-        max-width: 1200px !important;  /* 黄金宽度 */
-        background-color: #ffffff;     /* 白色背景 */
-        padding: 3rem !important;      /* 内边距 */
+        max-width: 90% !important;     /* 强制占满 90% */
+        min-width: 90% !important;     /* 保证不缩得太小 */
+        background-color: #ffffff;     
+        padding: 3rem !important;      
         margin: 2rem auto !important;  /* 上下留白，左右自动居中 */
-        border-radius: 12px;           /* 圆角 */
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08); /* 悬浮阴影 */
+        border-radius: 12px;           
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
     }
 
-    /* 3. 侧边栏 */
+    /* 2. 侧边栏 */
     [data-testid="stSidebar"] { 
         background-color: #ffffff; 
         border-right: 1px solid #e0e0e0; 
     }
     
-    /* 4. 内部卡片 (工作台) 去掉边框，因为外层已经是白的了 */
+    /* 3. 内部卡片 (工作台) */
     [data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: #f8f9fa; /* 工作台用极淡的灰区分 */
+        background-color: #f8f9fa; 
         border: 1px solid #eaeaea; 
         border-radius: 10px; 
         padding: 20px;
     }
     
-    /* 5. 标题 */
+    /* 4. 标题 */
     h1 { color: #1a202c; font-weight: 800 !important; text-align: center; margin-bottom: 30px !important;}
     h2, h3 { color: #2d3748; font-weight: 700 !important; }
     
-    /* 6. 按钮美化 - 蓝色系 */
+    /* 5. 按钮美化 - 蓝色系 */
     div.stButton > button {
         border-radius: 6px; 
         font-weight: 600; 
@@ -66,7 +67,7 @@ st.markdown("""
         border: none;
     }
 
-    /* 7. 输入框 */
+    /* 6. 输入框 */
     .stTextArea textarea, .stTextInput input {
         border-radius: 6px; 
         border: 1px solid #e2e8f0; 
@@ -77,7 +78,7 @@ st.markdown("""
         box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
     }
     
-    /* 8. 登录框垂直间距 */
+    /* 7. 登录框垂直间距 */
     .login-spacer { height: 5vh; }
 </style>
 """, unsafe_allow_html=True)
@@ -121,7 +122,6 @@ def check_login():
         st.markdown("<div class='login-spacer'></div>", unsafe_allow_html=True)
         c1, c2, c3 = st.columns([1, 1.5, 1])
         with c2:
-            # 登录区域不需要再套 card，直接显示
             st.markdown("<h2 style='text-align: center; margin-bottom: 20px;'>💠 爆款工场 Pro</h2>", unsafe_allow_html=True)
             st.info("🔒 系统已加密，获取密码请联系微信：TG777188", icon="🔑")
             
@@ -189,7 +189,6 @@ def page_rewrite():
     # 总控台
     col_main, col_tips = st.columns([1, 2])
     with col_main:
-        # 这里已经是蓝色按钮了
         if st.button("🚀 一键并发执行 (5路全开)", type="primary", use_container_width=True):
             tasks, indices = [], []
             for i in range(1, 6):
@@ -209,7 +208,6 @@ def page_rewrite():
                     status.update(label="✅ 完成！", state="complete", expanded=False)
                     st.rerun()
     with col_tips:
-        # 修正文案：红色按钮 -> 蓝色按钮
         st.info("💡 操作指南：将不同文案粘贴到下方 1-5 号窗口，点击左侧 **【蓝色按钮】** 同时处理。", icon="📝")
 
     st.markdown("<br>", unsafe_allow_html=True)

@@ -116,15 +116,13 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 核心功能：前端 HTML 复制按钮组件
+# ⚡ 核心功能：JS 剪贴板注入 (通用版)
 # ==========================================
 def render_copy_button_html(text, unique_key):
     """
-    生成一个完全由 HTML/CSS/JS 控制的复制按钮。
+    通用复制按钮 (保留给其他模块使用)
     """
-    # 对文本进行转义
     safe_text = text.replace("`", "\`").replace("${", "\${").replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"')
-    
     html_code = f"""
     <!DOCTYPE html>
     <html>
@@ -132,56 +130,119 @@ def render_copy_button_html(text, unique_key):
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap');
             body {{ margin: 0; padding: 0; background: transparent; overflow: hidden; }}
-            
-            .copy-btn {{
-                width: 100%;
-                height: 42px;
-                background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-                color: white;
-                border: none;
-                border-radius: 8px;
-                font-family: 'Inter', sans-serif;
-                font-weight: 600;
-                font-size: 14px;
-                cursor: pointer;
-                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-                transition: all 0.2s ease;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
-            }}
-            .copy-btn:hover {{
-                box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
-                transform: translateY(-1px);
-            }}
-            .copy-btn:active {{
-                transform: translateY(0);
-                background: #1d4ed8;
-            }}
-            .copy-btn.success {{
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-            }}
+            .copy-btn {{ width: 100%; height: 42px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; border-radius: 8px; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; }}
+            .copy-btn:hover {{ box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); transform: translateY(-1px); }}
+            .copy-btn:active {{ transform: translateY(0); background: #1d4ed8; }}
+            .copy-btn.success {{ background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }}
         </style>
     </head>
     <body>
-        <button class="copy-btn" onclick="copyText(this)">
-            <span>📋 一键复制纯文本</span>
-        </button>
-
+        <button class="copy-btn" onclick="copyText(this)"><span>📋 一键复制纯文本</span></button>
         <script>
             function copyText(btn) {{
                 const text = `{safe_text}`;
+                if (navigator.clipboard && window.isSecureContext) {{ navigator.clipboard.writeText(text).then(() => {{ showSuccess(btn); }}).catch(err => {{ fallbackCopyText(text, btn); }}); }} else {{ fallbackCopyText(text, btn); }}
+            }}
+            function fallbackCopyText(text, btn) {{
+                const textArea = document.createElement("textarea"); textArea.value = text; textArea.style.position = "fixed"; textArea.style.left = "-9999px"; document.body.appendChild(textArea); textArea.focus(); textArea.select();
+                try {{ const successful = document.execCommand('copy'); if (successful) showSuccess(btn); }} catch (err) {{ btn.innerText = "❌ 复制失败"; }} document.body.removeChild(textArea);
+            }}
+            function showSuccess(btn) {{
+                const originalText = btn.innerHTML; btn.innerHTML = "<span>✅ 复制成功！</span>"; btn.classList.add("success");
+                setTimeout(() => {{ btn.innerHTML = originalText; btn.classList.remove("success"); }}, 2000);
+            }}
+        </script>
+    </body>
+    </html>
+    """
+    components.html(html_code, height=50)
+
+# ==========================================
+# ⚡ 核心功能：极简悬浮复制框 (专属版)
+# ==========================================
+def render_hover_copy_box(text):
+    """
+    一个看起来像输入框，但悬浮会提示复制，点击即复制的组件。
+    """
+    safe_text = text.replace("`", "\`").replace("${", "\${").replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"')
+    
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');
+            body {{ margin: 0; padding: 0; background: transparent; font-family: 'Inter', sans-serif; }}
+            
+            .code-box {{
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background-color: #f8fafc;
+                border: 1px solid #cbd5e1;
+                border-radius: 8px;
+                padding: 0 16px;
+                height: 46px; /* 增加高度 */
+                cursor: pointer;
+                transition: all 0.2s ease;
+                position: relative;
+                color: #1e293b;
+                font-weight: 600;
+                font-size: 16px;
+                letter-spacing: 0.5px;
+            }}
+            
+            /* 悬浮效果 */
+            .code-box:hover {{
+                border-color: #3b82f6;
+                background-color: #ffffff;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            }}
+            
+            /* 右侧提示文字 */
+            .hint {{
+                font-size: 13px;
+                color: #94a3b8;
+                font-weight: 500;
+                transition: color 0.2s;
+            }}
+            
+            .code-box:hover .hint {{
+                color: #3b82f6;
+            }}
+            
+            /* 点击后的成功状态 */
+            .code-box.success {{
+                background-color: #ecfdf5;
+                border-color: #10b981;
+                color: #065f46;
+            }}
+            .code-box.success .hint {{
+                color: #059669;
+            }}
+            
+        </style>
+    </head>
+    <body>
+        <div class="code-box" onclick="copyText(this)">
+            <span id="code-content">{safe_text}</span>
+            <span class="hint" id="status-text">📋 点击复制</span>
+        </div>
+
+        <script>
+            function copyText(box) {{
+                const text = `{safe_text}`;
+                const statusText = box.querySelector("#status-text");
+                
                 if (navigator.clipboard && window.isSecureContext) {{
-                    navigator.clipboard.writeText(text).then(() => {{ showSuccess(btn); }})
-                    .catch(err => {{ fallbackCopyText(text, btn); }});
+                    navigator.clipboard.writeText(text).then(() => {{ showSuccess(box, statusText); }})
+                    .catch(err => {{ fallbackCopyText(text, box, statusText); }});
                 }} else {{
-                    fallbackCopyText(text, btn);
+                    fallbackCopyText(text, box, statusText);
                 }}
             }}
 
-            function fallbackCopyText(text, btn) {{
+            function fallbackCopyText(text, box, statusText) {{
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
                 textArea.style.position = "fixed";
@@ -191,20 +252,21 @@ def render_copy_button_html(text, unique_key):
                 textArea.select();
                 try {{
                     const successful = document.execCommand('copy');
-                    if (successful) showSuccess(btn);
+                    if (successful) showSuccess(box, statusText);
                 }} catch (err) {{
-                    btn.innerText = "❌ 复制失败";
+                    statusText.innerText = "❌ 失败";
                 }}
                 document.body.removeChild(textArea);
             }}
 
-            function showSuccess(btn) {{
-                const originalText = btn.innerHTML;
-                btn.innerHTML = "<span>✅ 复制成功！</span>";
-                btn.classList.add("success");
+            function showSuccess(box, statusText) {{
+                box.classList.add("success");
+                const originalHint = "📋 点击复制";
+                statusText.innerText = "✅ 已复制";
+                
                 setTimeout(() => {{
-                    btn.innerHTML = originalText;
-                    btn.classList.remove("success");
+                    box.classList.remove("success");
+                    statusText.innerText = originalHint;
                 }}, 2000);
             }}
         </script>
@@ -496,9 +558,9 @@ def page_poster_gen():
             st.markdown("##### 第 1 步：复制专属邀请码")
             st.caption("注册时填写，可获赠额外算力点数")
             
+            # 🔥 核心修改：使用悬浮复制框 🔥
             invite_code = "5yzMbpxn"
-            st.text_input("邀请码", value=invite_code, disabled=True, label_visibility="collapsed")
-            render_copy_button_html(invite_code, "invite_code_btn")
+            render_hover_copy_box(invite_code)
             
         with c2:
             st.markdown("##### 第 2 步：前往生成")
@@ -515,7 +577,6 @@ def page_poster_gen():
         st.markdown("#### 📖 新手保姆级改图教程")
         st.caption("按照以下步骤操作，1分钟搞定电影级海报")
         
-        # 教程步骤 (HTML/CSS 布局)
         st.markdown("""
         <div class="tutorial-box">
             <div class="tutorial-step">
@@ -537,7 +598,6 @@ def page_poster_gen():
         </div>
         """, unsafe_allow_html=True)
         
-        # 指令代码块 (st.code 自带复制)
         st.code("将原图剧名：原剧名\n改为：[你的新剧名]", language="text")
     
     st.markdown("---")

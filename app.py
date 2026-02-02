@@ -27,7 +27,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 🔐 1. 登录与安全系统 (修复版)
+# 🔐 1. 登录与安全系统 (表单修复版)
 # ==========================================
 
 PASSWORD = "taoge888"
@@ -62,25 +62,30 @@ def check_login():
         st.session_state['is_logged_in'] = True 
         return True 
         
-    # --- 登录界面 ---
+    # --- 登录界面 (改用 st.form 表单模式，按回车也能提交) ---
     st.markdown("<br><br>", unsafe_allow_html=True) 
     c1, c2, c3 = st.columns([1, 1.5, 1])
     with c2:
         with st.container(border=True):
-            # 注意：这就是你之前报错的那一行，我已经补全了 True)
             st.markdown("<h2 style='text-align: center;'>🔒 访问受限</h2>", unsafe_allow_html=True)
             st.info("🔑 获取密码请联系微信：TG777188", icon="💬")
             
-            pwd = st.text_input("请输入会员密码", type="password", key="login_pwd")
-            if st.button("立即解锁", type="primary", use_container_width=True):
-                if pwd == PASSWORD:
-                    login_cache[user_ip] = current_time 
-                    st.session_state['is_logged_in'] = True 
-                    st.toast("验证成功！48小时内免密", icon="✅")
-                    time.sleep(0.5)
-                    st.rerun()
-                else:
-                    st.error("❌ 密码错误")
+            # 🔥 关键修改：使用 form 包裹，解决点击无反应的问题
+            with st.form("login_form"):
+                pwd = st.text_input("请输入会员密码", type="password")
+                # form_submit_button 是表单专用的提交按钮
+                submitted = st.form_submit_button("立即解锁", type="primary", use_container_width=True)
+                
+                if submitted:
+                    if pwd == PASSWORD:
+                        login_cache[user_ip] = current_time 
+                        st.session_state['is_logged_in'] = True 
+                        st.toast("验证成功！48小时内免密", icon="✅")
+                        time.sleep(0.5)
+                        st.rerun() # 强制刷新进入系统
+                    else:
+                        st.error("❌ 密码错误，请检查大小写")
+                        
     return False
 
 if not check_login():
@@ -127,4 +132,81 @@ if 'results' not in st.session_state:
 
 # ==========================================
 # 🖥️ 3. 页面布局 (美观大气版)
-# =================
+# ==========================================
+
+st.markdown("<h1>⚡ 抖音爆款内容中台 <span style='font-size:0.5em; color:gray'>VIP PRO</span></h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: gray;'>全网独家五路并发架构 | 自动清洗杂质 | 原创爆款生成</p>", unsafe_allow_html=True)
+st.markdown("---")
+
+# --- 总控区 ---
+col_main, col_info = st.columns([2, 1])
+with col_main:
+    start_all = st.button("🚀 一键并发：同时改写所有窗口 (提速 500%)", type="primary", use_container_width=True)
+
+if start_all:
+    tasks = []   
+    indices = [] 
+    for i in range(1, 6):
+        text = st.session_state.get(f"input_{i}", "")
+        if text.strip():
+            tasks.append(text)
+            indices.append(i)
+    
+    if not tasks:
+        st.toast("⚠️ 所有窗口都是空的，请先粘贴文案！", icon="🛑")
+    else:
+        with st.status("正在火力全开处理中...", expanded=True) as status:
+            st.write(f"正在调动 {len(tasks)} 个 AI 线程同时工作...")
+            with ThreadPoolExecutor(max_workers=5) as executor:
+                results_list = list(executor.map(rewrite_viral_script, tasks))
+            
+            for idx, res in zip(indices, results_list):
+                st.session_state['results'][idx] = res
+            
+            status.update(label="✅ 全部生成完毕！", state="complete", expanded=False)
+            st.rerun()
+
+# --- 5个独立卡片工作区 ---
+st.markdown("<br>", unsafe_allow_html=True)
+
+for i in range(1, 6):
+    with st.container(border=True):
+        st.markdown(f"### 🎬 工作台 #{i}")
+        
+        c1, c2 = st.columns([1, 1], gap="large")
+        
+        # --- 左侧：输入区 ---
+        with c1:
+            st.caption(f"在此粘贴第 {i} 条杂乱素材")
+            input_key = f"input_{i}"
+            
+            input_text = st.text_area(
+                "输入区", 
+                height=200, 
+                key=input_key, 
+                label_visibility="collapsed", 
+                placeholder="直接按 Ctrl+V 粘贴提取好的文案..."
+            )
+            
+            b1, b2 = st.columns([1, 3])
+            with b1:
+                # 修复核心：使用 on_click 回调来清空
+                st.button("🗑️ 清空", key=f"clr_{i}", on_click=clear_text_callback, args=(input_key,), use_container_width=True)
+            with b2:
+                if st.button(f"⚡ 仅改写此条", key=f"btn_{i}", use_container_width=True):
+                    if input_text:
+                        with st.spinner("AI 正在思考..."):
+                            res = rewrite_viral_script(input_text)
+                            st.session_state['results'][i] = res
+                            st.rerun()
+
+        # --- 右侧：结果区 ---
+        with c2:
+            st.caption(f"生成的爆款文案 #{i}")
+            val = st.session_state['results'].get(i, "")
+            
+            if val:
+                st.code(val, language='text')
+                st.toast(f"工作台 #{i} 生成完毕，点击右上角图标即可复制！", icon="🎉")
+            else:
+                st.info("等待指令... 请在左侧输入文案并点击生成", icon="⏳")

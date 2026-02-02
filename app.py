@@ -543,31 +543,26 @@ def page_poster_gen():
         st.markdown("#### 📖 新手保姆级改图教程")
         st.caption("按照以下步骤操作，1分钟搞定电影级海报")
         
-        st.markdown("""
-        <div class="tutorial-box">
-            <div class="tutorial-step">
-                <div class="step-num">1</div>
-                <div>注册登录后，点击 <b>“创建自由画布”</b></div>
+            st.markdown("""
+            <div class="tutorial-box">
+                <div class="tutorial-step">
+                    <div class="step-num">1</div>
+                    <div>注册登录后，点击 <b>“创建自由画布”</b></div>
+                </div>
+                <div class="tutorial-step">
+                    <div class="step-num">2</div>
+                    <div>根据提示 <b>双击</b> 或者 <b>右键点击</b> 空白处，选择 <b>“图生图”</b></div>
+                </div>
+                <div class="tutorial-step">
+                    <div class="step-num">3</div>
+                    <div>点击组件上的 <b>“+”</b> 号，上传你需要修改的 <b>原剧海报</b></div>
+                </div>
+                <div class="tutorial-step">
+                    <div class="step-num">4</div>
+                    <div>点击 <b>右边边框</b>，在下方输入指令（点击右上角复制）：</div>
+                </div>
             </div>
-            <div class="tutorial-step">
-                <div class="step-num">2</div>
-                <div>根据提示 <b>双击</b> 或者 <b>右键点击</b> 空白处，选择 <b>“图生图”</b></div>
-            </div>
-            <div class="tutorial-step">
-                <div class="step-num">3</div>
-                <div>点击组件上的 <b>“+”</b> 号，上传你需要修改的 <b>原剧海报</b></div>
-            </div>
-            <div class="tutorial-step">
-                <div class="step-num">4</div>
-                <div>点击 <b>右边边框</b>，在下方输入指令（Prompt）：</div>
-            </div>
-            
-            <div class="prompt-block">
-                将原图剧名：原剧名<br>
-                改为：[你的新剧名]
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
     
     st.markdown("---")
     st.caption("如有疑问，请联系客服微信：TG777188")
@@ -611,3 +606,4 @@ elif menu_option == "🎭 创建别名": page_alias_creation()
 elif menu_option == "🎨 海报生成": page_poster_gen()
 elif menu_option == "🏷️ 账号起名": page_naming()
 elif menu_option == "👤 我的账户": page_account()
+

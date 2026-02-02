@@ -4,7 +4,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 import io
 import os
-import requests # 用于调用外部 API
+import requests
 import base64
 
 # ==========================================
@@ -17,7 +17,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 注入 CSS：修复按钮文字颜色 + 极致 UI + 商业化引导
+# 注入 CSS：极致 UI + 商业化引导 + 导流卡片
 st.markdown("""
 <style>
     /* 1. 全局字体与背景 */
@@ -97,25 +97,26 @@ st.markdown("""
         transform: translateY(-1px);
     }
     
-    /* (C) 充值链接按钮 (显眼的渐变红/橙色，促进点击) */
-    a.recharge-btn {
+    /* (C) 导流跳转按钮 (紫色系，突出高级感) */
+    a.redirect-btn {
         display: block;
         width: 100%;
         text-align: center;
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); /* 橙色系吸引点击 */
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
         color: white !important;
-        padding: 12px;
-        border-radius: 8px;
+        padding: 16px;
+        border-radius: 12px;
         text-decoration: none;
+        font-size: 18px;
         font-weight: 700;
         margin-top: 10px;
-        box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
         transition: transform 0.2s;
-        border: 1px solid #d97706;
+        border: 1px solid #7c3aed;
     }
-    a.recharge-btn:hover {
+    a.redirect-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 14px rgba(245, 158, 11, 0.4);
+        box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
     }
 
     /* 7. 输入框修复 */
@@ -136,13 +137,11 @@ st.markdown("""
     }
     ::placeholder { color: #94a3b8 !important; opacity: 1; }
 
-    /* 8. 空状态占位符 */
+    /* 8. 辅助样式 */
     .empty-state-box { height: 200px; background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc); background-size: 20px 20px; border: 2px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 500; flex-direction: column; gap: 10px; }
     .idea-card { background-color: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 15px; margin-bottom: 10px; border-radius: 4px; color: #334155; }
     .login-spacer { height: 10vh; }
     
-    /* 海报预览图圆角 */
-    [data-testid="stImage"] img { border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -405,99 +404,40 @@ def page_brainstorm():
                 st.markdown(f"<div class='idea-card'>{idea}</div>", unsafe_allow_html=True)
 
 
-# --- E. 海报生成 (调用 bj.nfai.lol - Nano Banana Pro) ---
+# --- E. 海报生成 (跳转独立站导流版) ---
 def page_poster_gen():
-    st.markdown("## 🎨 剧名海报生成 (Banana Pro)")
-    st.caption("基于 Nano Banana Pro 模型，智能替换海报文字。")
+    st.markdown("## 🎨 AI 智能海报改图 (专业版)")
+    st.caption("基于 Flux/Banana Pro 算力集群，提供好莱坞级改图效果。")
     st.markdown("---")
 
-    # 1. 检查 Key 是否配置
-    user_api_key = st.session_state.get('baojian_api_key', '')
-    
-    if not user_api_key:
-        st.warning("⚠️ 需配置 **豹剪 API Key** 方可使用商业版模型。")
-        st.info("👇 请查看左侧侧边栏底部，获取或填入 Key。")
-        return
+    st.info("💡 提示：为了提供更稳定的算力支持，海报改图功能已升级至 **AIXT 独立站**。")
 
+    # 导流卡片
     with st.container(border=True):
-        c1, c2 = st.columns([1, 1], gap="large")
+        
+        st.markdown("### 🚀 前往 AIXT 专业版控制台")
+        st.markdown("支持：**智能去字、无痕融合、艺术字特效、4K高清导出**。")
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        c1, c2 = st.columns([1, 1.5], gap="large")
+        
         with c1:
-            uploaded_file = st.file_uploader("📤 上传原海报 (支持 JPG/PNG)", type=["jpg", "png", "jpeg"])
+            st.markdown("##### 第 1 步：复制专属邀请码")
+            st.caption("注册时填写，可获赠额外算力点数")
+            st.code("5yzMbpxn", language="text")
+        
         with c2:
-            new_title = st.text_input("🎬 输入新剧名", placeholder="例如：重生之我在豪门当保姆")
-            st.caption("提示：将调用 `Nano Banana Pro` 模型进行智能重绘。")
-            
-            generate_btn = st.button("✨ 立即生成新海报", type="primary", use_container_width=True, disabled=(not uploaded_file or not new_title))
-
-    if generate_btn and uploaded_file and new_title:
-        try:
-            with st.spinner("🍌 正在呼叫 Nano Banana Pro 模型进行绘图..."):
-                
-                # 1. 图片转 Base64
-                image_bytes = uploaded_file.getvalue()
-                base64_image = base64.b64encode(image_bytes).decode('utf-8')
-                
-                # 2. 构建请求
-                # 目标：bj.nfai.lol
-                # 模型：Nano Banana Pro
-                api_url = "https://bj.nfai.lol/v1/chat/completions" 
-                
-                headers = {
-                    "Authorization": f"Bearer {user_api_key}",
-                    "Content-Type": "application/json"
-                }
-                
-                # 构造多模态 Payload (Vision 格式)
-                data = {
-                    "model": "Nano Banana Pro", # 强制指定模型
-                    "messages": [
-                        {
-                            "role": "user",
-                            "content": [
-                                {
-                                    "type": "text", 
-                                    "text": f"将海报上的剧名文字修改为：{new_title}。保持海报原有设计风格，字体大气，无痕替换。"
-                                },
-                                {
-                                    "type": "image_url", 
-                                    "image_url": {
-                                        "url": f"data:image/jpeg;base64,{base64_image}"
-                                    }
-                                }
-                            ]
-                        }
-                    ],
-                    "stream": False
-                }
-                
-                # 3. 发送请求
-                response = requests.post(api_url, headers=headers, json=data, timeout=60)
-                
-                if response.status_code == 200:
-                    res_json = response.json()
-                    # 假设返回格式为 OpenAI 兼容格式，内容在 content 中
-                    # 对于生图/改图模型，通常 URL 会在 content 里，或者是以 markdown 图片格式返回
-                    try:
-                        content = res_json['choices'][0]['message']['content']
-                        
-                        st.success("🎉 生成成功！")
-                        st.markdown("### ✨ 生成结果")
-                        
-                        # 解析返回内容，如果是 URL 直接显示，如果是 Markdown 图片提取显示
-                        # 这里简单处理：直接把 content 渲染出来，通常模型会返回 ![](url)
-                        st.markdown(content) 
-                        
-                        # 如果 API 返回的是纯 URL 文本，尝试自动提取并显示图片组件以便下载
-                        if content.startswith("http"):
-                             st.image(content)
-                             
-                    except Exception as parse_err:
-                        st.error(f"解析响应失败: {parse_err} | 原始返回: {res_json}")
-                else:
-                    st.error(f"API 请求失败 (状态码 {response.status_code}): {response.text}")
-
-        except Exception as e:
-            st.error(f"请求发生错误: {e}")
+            st.markdown("##### 第 2 步：前往生成")
+            st.caption("点击下方按钮跳转至 aixtdz.com")
+            # 渲染一个超大的跳转按钮
+            st.markdown("""
+                <a href="https://aixtdz.com/" target="_blank" class="redirect-btn">
+                    🚀 立即前往 AIXT 生成海报
+                </a>
+            """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    st.caption("如有疑问，请联系客服微信：TG777188")
 
 # --- F. 个人中心 ---
 def page_account():
@@ -514,26 +454,12 @@ def page_account():
             st.markdown("**微信 ID**: `TG777188`")
 
 # ==========================================
-# 4. 侧边栏导航 (含 API 配置与充值)
+# 4. 侧边栏导航
 # ==========================================
 
 with st.sidebar:
     st.markdown("### 💠 爆款工场 Pro")
     st.markdown(f"<small>IP: {get_remote_ip()}</small>", unsafe_allow_html=True)
-    st.markdown("---")
-    
-    # 🔥 商业化核心：API Key 配置区 🔥
-    with st.expander("🔑 豹剪 Key 配置", expanded=True):
-        st.caption("使用海报改图功能需配置 Key")
-        baojian_key = st.text_input("输入 Key", type="password", key="baojian_api_key", label_visibility="collapsed")
-        
-        # 充值直达按钮 (带分销参数)
-        st.markdown("""
-            <a href="https://bj.nfai.lol/register?aff=Mzx2" target="_blank" class="recharge-btn">
-                ⚡ 前往获取 / 充值 Key
-            </a>
-        """, unsafe_allow_html=True)
-    
     st.markdown("---")
     
     menu_option = st.radio(
@@ -544,7 +470,7 @@ with st.sidebar:
     
     st.markdown("---")
     with st.container(border=True):
-        st.info("系统更新：\n🎨 海报生成已接入 **Nano Banana Pro** 模型。", icon="🍌")
+        st.info("系统公告：\n🎨 **海报改图** 功能已升级至独立站，算力更强！", icon="🚀")
 
 if menu_option == "📝 文案改写": page_rewrite()
 elif menu_option == "💡 爆款选题库": page_brainstorm()

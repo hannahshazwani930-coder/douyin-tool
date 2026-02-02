@@ -14,149 +14,80 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 注入 CSS：全局样式 + 像素级对齐修复
+# 注入 CSS：全局样式 + 商业化组件样式
 st.markdown("""
 <style>
-    /* 1. 全局字体与背景 */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    
-    .stApp { 
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
-        background-color: #f8fafc; 
-    }
-    
-    /* 2. 布局容器 */
-    div.block-container {
-        max-width: 90% !important;
-        min-width: 90% !important;
-        background-color: #ffffff;
-        padding: 3rem !important;
-        margin: 2rem auto !important;
-        border-radius: 16px;
-        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); 
-    }
-
-    /* 3. 侧边栏 */
-    [data-testid="stSidebar"] { 
-        background-color: #ffffff; 
-        border-right: 1px solid #f1f5f9; 
-    }
-    
-    /* 4. 工作台卡片 */
-    [data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 24px;
-        position: relative;
-        transition: all 0.3s ease;
-    }
-    [data-testid="stVerticalBlockBorderWrapper"]:hover {
-        border-color: #cbd5e1;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    }
-    
-    /* 5. 标题与文字颜色控制 */
+    .stApp { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #f8fafc; }
+    div.block-container { max-width: 90% !important; min-width: 90% !important; background-color: #ffffff; padding: 3rem !important; margin: 2rem auto !important; border-radius: 16px; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); }
+    [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #f1f5f9; }
+    [data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; transition: all 0.3s ease; }
+    [data-testid="stVerticalBlockBorderWrapper"]:hover { border-color: #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
     h1 { color: #0f172a !important; font-weight: 800 !important; margin-bottom: 1.5rem !important; }
-    h2, h3, h4, h5 { color: #334155 !important; font-weight: 700 !important; }
     .stMarkdown p, label { color: #475569 !important; }
     
-    /* ------------------------------------------------------- */
-    /* 🔥 核心修复：强制统一所有主要交互元素的高度为 50px 🔥 */
-    /* ------------------------------------------------------- */
+    /* 按钮美化 */
+    div.stButton > button { border-radius: 8px; font-weight: 600; height: 40px; transition: all 0.2s; }
+    div.stButton > button:not([kind="primary"]) { background-color: #f1f5f9; color: #475569 !important; border: 1px solid transparent; }
+    div.stButton > button:not([kind="primary"]):hover { background-color: #e0f2fe; color: #0284c7 !important; border-color: #bae6fd; }
+    div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); border: none; color: #ffffff !important; }
+    div.stButton > button[kind="primary"]:hover { box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); transform: translateY(-1px); }
     
-    /* (A) Streamlit 原生按钮 */
-    div.stButton > button {
-        border-radius: 8px !important; 
-        font-weight: 600 !important; 
-        height: 50px !important; /* 强制高度 */
-        transition: all 0.2s !important;
-    }
-    div.stButton > button:not([kind="primary"]) {
-        background-color: #f1f5f9; color: #475569 !important; border: 1px solid transparent;
-    }
-    div.stButton > button:not([kind="primary"]):hover {
-        background-color: #e0f2fe; color: #0284c7 !important; border-color: #bae6fd;
-    }
-    div.stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-        border: none;
-    }
-    div.stButton > button[kind="primary"] * { color: #ffffff !important; }
-    div.stButton > button[kind="primary"]:hover {
-        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); transform: translateY(-1px);
-    }
+    /* 输入框 */
+    .stTextArea textarea, .stTextInput input { border-radius: 8px; border: 1px solid #cbd5e1; background-color: #f8fafc !important; color: #1e293b !important; caret-color: #2563eb; font-weight: 500; }
+    .stTextArea textarea:focus, .stTextInput input:focus { background-color: #ffffff !important; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
     
-    /* (B) 顶部文案改写区的“指南”提示框 (替代 st.info) */
-    .info-box-aligned {
-        height: 50px !important; /* 与按钮严格对齐 */
-        background-color: #eff6ff; /* 浅蓝背景 */
-        border: 1px solid #bfdbfe; /* 浅蓝边框 */
-        border-radius: 8px;
-        color: #1e40af;
-        display: flex;
-        align-items: center; /* 垂直居中 */
-        padding: 0 16px;
+    /* 🔥 商业化广告卡片 🔥 */
+    .ad-card {
+        background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
+        border: 1px solid #fecdd3;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 15px;
+        color: #be123c;
         font-size: 14px;
-        font-weight: 500;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    /* 7. 输入框修复 */
-    .stTextArea textarea, .stTextInput input {
-        border-radius: 8px;
-        border: 1px solid #cbd5e1;
-        background-color: #f8fafc !important; 
-        color: #1e293b !important;            
-        caret-color: #2563eb;                 
-        font-weight: 500;
-        -webkit-text-fill-color: #1e293b !important;
-        transition: border 0.2s, box-shadow 0.2s;
-    }
-    .stTextArea textarea:focus, .stTextInput input:focus {
-        background-color: #ffffff !important;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-    }
-    ::placeholder { color: #94a3b8 !important; opacity: 1; }
-    
-    /* 8. 辅助样式 */
-    .empty-state-box { height: 200px; background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc); background-size: 20px 20px; border: 2px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 500; flex-direction: column; gap: 10px; }
-    
-    /* 跳转按钮 (海报页) - 强制对齐 */
-    a.redirect-btn { 
-        display: flex !important; 
+        display: flex;
         align-items: center;
-        justify-content: center;
-        width: 100%; 
-        height: 52px !important; /* 加上边框共 54px，与左侧复制框视觉一致 */
-        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); 
-        color: white !important; 
-        padding: 0 !important; 
-        border-radius: 8px; 
-        text-decoration: none; 
-        font-size: 16px; 
-        font-weight: 700; 
-        margin-top: 0px !important; 
-        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); 
-        transition: transform 0.2s; 
-        border: 1px solid #7c3aed; 
+        justify-content: space-between;
+        cursor: pointer;
+        transition: transform 0.2s;
+        text-decoration: none !important;
     }
-    a.redirect-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4); }
+    .ad-card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(190, 18, 60, 0.1); }
+    .ad-card b { font-size: 15px; display: block; margin-bottom: 2px; }
+    .ad-tag { background-color: #e11d48; color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px; margin-right: 8px; }
+    
+    /* 侧边栏项目推荐 */
+    .project-box {
+        background-color: #f0f9ff;
+        border: 1px solid #bae6fd;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+    .project-title { font-weight: bold; color: #0369a1; font-size: 14px; display: flex; align-items: center; }
+    .project-desc { font-size: 12px; color: #334155; margin-top: 4px; }
+
+    /* 通用辅助类 */
+    .info-box-aligned { height: 50px !important; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1e40af; display: flex; align-items: center; padding: 0 16px; font-size: 14px; font-weight: 500; width: 100%; box-sizing: border-box; }
+    .empty-state-box { height: 200px; background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc); background-size: 20px 20px; border: 2px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 500; flex-direction: column; gap: 10px; }
     
     /* 教程盒子 */
     .tutorial-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-top: 25px; }
     .tutorial-step { display: flex; align-items: center; margin-bottom: 15px; font-size: 15px; color: #334155; line-height: 1.5; }
     .step-num { background-color: #e0f2fe; color: #0284c7; font-weight: bold; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0; }
+    .prompt-block { background-color: #1e293b; color: #cbd5e1; padding: 15px; border-radius: 8px; font-family: monospace; margin-top: 10px; border-left: 4px solid #3b82f6; font-size: 14px; }
     
+    /* 跳转按钮 */
+    a.redirect-btn { display: flex !important; align-items: center; justify-content: center; width: 100%; height: 52px !important; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white !important; padding: 0 !important; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 700; margin-top: 0px !important; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); transition: transform 0.2s; border: 1px solid #7c3aed; }
+    a.redirect-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4); }
+
     .login-spacer { height: 10vh; }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 核心功能：JS 剪贴板注入 (通用版)
+# ⚡ 核心功能：JS 剪贴板注入
 # ==========================================
 def render_copy_button_html(text, unique_key):
     safe_text = text.replace("`", "\`").replace("${", "\${").replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"')
@@ -194,15 +125,8 @@ def render_copy_button_html(text, unique_key):
     """
     components.html(html_code, height=50)
 
-# ==========================================
-# ⚡ 核心功能：极简悬浮复制框 (高度对齐版)
-# ==========================================
 def render_hover_copy_box(text):
-    """
-    高度精确调整，与右侧按钮对齐
-    """
     safe_text = text.replace("`", "\`").replace("${", "\${").replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"')
-    
     html_code = f"""
     <!DOCTYPE html>
     <html>
@@ -210,52 +134,12 @@ def render_hover_copy_box(text):
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');
             body {{ margin: 0; padding: 0; background: transparent; font-family: 'Inter', sans-serif; overflow: hidden; }}
-            
-            .code-box {{
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                background-color: #f8fafc;
-                border: 1px solid #cbd5e1;
-                border-radius: 8px;
-                padding: 0 16px;
-                height: 52px; /* 🔥 核心：与跳转按钮保持视觉高度一致 */
-                cursor: pointer;
-                transition: all 0.2s ease;
-                position: relative;
-                color: #1e293b;
-                font-weight: 600;
-                font-size: 16px;
-                letter-spacing: 0.5px;
-                box-sizing: border-box;
-            }}
-            
-            .code-box:hover {{
-                border-color: #3b82f6;
-                background-color: #ffffff;
-                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-            }}
-            
-            .hint {{
-                font-size: 13px;
-                color: #94a3b8;
-                font-weight: 500;
-                transition: color 0.2s;
-            }}
-            
-            .code-box:hover .hint {{
-                color: #3b82f6;
-            }}
-            
-            .code-box.success {{
-                background-color: #ecfdf5;
-                border-color: #10b981;
-                color: #065f46;
-            }}
-            .code-box.success .hint {{
-                color: #059669;
-            }}
-            
+            .code-box {{ display: flex; align-items: center; justify-content: space-between; background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 16px; height: 52px; cursor: pointer; transition: all 0.2s ease; position: relative; color: #1e293b; font-weight: 600; font-size: 16px; letter-spacing: 0.5px; box-sizing: border-box; }}
+            .code-box:hover {{ border-color: #3b82f6; background-color: #ffffff; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }}
+            .hint {{ font-size: 13px; color: #94a3b8; font-weight: 500; transition: color 0.2s; }}
+            .code-box:hover .hint {{ color: #3b82f6; }}
+            .code-box.success {{ background-color: #ecfdf5; border-color: #10b981; color: #065f46; }}
+            .code-box.success .hint {{ color: #059669; }}
         </style>
     </head>
     <body>
@@ -263,26 +147,18 @@ def render_hover_copy_box(text):
             <span id="code-content">{safe_text}</span>
             <span class="hint" id="status-text">📋 点击复制</span>
         </div>
-
         <script>
             function copyText(box) {{
                 const text = `{safe_text}`;
                 const statusText = box.querySelector("#status-text");
-                if (navigator.clipboard && window.isSecureContext) {{
-                    navigator.clipboard.writeText(text).then(() => {{ showSuccess(box, statusText); }})
-                    .catch(err => {{ fallbackCopyText(text, box, statusText); }});
-                }} else {{
-                    fallbackCopyText(text, box, statusText);
-                }}
+                if (navigator.clipboard && window.isSecureContext) {{ navigator.clipboard.writeText(text).then(() => {{ showSuccess(box, statusText); }}).catch(err => {{ fallbackCopyText(text, box, statusText); }}); }} else {{ fallbackCopyText(text, box, statusText); }}
             }}
             function fallbackCopyText(text, box, statusText) {{
                 const textArea = document.createElement("textarea"); textArea.value = text; textArea.style.position = "fixed"; textArea.style.left = "-9999px"; document.body.appendChild(textArea); textArea.focus(); textArea.select();
                 try {{ const successful = document.execCommand('copy'); if (successful) showSuccess(box, statusText); }} catch (err) {{ statusText.innerText = "❌ 失败"; }} document.body.removeChild(textArea);
             }}
             function showSuccess(box, statusText) {{
-                box.classList.add("success");
-                const originalHint = "📋 点击复制";
-                statusText.innerText = "✅ 已复制";
+                box.classList.add("success"); const originalHint = "📋 点击复制"; statusText.innerText = "✅ 已复制";
                 setTimeout(() => {{ box.classList.remove("success"); statusText.innerText = originalHint; }}, 2000);
             }}
         </script>
@@ -332,26 +208,20 @@ def check_login():
         with c2:
             st.markdown("<h2 style='text-align: center; margin-bottom: 20px;'>💠 爆款工场 Pro</h2>", unsafe_allow_html=True)
             st.info("🔒 系统已加密，获取密码请联系微信：TG777188", icon="🔑")
-            
             with st.form("login_form"):
                 pwd = st.text_input("请输入会员密码", type="password", placeholder="******")
                 st.markdown("<br>", unsafe_allow_html=True)
                 submitted = st.form_submit_button("🚀 立即解锁", type="primary", use_container_width=True)
-            
             if submitted:
                 if pwd == PASSWORD:
                     login_cache[user_ip] = current_time 
                     st.session_state['is_logged_in'] = True 
                     st.success("✅ 验证成功！")
-                    time.sleep(0.5)
-                    login_placeholder.empty()
-                    st.rerun()
-                else:
-                    st.error("❌ 密码错误")
+                    time.sleep(0.5); login_placeholder.empty(); st.rerun()
+                else: st.error("❌ 密码错误")
     return False
 
-if not check_login():
-    st.stop()
+if not check_login(): st.stop()
 
 # ==========================================
 # 2. API 配置
@@ -394,30 +264,22 @@ def page_rewrite():
             return res.choices[0].message.content
         except Exception as e: return f"Error: {e}"
 
-    # 🔥 修复对齐：左侧按钮，右侧自定义 HTML 框 🔥
     col_main, col_tips = st.columns([1, 2], gap="medium")
     with col_main:
         if st.button("🚀 一键并发执行 (5路全开)", type="primary", use_container_width=True):
             tasks, indices = [], []
             for i in range(1, 6):
                 text = st.session_state.get(f"input_{i}", "")
-                if text.strip():
-                    tasks.append(text)
-                    indices.append(i)
-            
-            if not tasks:
-                st.toast("⚠️ 请先输入文案", icon="🛑")
+                if text.strip(): tasks.append(text); indices.append(i)
+            if not tasks: st.toast("⚠️ 请先输入文案", icon="🛑")
             else:
                 with st.status("☁️ 云端计算中...", expanded=True) as status:
                     with ThreadPoolExecutor(max_workers=5) as executor:
                         results_list = list(executor.map(rewrite_logic, tasks))
-                    for idx, res in zip(indices, results_list):
-                        st.session_state['results'][idx] = res
-                    status.update(label="✅ 完成！", state="complete", expanded=False)
-                    st.rerun()
+                    for idx, res in zip(indices, results_list): st.session_state['results'][idx] = res
+                    status.update(label="✅ 完成！", state="complete", expanded=False); st.rerun()
     with col_tips:
-        # 使用自定义 DIV 替代 st.info，确保高度与左侧按钮完美对齐 (50px)
-        st.markdown(f"""
+        st.markdown("""
         <div class="info-box-aligned">
             💡 指南：粘贴文案到下方窗口，点击左侧 <b>【蓝色按钮】</b> 同时处理。
         </div>
@@ -425,7 +287,6 @@ def page_rewrite():
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 5个工作台
     for i in range(1, 6):
         with st.container(border=True):
             st.markdown(f"#### 🎬 工作台 #{i}")
@@ -438,22 +299,23 @@ def page_rewrite():
                 if b2.button(f"⚡ 仅生成 #{i}", key=f"btn_{i}", use_container_width=True):
                     val = st.session_state.get(input_key, "")
                     if val:
-                        with st.spinner("生成中..."):
-                            st.session_state['results'][i] = rewrite_logic(val)
-                            st.rerun()
+                        with st.spinner("生成中..."): st.session_state['results'][i] = rewrite_logic(val); st.rerun()
             with c2:
                 res_val = st.session_state['results'].get(i, "")
                 if res_val:
                     st.text_area(f"结果 #{i}", value=res_val, height=200, label_visibility="collapsed", key=f"res_area_{i}")
                     render_copy_button_html(res_val, f"copy_btn_{i}")
-                else:
+                    
+                    # 🔥 KOC 课程引流卡片 (软广) 🔥
                     st.markdown("""
-                    <div class="empty-state-box">
-                        <div style="font-size: 24px;">⏳</div>
-                        <div>等待指令...</div>
-                        <div style="font-size: 12px; color: #94a3b8;">Input content to generate</div>
+                    <div style="margin-top: 10px; padding: 10px; background: #fff1f2; border-radius: 8px; border: 1px solid #fecdd3; font-size: 13px; color: #be123c;">
+                        🔥 <b>文案搞定了，不会拍？</b> <br>
+                        领取《素人KOC爆款出镜SOP》，教你对着镜头自然说话，一天拍20条！
+                        <a href="#" style="color: #e11d48; font-weight: bold;">👉 联系微信 TG777188 免费领</a>
                     </div>
                     """, unsafe_allow_html=True)
+                else:
+                    st.markdown("<div class='empty-state-box'><div style='font-size: 24px;'>⏳</div><div>等待指令...</div><div style='font-size: 12px; color: #94a3b8;'>Input content to generate</div></div>", unsafe_allow_html=True)
 
 # --- B. 别名创建 ---
 def page_alias_creation():
@@ -466,23 +328,15 @@ def page_alias_creation():
         original_name = st.text_input("🎬 原剧名/原书名", placeholder="例如：霸道总裁爱上我")
     with col2:
         count = st.slider("生成数量", 5, 20, 10)
-    
     tags = st.multiselect("🏷️ 强化元素", ["高甜", "复仇", "逆袭", "悬疑", "虐恋", "豪门"], default=["逆袭", "高甜"])
     
     if st.button("🚀 生成别名", type="primary", use_container_width=True):
-        if not original_name:
-            st.toast("请输入原名", icon="🛑")
+        if not original_name: st.toast("请输入原名", icon="🛑")
         else:
-            prompt = f"""
-            请将《{original_name}》改写为{count}个推广别名。
-            策略：加入“{'、'.join(tags)}”元素，去原名化，直击痛点。
-            输出：只输出别名列表，一行一个，不要带序号，纯文本。
-            """
+            prompt = f"请将《{original_name}》改写为{count}个推广别名。策略：加入“{'、'.join(tags)}”元素，去原名化，直击痛点。输出：只输出别名列表，一行一个，不要带序号，纯文本。"
             try:
                 with st.spinner("生成中..."):
-                    res = client.chat.completions.create(
-                        model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.4
-                    )
+                    res = client.chat.completions.create(model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.4)
                     st.session_state['alias_result'] = res.choices[0].message.content
             except Exception as e: st.error(f"Error: {e}")
 
@@ -508,9 +362,7 @@ def page_naming():
         prompt = f"为【{niche}】赛道生成10个{style}风格账号名，含关键词：{keywords}。格式：名字+解释。"
         try:
             with st.spinner("生成中..."):
-                res = client.chat.completions.create(
-                    model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.5
-                )
+                res = client.chat.completions.create(model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.5)
                 st.session_state['naming_result'] = res.choices[0].message.content
         except Exception as e: st.error(str(e))
 
@@ -530,26 +382,14 @@ def page_brainstorm():
         with c1:
             topic = st.text_input("🔍 输入你的赛道/关键词", placeholder="例如：职场、美妆、减肥、副业...")
         with c2:
-            st.write("") 
-            st.write("") 
+            st.write(""); st.write("") 
             generate_btn = st.button("🧠 帮我想选题", type="primary", use_container_width=True)
 
     if generate_btn and topic:
-        prompt = f"""
-        我是做【{topic}】领域的。现在文案枯竭，请帮我生成 10 个绝对会火的爆款选题。
-        
-        【要求】：
-        1. 必须反直觉，打破认知。
-        2. 必须直击痛点，引发焦虑或强烈好奇。
-        3. 格式：
-        1. 标题：xxxx | 钩子：xxxx
-        2. 标题：xxxx | 钩子：xxxx
-        """
+        prompt = f"我是做【{topic}】领域的。现在文案枯竭，请帮我生成 10 个绝对会火的爆款选题。要求：1. 必须反直觉，打破认知。2. 必须直击痛点，引发焦虑或强烈好奇。3. 格式：标题：xxxx | 钩子：xxxx"
         try:
             with st.spinner("AI 正在疯狂头脑风暴..."):
-                res = client.chat.completions.create(
-                    model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.5
-                )
+                res = client.chat.completions.create(model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.5)
                 st.session_state['brainstorm_result'] = res.choices[0].message.content
         except Exception as e: st.error(str(e))
 
@@ -558,69 +398,54 @@ def page_brainstorm():
         st.text_area("灵感列表", value=res_text, height=400, label_visibility="collapsed")
         render_copy_button_html(res_text, "brain_copy_btn")
 
-
-# --- E. 海报生成 (跳转独立站 + 精准教程) ---
+# --- E. 海报生成 (小提大作导流版) ---
 def page_poster_gen():
     st.markdown("## 🎨 AI 智能海报改图 (专业版)")
     st.caption("基于 Flux/Banana Pro 算力集群，提供好莱坞级改图效果。")
     st.markdown("---")
-
     st.info("💡 提示：为了提供更稳定的算力支持，海报改图功能已升级至 **小提大作 独立站**。")
 
-    # 导流卡片
     with st.container(border=True):
-        
         st.markdown("### 🚀 前往 小提大作 专业版控制台")
         st.markdown("支持：**智能去字、无痕融合、艺术字特效、4K高清导出**。")
         st.markdown("<br>", unsafe_allow_html=True)
 
         c1, c2 = st.columns([1, 1.5], gap="large")
-        
         with c1:
             st.markdown("##### 第 1 步：复制专属邀请码")
             st.caption("注册时填写，可获赠额外算力点数")
-            
-            # 🔥 使用新的悬浮复制组件 🔥
-            invite_code = "5yzMbpxn"
-            render_hover_copy_box(invite_code)
+            render_hover_copy_box("5yzMbpxn")
             
         with c2:
             st.markdown("##### 第 2 步：前往生成")
             st.caption("点击下方按钮跳转至 aixtdz.com")
-            # 🔥 按钮样式已在 CSS 中强制对齐 🔥
-            st.markdown("""
-                <a href="https://aixtdz.com/" target="_blank" class="redirect-btn">
-                    🚀 立即前往 小提大作 生成海报
-                </a>
-            """, unsafe_allow_html=True)
+            st.markdown("""<a href="https://aixtdz.com/" target="_blank" class="redirect-btn">🚀 立即前往 小提大作 生成海报</a>""", unsafe_allow_html=True)
 
-    # 🔥 新增：保姆级教程 🔥
+        # 🔥 御灵AI 课程引流 (软广) 🔥
+        st.markdown("---")
+        st.markdown("""
+        <div style="padding: 10px; background: #f0f9ff; border-radius: 8px; border: 1px solid #bae6fd; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <span style="font-size: 18px;">💡</span>
+                <span style="color: #0369a1; font-weight: bold; margin-left: 5px;">想让海报动起来？做动漫视频赚收益？</span>
+                <div style="font-size: 12px; color: #64748b; margin-top: 2px;">了解【御灵AI】动漫视频变现玩法，红果/番茄拉新 + 版权分销。</div>
+            </div>
+            <a href="#" style="background: #0284c7; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: bold;">联系客服咨询</a>
+        </div>
+        """, unsafe_allow_html=True)
+
     st.markdown("<br>", unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("#### 📖 新手保姆级改图教程")
         st.caption("按照以下步骤操作，1分钟搞定电影级海报")
-        
         st.markdown("""
         <div class="tutorial-box">
-            <div class="tutorial-step">
-                <div class="step-num">1</div>
-                <div>注册登录后，点击 <b>“创建自由画布”</b></div>
-            </div>
-            <div class="tutorial-step">
-                <div class="step-num">2</div>
-                <div>根据提示 <b>双击</b> 或者 <b>右键点击</b> 空白处，选择 <b>“图生图”</b></div>
-            </div>
-            <div class="tutorial-step">
-                <div class="step-num">3</div>
-                <div>点击组件上的 <b>“+”</b> 号，上传你需要修改的 <b>原剧海报</b></div>
-            </div>
-            <div class="tutorial-step">
-                <div class="step-num">4</div>
-                <div>点击 <b>右边边框</b>，在下方输入指令（点击右上角复制）：</div>
-            </div>
+            <div class="tutorial-step"><div class="step-num">1</div><div>注册登录后，点击 <b>“创建自由画布”</b></div></div>
+            <div class="tutorial-step"><div class="step-num">2</div><div>根据提示 <b>双击</b> 或者 <b>右键点击</b> 空白处，选择 <b>“图生图”</b></div></div>
+            <div class="tutorial-step"><div class="step-num">3</div><div>点击组件上的 <b>“+”</b> 号，上传你需要修改的 <b>原剧海报</b></div></div>
+            <div class="tutorial-step"><div class="step-num">4</div><div>点击 <b>右边边框</b>，在下方输入指令（点击右上角复制）：</div></div>
         </div>
         """, unsafe_allow_html=True)
-        
         st.code("将原图剧名：原剧名\n改为：[你的新剧名]", language="text")
     
     st.markdown("---")
@@ -635,10 +460,20 @@ def page_account():
         with st.container(border=True):
             st.metric("会员状态", "VIP 专业版", delta="永久激活")
             st.text_input("绑定 IP", value=get_remote_ip(), disabled=True)
+            st.info("⚠️ 提示：为了保障服务质量，授权码/密码每 3 天更新一次。")
     with col2:
         with st.container(border=True):
-            st.markdown("#### 💬 联系客服")
+            st.markdown("#### 💬 联系客服 / 获取更新")
             st.markdown("**微信 ID**: `TG777188`")
+            st.markdown("""
+            <div style="margin-top:10px; font-size: 13px; color: #475569;">
+                添加微信时请备注：<b>【爆款工具】</b><br>
+                我们将拉您进入 <b>KOC 搞钱交流群</b>，免费获取：<br>
+                ✅ 最新工具密码<br>
+                ✅ 每日爆款选题库<br>
+                ✅ 视频变现防封指南
+            </div>
+            """, unsafe_allow_html=True)
 
 # ==========================================
 # 4. 侧边栏导航
@@ -649,12 +484,22 @@ with st.sidebar:
     st.markdown(f"<small>IP: {get_remote_ip()}</small>", unsafe_allow_html=True)
     st.markdown("---")
     
-    menu_option = st.radio(
-        "导航",
-        ["📝 文案改写", "💡 爆款选题库", "🎭 创建别名", "🎨 海报生成", "🏷️ 账号起名", "👤 我的账户"],
-        index=0, label_visibility="collapsed"
-    )
+    # 🔥 侧边栏项目推荐 (核心引流) 🔥
+    st.markdown("#### 🔥 热门搞钱项目")
+    st.markdown("""
+    <div class="project-box">
+        <div class="project-title">📹 素人 KOC 孵化</div>
+        <div class="project-desc">真人出镜口播，红果/番茄拉新，0基础陪跑。</div>
+    </div>
+    <div class="project-box">
+        <div class="project-title">🎨 御灵 AI 动漫</div>
+        <div class="project-desc">小说转动漫视频，端原生+版权分销，高收益。</div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.caption("👉 详情咨询微信：TG777188")
     
+    st.markdown("---")
+    menu_option = st.radio("功能导航", ["📝 文案改写", "💡 爆款选题库", "🎭 创建别名", "🎨 海报生成", "🏷️ 账号起名", "👤 我的账户"], index=0, label_visibility="collapsed")
     st.markdown("---")
     with st.container(border=True):
         st.info("系统公告：\n🎨 **海报改图** 功能已升级至独立站，算力更强！", icon="🚀")

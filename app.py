@@ -4,90 +4,91 @@ import time
 from concurrent.futures import ThreadPoolExecutor 
 
 # ==========================================
-# 🎨 0. 核心配置 (黄金比例布局版)
+# 0. 核心配置
 # ==========================================
 st.set_page_config(
     page_title="抖音爆款工场 Pro", 
-    layout="wide", # 开启宽屏模式，但用 CSS 限制内容宽度
+    layout="wide", # 保持宽屏模式，但用 CSS 勒住宽度
     page_icon="💠",
     initial_sidebar_state="expanded"
 )
 
-# 注入 CSS：强制居中 + 黄金宽度 + 防报错写法
-# 我们将宽度限制在 1100px，这在大屏上大约就是黄金比例，且不会太散
+# 注入 CSS：强制 80% 宽度 + 居中
+# 使用 max-width: 80% !important 强制覆盖系统默认样式
 st.markdown("""
 <style>
     /* 全局字体 */
-    .stApp { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f8f9fa; }
+    .stApp { 
+        font-family: 'Helvetica Neue', Arial, sans-serif; 
+        background-color: #f4f6f9; /* 背景色调稍微深一点，突出中间的卡片 */
+    }
     
-    /* 🔥 核心：黄金比例布局控制 🔥 */
-    /* 强制将内容区域限制在 1100px 宽，并且左右自动居中 */
-    [data-testid="stAppViewContainer"] > .main > .block-container {
-        max-width: 1100px; 
-        padding-top: 2rem; 
+    /* 🔥 核心修复：强制内容区域宽度为 80% 并居中 🔥 */
+    .main .block-container {
+        max-width: 80% !important; 
+        padding-top: 2rem;
         padding-bottom: 5rem;
-        margin-left: auto; 
+        margin-left: auto;
         margin-right: auto;
     }
-
+    
     /* 侧边栏美化 */
     [data-testid="stSidebar"] { 
         background-color: #ffffff; 
-        border-right: 1px solid #eaeaea; 
+        border-right: 1px solid #e0e0e0; 
     }
     
-    /* 卡片容器：悬浮质感 */
+    /* 卡片容器：白色背景 + 阴影 */
     [data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff; 
-        border: 1px solid #eeeeee; 
-        border-radius: 12px; 
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); 
+        border: 1px solid #e0e0e0; 
+        border-radius: 10px; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
         padding: 24px;
     }
     
-    /* 标题与排版 */
-    h1 { color: #2C3E50; font-weight: 800 !important; letter-spacing: -0.5px; }
-    h2, h3 { color: #34495e; font-weight: 700 !important; }
+    /* 标题美化 */
+    h1 { color: #1e293b; font-weight: 800 !important; letter-spacing: -0.5px; }
+    h2, h3 { color: #334155; font-weight: 700 !important; }
     
     /* 按钮美化 */
     div.stButton > button {
-        border-radius: 8px; 
+        border-radius: 6px; 
         font-weight: 600; 
         border: none; 
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
         transition: all 0.2s;
     }
-    div.stButton > button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    div.stButton > button:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
     
-    /* 蓝色主按钮渐变 */
+    /* 主按钮颜色 */
     div.stButton > button[kind="primary"] {
-        background: linear-gradient(90deg, #4b6cb7 0%, #182848 100%);
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
         border: none;
     }
 
-    /* 输入框微调 */
+    /* 输入框 */
     .stTextArea textarea, .stTextInput input {
-        border-radius: 8px; 
-        border: 1px solid #e0e0e0; 
-        background-color: #fcfcfc;
+        border-radius: 6px; 
+        border: 1px solid #cbd5e1; 
+        background-color: #ffffff;
     }
     .stTextArea textarea:focus, .stTextInput input:focus {
-        border-color: #4b6cb7;
-        box-shadow: 0 0 0 2px rgba(75, 108, 183, 0.2);
+        border-color: #2563eb;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
     }
     
-    /* 登录框位置 */
-    .login-box { margin-top: 8vh; }
+    /* 登录框垂直居中辅助 */
+    .login-spacer { height: 10vh; }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 🔐 1. 登录与安全系统
+# 1. 登录与安全系统
 # ==========================================
 
 PASSWORD = "taoge888"
 
-# 回调函数：安全清空
 def clear_text_callback(key):
     if key in st.session_state:
         st.session_state[key] = ""
@@ -112,17 +113,15 @@ def check_login():
     current_time = time.time()
     login_cache = get_login_cache()
     
-    # 48小时免密
     if user_ip in login_cache and (current_time - login_cache[user_ip] < 172800):
         st.session_state['is_logged_in'] = True 
         return True 
         
-    # --- 登录界面 ---
     login_placeholder = st.empty()
     with login_placeholder.container():
-        st.markdown("<div class='login-box'></div>", unsafe_allow_html=True)
-        # 调整列比例，让登录框在视觉中心
-        c1, c2, c3 = st.columns([1, 1.2, 1])
+        st.markdown("<div class='login-spacer'></div>", unsafe_allow_html=True)
+        # 这里的 columns 也是为了让登录框更聚拢
+        c1, c2, c3 = st.columns([1, 1, 1])
         with c2:
             with st.container(border=True):
                 st.markdown("<h2 style='text-align: center; margin-bottom: 20px;'>💠 爆款工场 Pro</h2>", unsafe_allow_html=True)
@@ -148,7 +147,7 @@ if not check_login():
     st.stop()
 
 # ==========================================
-# ⚙️ 2. API 配置
+# 2. API 配置
 # ==========================================
 
 try:
@@ -160,7 +159,7 @@ except:
 client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
 
 # ==========================================
-# 🧩 3. 功能模块 (专业封装)
+# 3. 功能模块
 # ==========================================
 
 # --- A. 文案改写 ---
@@ -188,7 +187,6 @@ def page_rewrite():
             return res.choices[0].message.content
         except Exception as e: return f"Error: {e}"
 
-    # 总控台
     with st.container(border=True):
         col_main, col_tips = st.columns([1, 2])
         with col_main:

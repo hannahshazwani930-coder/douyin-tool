@@ -460,7 +460,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     
     st.markdown("<div class='wechat-contact'>", unsafe_allow_html=True)
-    st.markdown("<div class='wechat-item'><span class='wechat-label'>💼 营销咨询:</span></div>", unsafe_allow_html=True)
+    st.markdown("<div class='wechat-item'><span class='wechat-label'>💼 项目咨询:</span></div>", unsafe_allow_html=True)
     render_hover_copy_box("W7774X", "点击复制微信号")
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
     st.markdown("<div class='wechat-item'><span class='wechat-label'>🛠️ 技术/合作:</span></div>", unsafe_allow_html=True)
@@ -476,3 +476,4 @@ elif menu_option == "🎭 创建别名": page_alias_creation()
 elif menu_option == "🎨 海报生成": page_poster_gen()
 elif menu_option == "🏷️ 账号起名": page_naming()
 elif menu_option == "👤 我的账户": page_account()
+

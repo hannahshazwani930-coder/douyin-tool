@@ -2,7 +2,7 @@ import streamlit as st
 from openai import OpenAI
 import time
 from concurrent.futures import ThreadPoolExecutor
-import streamlit.components.v1 as components # 用于注入 JS 复制功能
+import streamlit.components.v1 as components 
 
 # ==========================================
 # 0. 核心配置
@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 注入 CSS：全局样式美化 + 教程样式
+# 注入 CSS：全局样式 + 对齐修复
 st.markdown("""
 <style>
     /* 1. 全局字体与背景 */
@@ -102,8 +102,25 @@ st.markdown("""
     /* 8. 辅助样式 */
     .empty-state-box { height: 200px; background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc); background-size: 20px 20px; border: 2px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 500; flex-direction: column; gap: 10px; }
     
-    /* 跳转按钮 */
-    a.redirect-btn { display: block; width: 100%; text-align: center; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white !important; padding: 16px; border-radius: 12px; text-decoration: none; font-size: 18px; font-weight: 700; margin-top: 10px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); transition: transform 0.2s; border: 1px solid #7c3aed; }
+    /* 🔥 修复对齐的核心 CSS 🔥 */
+    a.redirect-btn { 
+        display: flex !important; /* 使用 Flex 布局实现完美居中 */
+        align-items: center;
+        justify-content: center;
+        width: 100%; 
+        height: 54px !important; /* 强制高度与左侧输入框一致 */
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); 
+        color: white !important; 
+        padding: 0 !important; /* 移除 Padding，完全靠 Flex 居中 */
+        border-radius: 8px; /* 圆角稍微改小一点，与左侧更协调 */
+        text-decoration: none; 
+        font-size: 16px; 
+        font-weight: 700; 
+        margin-top: 0px !important; /* 移除顶部间距，实现水平对齐 */
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); 
+        transition: transform 0.2s; 
+        border: 1px solid #7c3aed; 
+    }
     a.redirect-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4); }
     
     /* 教程盒子 */
@@ -119,9 +136,6 @@ st.markdown("""
 # ⚡ 核心功能：JS 剪贴板注入 (通用版)
 # ==========================================
 def render_copy_button_html(text, unique_key):
-    """
-    通用复制按钮 (保留给其他模块使用)
-    """
     safe_text = text.replace("`", "\`").replace("${", "\${").replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"')
     html_code = f"""
     <!DOCTYPE html>
@@ -158,11 +172,11 @@ def render_copy_button_html(text, unique_key):
     components.html(html_code, height=50)
 
 # ==========================================
-# ⚡ 核心功能：极简悬浮复制框 (专属版)
+# ⚡ 核心功能：极简悬浮复制框 (高度对齐版)
 # ==========================================
 def render_hover_copy_box(text):
     """
-    一个看起来像输入框，但悬浮会提示复制，点击即复制的组件。
+    已修复：高度调整为 54px，与右侧按钮完全对齐
     """
     safe_text = text.replace("`", "\`").replace("${", "\${").replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"')
     
@@ -172,7 +186,7 @@ def render_hover_copy_box(text):
     <head>
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');
-            body {{ margin: 0; padding: 0; background: transparent; font-family: 'Inter', sans-serif; }}
+            body {{ margin: 0; padding: 0; background: transparent; font-family: 'Inter', sans-serif; overflow: hidden; }}
             
             .code-box {{
                 display: flex;
@@ -182,7 +196,7 @@ def render_hover_copy_box(text):
                 border: 1px solid #cbd5e1;
                 border-radius: 8px;
                 padding: 0 16px;
-                height: 46px; /* 增加高度 */
+                height: 52px; /* 🔥 核心：设置为 52px (加边框共 54px) */
                 cursor: pointer;
                 transition: all 0.2s ease;
                 position: relative;
@@ -190,16 +204,15 @@ def render_hover_copy_box(text):
                 font-weight: 600;
                 font-size: 16px;
                 letter-spacing: 0.5px;
+                box-sizing: border-box; /* 确保 padding 不撑大 */
             }}
             
-            /* 悬浮效果 */
             .code-box:hover {{
                 border-color: #3b82f6;
                 background-color: #ffffff;
                 box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
             }}
             
-            /* 右侧提示文字 */
             .hint {{
                 font-size: 13px;
                 color: #94a3b8;
@@ -211,7 +224,6 @@ def render_hover_copy_box(text):
                 color: #3b82f6;
             }}
             
-            /* 点击后的成功状态 */
             .code-box.success {{
                 background-color: #ecfdf5;
                 border-color: #10b981;
@@ -233,7 +245,6 @@ def render_hover_copy_box(text):
             function copyText(box) {{
                 const text = `{safe_text}`;
                 const statusText = box.querySelector("#status-text");
-                
                 if (navigator.clipboard && window.isSecureContext) {{
                     navigator.clipboard.writeText(text).then(() => {{ showSuccess(box, statusText); }})
                     .catch(err => {{ fallbackCopyText(text, box, statusText); }});
@@ -241,39 +252,22 @@ def render_hover_copy_box(text):
                     fallbackCopyText(text, box, statusText);
                 }}
             }}
-
             function fallbackCopyText(text, box, statusText) {{
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                textArea.style.position = "fixed";
-                textArea.style.left = "-9999px";
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                try {{
-                    const successful = document.execCommand('copy');
-                    if (successful) showSuccess(box, statusText);
-                }} catch (err) {{
-                    statusText.innerText = "❌ 失败";
-                }}
-                document.body.removeChild(textArea);
+                const textArea = document.createElement("textarea"); textArea.value = text; textArea.style.position = "fixed"; textArea.style.left = "-9999px"; document.body.appendChild(textArea); textArea.focus(); textArea.select();
+                try {{ const successful = document.execCommand('copy'); if (successful) showSuccess(box, statusText); }} catch (err) {{ statusText.innerText = "❌ 失败"; }} document.body.removeChild(textArea);
             }}
-
             function showSuccess(box, statusText) {{
                 box.classList.add("success");
                 const originalHint = "📋 点击复制";
                 statusText.innerText = "✅ 已复制";
-                
-                setTimeout(() => {{
-                    box.classList.remove("success");
-                    statusText.innerText = originalHint;
-                }}, 2000);
+                setTimeout(() => {{ box.classList.remove("success"); statusText.innerText = originalHint; }}, 2000);
             }}
         </script>
     </body>
     </html>
     """
-    components.html(html_code, height=50)
+    # iframe 高度给 60，确保没有滚动条
+    components.html(html_code, height=60)
 
 # ==========================================
 # 1. 登录与安全系统
@@ -537,7 +531,7 @@ def page_brainstorm():
         render_copy_button_html(res_text, "brain_copy_btn")
 
 
-# --- E. 海报生成 (跳转独立站 + 修正版教程) ---
+# --- E. 海报生成 (跳转独立站 + 精准教程) ---
 def page_poster_gen():
     st.markdown("## 🎨 AI 智能海报改图 (专业版)")
     st.caption("基于 Flux/Banana Pro 算力集群，提供好莱坞级改图效果。")
@@ -552,26 +546,28 @@ def page_poster_gen():
         st.markdown("支持：**智能去字、无痕融合、艺术字特效、4K高清导出**。")
         st.markdown("<br>", unsafe_allow_html=True)
 
+        # 🔥 调整了列宽比例，并添加了 gap 🔥
         c1, c2 = st.columns([1, 1.5], gap="large")
         
         with c1:
             st.markdown("##### 第 1 步：复制专属邀请码")
             st.caption("注册时填写，可获赠额外算力点数")
             
-            # 🔥 核心修改：使用悬浮复制框 🔥
+            # 🔥 使用新的悬浮复制组件 🔥
             invite_code = "5yzMbpxn"
             render_hover_copy_box(invite_code)
             
         with c2:
             st.markdown("##### 第 2 步：前往生成")
             st.caption("点击下方按钮跳转至 aixtdz.com")
+            # 🔥 按钮样式已在 CSS 中强制对齐 🔥
             st.markdown("""
                 <a href="https://aixtdz.com/" target="_blank" class="redirect-btn">
                     🚀 立即前往 小提大作 生成海报
                 </a>
             """, unsafe_allow_html=True)
 
-    # 🔥 新增：保姆级教程 (含 st.code 纯净复制) 🔥
+    # 🔥 保姆级教程 🔥
     st.markdown("<br>", unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("#### 📖 新手保姆级改图教程")

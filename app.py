@@ -20,12 +20,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 🔑 管理员配置 (固定死，只有这个账号能看后台)
+# 🔑 管理员配置 (请确保你登录时使用这个手机号)
 ADMIN_PHONE = "13065080569"
 ADMIN_INIT_PASSWORD = "ltren777188" 
 
-# 数据库文件
-DB_FILE = 'saas_data.db'
+# 🔥 修改数据库文件名，强制生成新库，解决旧数据冲突 🔥
+DB_FILE = 'saas_data_v2.db'
 
 # --- 数据库初始化 ---
 def init_db():
@@ -50,8 +50,9 @@ def init_db():
     # 4. 系统设置表
     c.execute('''CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)''')
     
-    # 🔥 核心修正：强制重置/创建管理员账号，防止密码错误导致进不去后台 🔥
+    # 🔥 核心修正：强制覆盖管理员账号，确保你能进后台 🔥
     admin_pwd_hash = hashlib.sha256(ADMIN_INIT_PASSWORD.encode()).hexdigest()
+    # 使用 REPLACE INTO，如果存在则更新，不存在则插入
     c.execute("REPLACE INTO users (phone, password_hash, register_time) VALUES (?, ?, ?)", 
               (ADMIN_PHONE, admin_pwd_hash, datetime.datetime.now()))
         
@@ -59,7 +60,7 @@ def init_db():
 
 init_db()
 
-# --- CSS 样式 (美化) ---
+# --- CSS 样式 ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -227,7 +228,7 @@ def auth_page():
                 c_c1, c_c2 = st.columns([2,1])
                 if c_c2.button("发验证码", key="r_btn"): st.session_state['mk'] = send_mock_sms(ph); st.toast(f"验证码: {st.session_state['mk']}", icon="📩")
                 cd = c_c1.text_input("验证码", key="r_cd")
-                pw1 = st.text_input("设置密码", type="password", key="r_p1")
+                pw1 = st.text_input("密码", type="password", key="r_p1")
                 pw2 = st.text_input("确认密码", type="password", key="r_p2")
                 if st.button("注册", type="primary", use_container_width=True):
                     if pw1 != pw2: st.error("两次密码不一致")
@@ -245,6 +246,15 @@ if 'user_phone' not in st.session_state:
 CURRENT_USER = st.session_state['user_phone']
 IS_ADMIN = (CURRENT_USER == ADMIN_PHONE)
 IS_VIP, VIP_MSG = get_user_vip_status(CURRENT_USER)
+
+# --- 导航逻辑 (核心修复) ---
+# 定义跳转函数
+def go_to(page):
+    st.session_state['nav_menu'] = page
+    # st.rerun() # 在回调中不需要 rerun，Streamlit 会自动重新加载
+
+# 确保 nav_menu 初始化
+if 'nav_menu' not in st.session_state: st.session_state['nav_menu'] = "🏠 首页"
 
 # --- 侧边栏 ---
 with st.sidebar:
@@ -271,17 +281,19 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 导航菜单
-    # 🔥 核心修正：使用 radio 的 key 来绑定 session_state，实现跨页面跳转 🔥
-    if 'nav_menu' not in st.session_state: st.session_state['nav_menu'] = "🏠 首页"
-    
     ops = ["🏠 首页", "📝 文案改写", "💡 爆款选题库", "🎨 海报生成", "🏷️ 账号起名", "👤 个人中心"]
     if IS_ADMIN: ops.append("🕵️‍♂️ 管理后台")
     
-    # 手动处理菜单逻辑
-    selected = st.radio("导航", ops, index=ops.index(st.session_state['nav_menu']) if st.session_state['nav_menu'] in ops else 0, label_visibility="collapsed", key="sb_radio")
+    # 手动菜单逻辑
+    # 找到当前 page 在 ops 中的索引，防止报错
+    try:
+        curr_idx = ops.index(st.session_state['nav_menu'])
+    except ValueError:
+        curr_idx = 0
+        st.session_state['nav_menu'] = ops[0]
+
+    selected = st.radio("导航", ops, index=curr_idx, label_visibility="collapsed", key="sb_radio")
     
-    # 如果用户点击了 Radio，更新 session state
     if selected != st.session_state['nav_menu']:
         st.session_state['nav_menu'] = selected
         st.rerun()
@@ -292,26 +304,26 @@ with st.sidebar:
 # --- 路由 ---
 menu = st.session_state['nav_menu']
 
-# --- 首页 ---
+# --- 首页 (修复点击) ---
 def page_home():
     st.markdown("## 💠 抖音爆款工场 Pro")
     st.caption("专为素人 KOC 打造的 AI 提效神器 | 文案 · 选题 · 海报 · 变现")
     st.markdown("---")
     
-    # 🔥 修复：首页卡片改成实体按钮，点击可跳转 🔥
     c1, c2, c3, c4 = st.columns(4)
+    # 使用 on_click 回调实现跳转
     with c1: 
         st.info("📝 **文案改写**\n\n5路并发，爆款逻辑重组")
-        if st.button("立即使用 ➜", key="go_rewrite"): st.session_state['nav_menu'] = "📝 文案改写"; st.rerun()
+        st.button("立即使用 ➜", key="go_rewrite", on_click=go_to, args=("📝 文案改写",))
     with c2: 
         st.info("💡 **爆款选题**\n\n解决流量焦虑，日更不断")
-        if st.button("立即使用 ➜", key="go_brain"): st.session_state['nav_menu'] = "💡 爆款选题库"; st.rerun()
+        st.button("立即使用 ➜", key="go_brain", on_click=go_to, args=("💡 爆款选题库",))
     with c3: 
         st.info("🎨 **海报生成**\n\n对接小提大作，好莱坞级")
-        if st.button("立即使用 ➜", key="go_poster"): st.session_state['nav_menu'] = "🎨 海报生成"; st.rerun()
+        st.button("立即使用 ➜", key="go_poster", on_click=go_to, args=("🎨 海报生成",))
     with c4: 
         st.info("💰 **变现陪跑**\n\nKOC/御灵AI 项目实操")
-        if st.button("查看详情 ➜", key="go_project"): st.session_state['nav_menu'] = "👤 个人中心"; st.rerun() # 暂跳个人中心或详情
+        st.button("查看详情 ➜", key="go_project", on_click=go_to, args=("👤 个人中心",))
     
     st.markdown("<br>", unsafe_allow_html=True)
     with st.container(border=True):
@@ -382,7 +394,6 @@ def page_account():
     with t2:
         txt = st.text_area("请输入您的建议...")
         if st.button("提交"): submit_feedback(CURRENT_USER, txt); st.success("已提交！")
-        # 历史
         conn = sqlite3.connect(DB_FILE); c = conn.cursor()
         c.execute("SELECT content, reply, create_time FROM feedbacks WHERE user_phone=? ORDER BY create_time DESC", (CURRENT_USER,))
         rows = c.fetchall(); conn.close()
@@ -439,4 +450,4 @@ elif menu == "👤 个人中心": page_account()
 elif menu == "🕵️‍♂️ 管理后台": page_admin()
 else: st.info("功能开发中...")
 
-render_footer() # 🔥 底部法律声明
+render_footer()

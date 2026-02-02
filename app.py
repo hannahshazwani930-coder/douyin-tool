@@ -6,6 +6,7 @@ import io
 import os
 import requests
 import base64
+import streamlit.components.v1 as components # 用于注入 JS 复制功能
 
 # ==========================================
 # 0. 核心配置
@@ -148,7 +149,7 @@ st.markdown("""
     .tutorial-step {
         display: flex;
         align-items: center;
-        margin-bottom: 15px; /* 稍微增加间距 */
+        margin-bottom: 15px; 
         font-size: 15px;
         color: #334155;
         line-height: 1.5;
@@ -181,6 +182,28 @@ st.markdown("""
     
 </style>
 """, unsafe_allow_html=True)
+
+# ==========================================
+# ⚡ 核心功能：JS 剪贴板注入
+# ==========================================
+# 这是一个黑科技函数，用于生成一个看不见的 iframe 来执行复制操作
+def copy_to_clipboard_js(text):
+    # 转义文本中的特殊字符，防止 JS 报错
+    text = text.replace('\n', '\\n').replace('"', '\\"').replace("'", "\\'")
+    js_code = f"""
+    <script>
+    function copyToClipboard(text) {{
+        const el = document.createElement('textarea');
+        el.value = text;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+    }}
+    copyToClipboard("{text}");
+    </script>
+    """
+    return js_code
 
 # ==========================================
 # 1. 登录与安全系统
@@ -245,7 +268,7 @@ if not check_login():
     st.stop()
 
 # ==========================================
-# 2. API 配置 (DeepSeek - 文本用)
+# 2. API 配置
 # ==========================================
 
 try:
@@ -260,7 +283,7 @@ client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
 # 3. 功能模块
 # ==========================================
 
-# --- A. 文案改写 ---
+# --- A. 文案改写 (带纯净复制) ---
 def page_rewrite():
     st.markdown("## ⚡ 爆款文案改写中台")
     st.caption("AI 驱动的五路并发架构 | 40秒黄金完播率模型")
@@ -276,7 +299,7 @@ def page_rewrite():
         【原始素材】：{content}
         【任务】：清洗数据，改写为原创爆款文案。
         【公式】：黄金3秒开头 + 中间情绪饱满说人话 + 结尾强引导。
-        【输出】：直接输出文案，200字左右。
+        【输出】：直接输出文案，200字左右，不要任何 markdown 符号，直接给纯文本。
         """
         try:
             res = client.chat.completions.create(
@@ -310,6 +333,7 @@ def page_rewrite():
 
     st.markdown("<br>", unsafe_allow_html=True)
     
+    # 5个工作台
     for i in range(1, 6):
         with st.container(border=True):
             st.markdown(f"#### 🎬 工作台 #{i}")
@@ -328,8 +352,15 @@ def page_rewrite():
             with c2:
                 res_val = st.session_state['results'].get(i, "")
                 if res_val:
-                    st.code(res_val, language='text')
-                    st.toast(f"#{i} 已生成，可复制", icon="🎉")
+                    # 🔥 核心修改：使用 TextArea 展示结果，而非 st.code 🔥
+                    # 这样更像一个编辑器，没有代码背景
+                    st.text_area(f"结果 #{i}", value=res_val, height=200, label_visibility="collapsed", key=f"res_area_{i}")
+                    
+                    # 🚀 纯净复制按钮
+                    if st.button(f"📋 复制文案 #{i}", key=f"copy_{i}", use_container_width=True):
+                        # 注入 JS 复制
+                        components.html(copy_to_clipboard_js(res_val), height=0)
+                        st.toast(f"✅ 第 {i} 条文案已复制到剪贴板！", icon="🎉")
                 else:
                     st.markdown("""
                     <div class="empty-state-box">
@@ -339,7 +370,7 @@ def page_rewrite():
                     </div>
                     """, unsafe_allow_html=True)
 
-# --- B. 别名创建 ---
+# --- B. 别名创建 (带纯净复制) ---
 def page_alias_creation():
     st.markdown("## 🎭 剧名别名生成")
     st.caption("防屏蔽 | 矩阵分发专用")
@@ -360,7 +391,7 @@ def page_alias_creation():
             prompt = f"""
             请将《{original_name}》改写为{count}个推广别名。
             策略：加入“{'、'.join(tags)}”元素，去原名化，直击痛点。
-            输出：只输出别名列表，一行一个。
+            输出：只输出别名列表，一行一个，不要带序号，纯文本。
             """
             try:
                 with st.spinner("生成中..."):
@@ -371,10 +402,18 @@ def page_alias_creation():
             except Exception as e: st.error(f"Error: {e}")
 
     if 'alias_result' in st.session_state:
-        st.info("💡 点击右上角图标复制", icon="📋")
-        st.code(st.session_state['alias_result'], language='text')
+        res_text = st.session_state['alias_result']
+        st.info("👇 别名列表已生成，点击下方按钮一键复制", icon="📋")
+        
+        # 显示纯文本区域
+        st.text_area("结果", value=res_text, height=300, label_visibility="collapsed")
+        
+        # 复制按钮
+        if st.button("📋 一键复制全部别名", type="primary", use_container_width=True):
+            components.html(copy_to_clipboard_js(res_text), height=0)
+            st.toast("✅ 所有别名已复制！", icon="🎉")
 
-# --- C. 账号起名 ---
+# --- C. 账号起名 (带纯净复制) ---
 def page_naming():
     st.markdown("## 🏷️ 账号/IP 起名大师")
     st.markdown("---")
@@ -397,9 +436,13 @@ def page_naming():
         except Exception as e: st.error(str(e))
 
     if 'naming_result' in st.session_state:
-        st.code(st.session_state['naming_result'], language='text')
+        res_text = st.session_state['naming_result']
+        st.text_area("结果", value=res_text, height=400, label_visibility="collapsed")
+        if st.button("📋 复制全部名字", type="primary", use_container_width=True):
+            components.html(copy_to_clipboard_js(res_text), height=0)
+            st.toast("✅ 已复制！", icon="🎉")
 
-# --- D. 选题灵感库 ---
+# --- D. 选题灵感库 (带纯净复制) ---
 def page_brainstorm():
     st.markdown("## 💡 爆款选题灵感库")
     st.caption("文案枯竭？输入关键词，AI 帮你生成 10 个“必火”的选题方向。")
@@ -434,11 +477,11 @@ def page_brainstorm():
         except Exception as e: st.error(str(e))
 
     if 'brainstorm_result' in st.session_state:
-        st.markdown("### ✨ 推荐选题")
-        ideas = st.session_state['brainstorm_result'].split('\n')
-        for idea in ideas:
-            if idea.strip():
-                st.markdown(f"<div class='idea-card'>{idea}</div>", unsafe_allow_html=True)
+        res_text = st.session_state['brainstorm_result']
+        st.text_area("灵感列表", value=res_text, height=400, label_visibility="collapsed")
+        if st.button("📋 复制所有选题", type="primary", use_container_width=True):
+            components.html(copy_to_clipboard_js(res_text), height=0)
+            st.toast("✅ 已复制！", icon="🎉")
 
 
 # --- E. 海报生成 (跳转独立站导流版 + 精准教程) ---
@@ -461,8 +504,11 @@ def page_poster_gen():
         with c1:
             st.markdown("##### 第 1 步：复制专属邀请码")
             st.caption("注册时填写，可获赠额外算力点数")
-            st.code("5yzMbpxn", language="text")
-        
+            
+            # 邀请码复制
+            code_text = "5yzMbpxn"
+            st.code(code_text, language="text")
+            
         with c2:
             st.markdown("##### 第 2 步：前往生成")
             st.caption("点击下方按钮跳转至 aixtdz.com")

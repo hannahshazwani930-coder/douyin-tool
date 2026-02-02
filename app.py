@@ -13,73 +13,72 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 注入 CSS：暴力强制居中 + 黄金宽度 (1000px)
-# 这次使用了 div.block-container，这是 Streamlit 内容区的核心容器
+# 注入 CSS：盒子布局 (Boxed Layout) + 修正按钮颜色
 st.markdown("""
 <style>
-    /* 1. 强制锁定内容宽度 */
-    div.block-container {
-        max-width: 1000px !important;  /* 核心：限制最大宽度为 1000px */
-        padding-top: 2rem !important;
-        padding-bottom: 5rem !important;
-        margin: auto !important;       /* 核心：自动居中 */
-    }
-
-    /* 2. 全局背景与字体 */
+    /* 1. 全局背景：浅灰色，制造空间感 */
     .stApp { 
         font-family: 'Helvetica Neue', Arial, sans-serif; 
-        background-color: #f4f6f9; /* 高级灰背景 */
+        background-color: #f0f2f5; 
     }
     
-    /* 3. 侧边栏美化 */
+    /* 2. 核心：内容区域变成一张“白纸”，居中悬浮 */
+    div.block-container {
+        max-width: 1200px !important;  /* 黄金宽度 */
+        background-color: #ffffff;     /* 白色背景 */
+        padding: 3rem !important;      /* 内边距 */
+        margin: 2rem auto !important;  /* 上下留白，左右自动居中 */
+        border-radius: 12px;           /* 圆角 */
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08); /* 悬浮阴影 */
+    }
+
+    /* 3. 侧边栏 */
     [data-testid="stSidebar"] { 
         background-color: #ffffff; 
         border-right: 1px solid #e0e0e0; 
     }
     
-    /* 4. 卡片容器美化 */
+    /* 4. 内部卡片 (工作台) 去掉边框，因为外层已经是白的了 */
     [data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: #ffffff; 
-        border: 1px solid #e0e0e0; 
-        border-radius: 12px; 
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
-        padding: 30px; /* 增加内边距，显得更透气 */
+        background-color: #f8f9fa; /* 工作台用极淡的灰区分 */
+        border: 1px solid #eaeaea; 
+        border-radius: 10px; 
+        padding: 20px;
     }
     
-    /* 5. 标题与排版 */
-    h1 { color: #1e293b; font-weight: 800 !important; text-align: center; }
-    h2, h3 { color: #334155; font-weight: 700 !important; }
+    /* 5. 标题 */
+    h1 { color: #1a202c; font-weight: 800 !important; text-align: center; margin-bottom: 30px !important;}
+    h2, h3 { color: #2d3748; font-weight: 700 !important; }
     
-    /* 6. 按钮美化 */
+    /* 6. 按钮美化 - 蓝色系 */
     div.stButton > button {
-        border-radius: 8px; 
+        border-radius: 6px; 
         font-weight: 600; 
         border: none; 
-        height: 45px; /* 按钮加高，更有质感 */
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+        height: 42px; 
         transition: all 0.2s;
     }
-    div.stButton > button:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.1); }
+    div.stButton > button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
     
-    /* 主按钮颜色 */
+    /* 主按钮：科技蓝渐变 */
     div.stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);
         border: none;
     }
 
-    /* 7. 输入框优化 */
+    /* 7. 输入框 */
     .stTextArea textarea, .stTextInput input {
-        border-radius: 8px; 
-        border: 1px solid #cbd5e1; 
+        border-radius: 6px; 
+        border: 1px solid #e2e8f0; 
         background-color: #ffffff;
     }
     .stTextArea textarea:focus, .stTextInput input:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        border-color: #3182ce;
+        box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
     }
     
-    /* 8. 登录框垂直居中 */
-    .login-spacer { height: 12vh; }
+    /* 8. 登录框垂直间距 */
+    .login-spacer { height: 5vh; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -120,29 +119,27 @@ def check_login():
     login_placeholder = st.empty()
     with login_placeholder.container():
         st.markdown("<div class='login-spacer'></div>", unsafe_allow_html=True)
-        # 将列比例调整为 [1, 2, 1]，让登录框更宽一点，大气一点
-        c1, c2, c3 = st.columns([1, 2, 1])
+        c1, c2, c3 = st.columns([1, 1.5, 1])
         with c2:
-            with st.container(border=True):
-                st.markdown("<h2 style='text-align: center; margin-bottom: 20px;'>💠 爆款工场 Pro</h2>", unsafe_allow_html=True)
-                st.info("🔒 系统已加密，获取密码请联系微信：TG777188", icon="🔑")
-                
-                with st.form("login_form"):
-                    pwd = st.text_input("请输入会员密码", type="password", placeholder="******")
-                    # 加一点空行
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    submitted = st.form_submit_button("🚀 立即解锁", type="primary", use_container_width=True)
-                
-                if submitted:
-                    if pwd == PASSWORD:
-                        login_cache[user_ip] = current_time 
-                        st.session_state['is_logged_in'] = True 
-                        st.success("✅ 验证成功！")
-                        time.sleep(0.5)
-                        login_placeholder.empty()
-                        st.rerun()
-                    else:
-                        st.error("❌ 密码错误")
+            # 登录区域不需要再套 card，直接显示
+            st.markdown("<h2 style='text-align: center; margin-bottom: 20px;'>💠 爆款工场 Pro</h2>", unsafe_allow_html=True)
+            st.info("🔒 系统已加密，获取密码请联系微信：TG777188", icon="🔑")
+            
+            with st.form("login_form"):
+                pwd = st.text_input("请输入会员密码", type="password", placeholder="******")
+                st.markdown("<br>", unsafe_allow_html=True)
+                submitted = st.form_submit_button("🚀 立即解锁", type="primary", use_container_width=True)
+            
+            if submitted:
+                if pwd == PASSWORD:
+                    login_cache[user_ip] = current_time 
+                    st.session_state['is_logged_in'] = True 
+                    st.success("✅ 验证成功！")
+                    time.sleep(0.5)
+                    login_placeholder.empty()
+                    st.rerun()
+                else:
+                    st.error("❌ 密码错误")
     return False
 
 if not check_login():
@@ -189,29 +186,31 @@ def page_rewrite():
             return res.choices[0].message.content
         except Exception as e: return f"Error: {e}"
 
-    with st.container(border=True):
-        col_main, col_tips = st.columns([1, 2])
-        with col_main:
-            if st.button("🚀 一键并发执行 (5路全开)", type="primary", use_container_width=True):
-                tasks, indices = [], []
-                for i in range(1, 6):
-                    text = st.session_state.get(f"input_{i}", "")
-                    if text.strip():
-                        tasks.append(text)
-                        indices.append(i)
-                
-                if not tasks:
-                    st.toast("⚠️ 请先输入文案", icon="🛑")
-                else:
-                    with st.status("☁️ 云端计算中...", expanded=True) as status:
-                        with ThreadPoolExecutor(max_workers=5) as executor:
-                            results_list = list(executor.map(rewrite_logic, tasks))
-                        for idx, res in zip(indices, results_list):
-                            st.session_state['results'][idx] = res
-                        status.update(label="✅ 完成！", state="complete", expanded=False)
-                        st.rerun()
-        with col_tips:
-            st.info("💡 操作指南：将不同文案粘贴到下方 1-5 号窗口，点击红色按钮同时处理。", icon="📝")
+    # 总控台
+    col_main, col_tips = st.columns([1, 2])
+    with col_main:
+        # 这里已经是蓝色按钮了
+        if st.button("🚀 一键并发执行 (5路全开)", type="primary", use_container_width=True):
+            tasks, indices = [], []
+            for i in range(1, 6):
+                text = st.session_state.get(f"input_{i}", "")
+                if text.strip():
+                    tasks.append(text)
+                    indices.append(i)
+            
+            if not tasks:
+                st.toast("⚠️ 请先输入文案", icon="🛑")
+            else:
+                with st.status("☁️ 云端计算中...", expanded=True) as status:
+                    with ThreadPoolExecutor(max_workers=5) as executor:
+                        results_list = list(executor.map(rewrite_logic, tasks))
+                    for idx, res in zip(indices, results_list):
+                        st.session_state['results'][idx] = res
+                    status.update(label="✅ 完成！", state="complete", expanded=False)
+                    st.rerun()
+    with col_tips:
+        # 修正文案：红色按钮 -> 蓝色按钮
+        st.info("💡 操作指南：将不同文案粘贴到下方 1-5 号窗口，点击左侧 **【蓝色按钮】** 同时处理。", icon="📝")
 
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -245,31 +244,30 @@ def page_alias_creation():
     st.caption("防屏蔽 | 矩阵分发专用")
     st.markdown("---")
     
-    with st.container(border=True):
-        c1, c2 = st.columns([2, 1])
-        with c1:
-            original_name = st.text_input("🎬 原剧名/原书名", placeholder="例如：霸道总裁爱上我")
-        with c2:
-            count = st.slider("生成数量", 5, 20, 10)
-        
-        tags = st.multiselect("🏷️ 强化元素", ["高甜", "复仇", "逆袭", "悬疑", "虐恋", "豪门"], default=["逆袭", "高甜"])
-        
-        if st.button("🚀 生成别名", type="primary", use_container_width=True):
-            if not original_name:
-                st.toast("请输入原名", icon="🛑")
-            else:
-                prompt = f"""
-                请将《{original_name}》改写为{count}个推广别名。
-                策略：加入“{'、'.join(tags)}”元素，去原名化，直击痛点。
-                输出：只输出别名列表，一行一个。
-                """
-                try:
-                    with st.spinner("生成中..."):
-                        res = client.chat.completions.create(
-                            model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.4
-                        )
-                        st.session_state['alias_result'] = res.choices[0].message.content
-                except Exception as e: st.error(f"Error: {e}")
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        original_name = st.text_input("🎬 原剧名/原书名", placeholder="例如：霸道总裁爱上我")
+    with col2:
+        count = st.slider("生成数量", 5, 20, 10)
+    
+    tags = st.multiselect("🏷️ 强化元素", ["高甜", "复仇", "逆袭", "悬疑", "虐恋", "豪门"], default=["逆袭", "高甜"])
+    
+    if st.button("🚀 生成别名", type="primary", use_container_width=True):
+        if not original_name:
+            st.toast("请输入原名", icon="🛑")
+        else:
+            prompt = f"""
+            请将《{original_name}》改写为{count}个推广别名。
+            策略：加入“{'、'.join(tags)}”元素，去原名化，直击痛点。
+            输出：只输出别名列表，一行一个。
+            """
+            try:
+                with st.spinner("生成中..."):
+                    res = client.chat.completions.create(
+                        model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.4
+                    )
+                    st.session_state['alias_result'] = res.choices[0].message.content
+            except Exception as e: st.error(f"Error: {e}")
 
     if 'alias_result' in st.session_state:
         st.info("💡 点击右上角图标复制", icon="📋")
@@ -280,23 +278,22 @@ def page_naming():
     st.markdown("## 🏷️ 账号/IP 起名大师")
     st.markdown("---")
     
-    with st.container(border=True):
-        c1, c2 = st.columns(2)
-        with c1:
-            niche = st.selectbox("🎯 赛道", ["短剧", "小说", "口播", "情感", "带货"])
-        with c2:
-            style = st.selectbox("🎨 风格", ["高冷", "搞笑", "文艺", "粗暴", "反差"])
-        keywords = st.text_input("🔑 关键词 (选填)")
-        
-        if st.button("🎲 生成名字", type="primary", use_container_width=True):
-            prompt = f"为【{niche}】赛道生成10个{style}风格账号名，含关键词：{keywords}。格式：名字+解释。"
-            try:
-                with st.spinner("生成中..."):
-                    res = client.chat.completions.create(
-                        model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.5
-                    )
-                    st.session_state['naming_result'] = res.choices[0].message.content
-            except Exception as e: st.error(str(e))
+    c1, c2 = st.columns(2)
+    with c1:
+        niche = st.selectbox("🎯 赛道", ["短剧", "小说", "口播", "情感", "带货"])
+    with c2:
+        style = st.selectbox("🎨 风格", ["高冷", "搞笑", "文艺", "粗暴", "反差"])
+    keywords = st.text_input("🔑 关键词 (选填)")
+    
+    if st.button("🎲 生成名字", type="primary", use_container_width=True):
+        prompt = f"为【{niche}】赛道生成10个{style}风格账号名，含关键词：{keywords}。格式：名字+解释。"
+        try:
+            with st.spinner("生成中..."):
+                res = client.chat.completions.create(
+                    model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.5
+                )
+                st.session_state['naming_result'] = res.choices[0].message.content
+        except Exception as e: st.error(str(e))
 
     if 'naming_result' in st.session_state:
         st.code(st.session_state['naming_result'], language='text')

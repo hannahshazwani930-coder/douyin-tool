@@ -1,2 +1,8 @@
 streamlit
 openai>=1.0.0
+
+streamlit
+openai>=1.0.0
+pandas
+openpyxl
+requests

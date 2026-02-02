@@ -2,11 +2,7 @@ import streamlit as st
 from openai import OpenAI
 import time
 from concurrent.futures import ThreadPoolExecutor
-import io
-import os
-import requests
-import base64
-import streamlit.components.v1 as components # 关键组件
+import streamlit.components.v1 as components # 用于注入 JS 复制功能
 
 # ==========================================
 # 0. 核心配置
@@ -18,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 注入 CSS：全局样式美化
+# 注入 CSS：全局样式美化 + 教程样式
 st.markdown("""
 <style>
     /* 1. 全局字体与背景 */
@@ -101,15 +97,20 @@ st.markdown("""
         border-color: #3b82f6;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
     }
+    ::placeholder { color: #94a3b8 !important; opacity: 1; }
     
     /* 8. 辅助样式 */
     .empty-state-box { height: 200px; background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc); background-size: 20px 20px; border: 2px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 500; flex-direction: column; gap: 10px; }
+    
+    /* 跳转按钮 */
     a.redirect-btn { display: block; width: 100%; text-align: center; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white !important; padding: 16px; border-radius: 12px; text-decoration: none; font-size: 18px; font-weight: 700; margin-top: 10px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); transition: transform 0.2s; border: 1px solid #7c3aed; }
     a.redirect-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4); }
+    
+    /* 教程盒子 */
     .tutorial-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-top: 25px; }
     .tutorial-step { display: flex; align-items: center; margin-bottom: 15px; font-size: 15px; color: #334155; line-height: 1.5; }
     .step-num { background-color: #e0f2fe; color: #0284c7; font-weight: bold; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0; }
-    .prompt-block { background-color: #1e293b; color: #cbd5e1; padding: 15px; border-radius: 8px; font-family: monospace; margin-top: 10px; border-left: 4px solid #3b82f6; font-size: 14px; }
+    
     .login-spacer { height: 10vh; }
 </style>
 """, unsafe_allow_html=True)
@@ -120,9 +121,8 @@ st.markdown("""
 def render_copy_button_html(text, unique_key):
     """
     生成一个完全由 HTML/CSS/JS 控制的复制按钮。
-    这绕过了 Streamlit 的 Python 重载机制，直接在浏览器端操作剪贴板。
     """
-    # 对文本进行转义，防止 JS 语法错误
+    # 对文本进行转义
     safe_text = text.replace("`", "\`").replace("${", "\${").replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"')
     
     html_code = f"""
@@ -133,7 +133,6 @@ def render_copy_button_html(text, unique_key):
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap');
             body {{ margin: 0; padding: 0; background: transparent; overflow: hidden; }}
             
-            /* 模仿 Streamlit 原生 Primary 按钮样式 */
             .copy-btn {{
                 width: 100%;
                 height: 42px;
@@ -160,7 +159,6 @@ def render_copy_button_html(text, unique_key):
                 transform: translateY(0);
                 background: #1d4ed8;
             }}
-            /* 成功状态 */
             .copy-btn.success {{
                 background: linear-gradient(135deg, #10b981 0%, #059669 100%);
                 box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
@@ -175,40 +173,28 @@ def render_copy_button_html(text, unique_key):
         <script>
             function copyText(btn) {{
                 const text = `{safe_text}`;
-                
-                // 优先使用现代 API
                 if (navigator.clipboard && window.isSecureContext) {{
-                    navigator.clipboard.writeText(text).then(() => {{
-                        showSuccess(btn);
-                    }}).catch(err => {{
-                        fallbackCopyText(text, btn);
-                    }});
+                    navigator.clipboard.writeText(text).then(() => {{ showSuccess(btn); }})
+                    .catch(err => {{ fallbackCopyText(text, btn); }});
                 }} else {{
                     fallbackCopyText(text, btn);
                 }}
             }}
 
-            // 兼容性方案 (针对没有 HTTPS 或旧浏览器)
             function fallbackCopyText(text, btn) {{
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
-                
-                // 确保 textarea 不可见但可选中
                 textArea.style.position = "fixed";
                 textArea.style.left = "-9999px";
-                textArea.style.top = "0";
                 document.body.appendChild(textArea);
                 textArea.focus();
                 textArea.select();
-                
                 try {{
                     const successful = document.execCommand('copy');
                     if (successful) showSuccess(btn);
                 }} catch (err) {{
-                    console.error('Fallback: Oops, unable to copy', err);
                     btn.innerText = "❌ 复制失败";
                 }}
-                
                 document.body.removeChild(textArea);
             }}
 
@@ -216,7 +202,6 @@ def render_copy_button_html(text, unique_key):
                 const originalText = btn.innerHTML;
                 btn.innerHTML = "<span>✅ 复制成功！</span>";
                 btn.classList.add("success");
-                
                 setTimeout(() => {{
                     btn.innerHTML = originalText;
                     btn.classList.remove("success");
@@ -226,7 +211,6 @@ def render_copy_button_html(text, unique_key):
     </body>
     </html>
     """
-    # 渲染组件，高度要刚好容纳按钮
     components.html(html_code, height=50)
 
 # ==========================================
@@ -307,7 +291,7 @@ client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
 # 3. 功能模块
 # ==========================================
 
-# --- A. 文案改写 (带前端JS复制) ---
+# --- A. 文案改写 ---
 def page_rewrite():
     st.markdown("## ⚡ 爆款文案改写中台")
     st.caption("AI 驱动的五路并发架构 | 40秒黄金完播率模型")
@@ -376,12 +360,8 @@ def page_rewrite():
             with c2:
                 res_val = st.session_state['results'].get(i, "")
                 if res_val:
-                    # 1. 结果显示框 (只读，纯文本)
                     st.text_area(f"结果 #{i}", value=res_val, height=200, label_visibility="collapsed", key=f"res_area_{i}")
-                    
-                    # 2. 🔥 注入前端 JS 复制按钮 (不刷新页面，极速) 🔥
                     render_copy_button_html(res_val, f"copy_btn_{i}")
-                    
                 else:
                     st.markdown("""
                     <div class="empty-state-box">
@@ -391,7 +371,7 @@ def page_rewrite():
                     </div>
                     """, unsafe_allow_html=True)
 
-# --- B. 别名创建 (带前端JS复制) ---
+# --- B. 别名创建 ---
 def page_alias_creation():
     st.markdown("## 🎭 剧名别名生成")
     st.caption("防屏蔽 | 矩阵分发专用")
@@ -425,13 +405,10 @@ def page_alias_creation():
     if 'alias_result' in st.session_state:
         res_text = st.session_state['alias_result']
         st.info("👇 别名列表已生成，点击下方按钮一键复制", icon="📋")
-        
         st.text_area("结果", value=res_text, height=300, label_visibility="collapsed")
-        
-        # 前端复制按钮
         render_copy_button_html(res_text, "alias_copy_btn")
 
-# --- C. 账号起名 (带前端JS复制) ---
+# --- C. 账号起名 ---
 def page_naming():
     st.markdown("## 🏷️ 账号/IP 起名大师")
     st.markdown("---")
@@ -456,11 +433,9 @@ def page_naming():
     if 'naming_result' in st.session_state:
         res_text = st.session_state['naming_result']
         st.text_area("结果", value=res_text, height=400, label_visibility="collapsed")
-        
-        # 前端复制按钮
         render_copy_button_html(res_text, "name_copy_btn")
 
-# --- D. 选题灵感库 (带前端JS复制) ---
+# --- D. 选题灵感库 ---
 def page_brainstorm():
     st.markdown("## 💡 爆款选题灵感库")
     st.caption("文案枯竭？输入关键词，AI 帮你生成 10 个“必火”的选题方向。")
@@ -497,12 +472,10 @@ def page_brainstorm():
     if 'brainstorm_result' in st.session_state:
         res_text = st.session_state['brainstorm_result']
         st.text_area("灵感列表", value=res_text, height=400, label_visibility="collapsed")
-        
-        # 前端复制按钮
         render_copy_button_html(res_text, "brain_copy_btn")
 
 
-# --- E. 海报生成 (跳转独立站导流版 + 精准教程) ---
+# --- E. 海报生成 (跳转独立站 + 修正版教程) ---
 def page_poster_gen():
     st.markdown("## 🎨 AI 智能海报改图 (专业版)")
     st.caption("基于 Flux/Banana Pro 算力集群，提供好莱坞级改图效果。")
@@ -523,7 +496,6 @@ def page_poster_gen():
             st.markdown("##### 第 1 步：复制专属邀请码")
             st.caption("注册时填写，可获赠额外算力点数")
             
-            # 使用前端复制按钮来复制邀请码
             invite_code = "5yzMbpxn"
             st.text_input("邀请码", value=invite_code, disabled=True, label_visibility="collapsed")
             render_copy_button_html(invite_code, "invite_code_btn")
@@ -537,32 +509,36 @@ def page_poster_gen():
                 </a>
             """, unsafe_allow_html=True)
 
-    # 🔥 新增：保姆级教程 (内容已更新) 🔥
+    # 🔥 新增：保姆级教程 (含 st.code 纯净复制) 🔥
     st.markdown("<br>", unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("#### 📖 新手保姆级改图教程")
         st.caption("按照以下步骤操作，1分钟搞定电影级海报")
         
-            st.markdown("""
-            <div class="tutorial-box">
-                <div class="tutorial-step">
-                    <div class="step-num">1</div>
-                    <div>注册登录后，点击 <b>“创建自由画布”</b></div>
-                </div>
-                <div class="tutorial-step">
-                    <div class="step-num">2</div>
-                    <div>根据提示 <b>双击</b> 或者 <b>右键点击</b> 空白处，选择 <b>“图生图”</b></div>
-                </div>
-                <div class="tutorial-step">
-                    <div class="step-num">3</div>
-                    <div>点击组件上的 <b>“+”</b> 号，上传你需要修改的 <b>原剧海报</b></div>
-                </div>
-                <div class="tutorial-step">
-                    <div class="step-num">4</div>
-                    <div>点击 <b>右边边框</b>，在下方输入指令（点击右上角复制）：</div>
-                </div>
+        # 教程步骤 (HTML/CSS 布局)
+        st.markdown("""
+        <div class="tutorial-box">
+            <div class="tutorial-step">
+                <div class="step-num">1</div>
+                <div>注册登录后，点击 <b>“创建自由画布”</b></div>
             </div>
-            """, unsafe_allow_html=True)
+            <div class="tutorial-step">
+                <div class="step-num">2</div>
+                <div>根据提示 <b>双击</b> 或者 <b>右键点击</b> 空白处，选择 <b>“图生图”</b></div>
+            </div>
+            <div class="tutorial-step">
+                <div class="step-num">3</div>
+                <div>点击组件上的 <b>“+”</b> 号，上传你需要修改的 <b>原剧海报</b></div>
+            </div>
+            <div class="tutorial-step">
+                <div class="step-num">4</div>
+                <div>点击 <b>右边边框</b>，在下方输入指令（点击右上角复制）：</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # 指令代码块 (st.code 自带复制)
+        st.code("将原图剧名：原剧名\n改为：[你的新剧名]", language="text")
     
     st.markdown("---")
     st.caption("如有疑问，请联系客服微信：TG777188")
@@ -606,4 +582,3 @@ elif menu_option == "🎭 创建别名": page_alias_creation()
 elif menu_option == "🎨 海报生成": page_poster_gen()
 elif menu_option == "🏷️ 账号起名": page_naming()
 elif menu_option == "👤 我的账户": page_account()
-

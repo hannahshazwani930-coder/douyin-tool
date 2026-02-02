@@ -6,6 +6,7 @@ import streamlit.components.v1 as components
 import sqlite3
 import datetime
 import uuid
+import pandas as pd # 引入 Pandas 用于表格展示和导出
 
 # ==========================================
 # 0. 核心配置 & 数据库初始化
@@ -23,8 +24,21 @@ DB_FILE = 'users.db'
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
+    # 增加 create_time 字段记录创建时间，方便排序
     c.execute('''CREATE TABLE IF NOT EXISTS access_codes
-                 (code TEXT PRIMARY KEY, duration_days INTEGER, activated_at TIMESTAMP, expire_at TIMESTAMP, status TEXT)''')
+                 (code TEXT PRIMARY KEY, 
+                  duration_days INTEGER, 
+                  activated_at TIMESTAMP, 
+                  expire_at TIMESTAMP, 
+                  status TEXT,
+                  create_time TIMESTAMP)''')
+    
+    # 检查是否存在 create_time 列 (兼容旧版本数据库)
+    c.execute("PRAGMA table_info(access_codes)")
+    columns = [info[1] for info in c.fetchall()]
+    if 'create_time' not in columns:
+        c.execute("ALTER TABLE access_codes ADD COLUMN create_time TIMESTAMP")
+        
     conn.commit()
     conn.close()
 
@@ -40,6 +54,7 @@ def check_code(code):
         conn.close()
         return False, "❌ 卡密不存在"
     
+    # row结构: 0:code, 1:duration, 2:activated_at, 3:expire_at, 4:status, 5:create_time
     duration, activated_at, expire_at, status = row[1], row[2], row[3], row[4]
     now = datetime.datetime.now()
     
@@ -62,17 +77,6 @@ def check_code(code):
         conn.close()
         return False, "⛔ 卡密已过期"
 
-def generate_admin_codes(days=30, count=1):
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    new_codes = []
-    for _ in range(count):
-        code = "VIP-" + str(uuid.uuid4())[:8].upper()
-        c.execute("INSERT INTO access_codes (code, duration_days, status) VALUES (?, ?, ?)", (code, days, 'unused'))
-        new_codes.append(code)
-    conn.commit(); conn.close()
-    return new_codes
-
 # --- CSS 样式 ---
 st.markdown("""
 <style>
@@ -94,12 +98,9 @@ st.markdown("""
     div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); border: none; color: #ffffff !important; }
     div.stButton > button[kind="primary"]:hover { box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); transform: translateY(-1px); }
     
-    /* 对齐提示框 */
-    .info-box-aligned { height: 50px !important; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1e40af; display: flex; align-items: center; padding: 0 16px; font-size: 14px; font-weight: 500; width: 100%; box-sizing: border-box; }
-    
     /* 输入框 */
-    .stTextArea textarea, .stTextInput input { border-radius: 8px; border: 1px solid #cbd5e1; background-color: #f8fafc !important; color: #1e293b !important; caret-color: #2563eb; font-weight: 500; }
-    .stTextArea textarea:focus, .stTextInput input:focus { background-color: #ffffff !important; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+    .stTextArea textarea, .stTextInput input, .stNumberInput input { border-radius: 8px; border: 1px solid #cbd5e1; background-color: #f8fafc !important; color: #1e293b !important; caret-color: #2563eb; font-weight: 500; }
+    .stTextArea textarea:focus, .stTextInput input:focus, .stNumberInput input:focus { background-color: #ffffff !important; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
     
     /* 商业化组件 */
     .project-box { background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
@@ -109,6 +110,11 @@ st.markdown("""
     .wechat-item { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: #475569; margin-bottom: 8px; }
     .wechat-label { font-weight: 600; }
     
+    /* 后台统计卡片 */
+    .stat-card { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; text-align: center; }
+    .stat-value { font-size: 24px; font-weight: 800; color: #2563eb; }
+    .stat-label { font-size: 12px; color: #64748b; margin-top: 5px; }
+
     /* 跳转按钮 */
     a.redirect-btn { display: flex !important; align-items: center; justify-content: center; width: 100%; height: 52px !important; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white !important; padding: 0 !important; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 700; margin-top: 0px !important; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); transition: transform 0.2s; border: 1px solid #7c3aed; }
     a.redirect-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4); }
@@ -118,6 +124,7 @@ st.markdown("""
     .tutorial-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-top: 25px; }
     .tutorial-step { display: flex; align-items: center; margin-bottom: 15px; font-size: 15px; color: #334155; line-height: 1.5; }
     .step-num { background-color: #e0f2fe; color: #0284c7; font-weight: bold; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0; }
+    .info-box-aligned { height: 50px !important; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1e40af; display: flex; align-items: center; padding: 0 16px; font-size: 14px; font-weight: 500; width: 100%; box-sizing: border-box; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -127,59 +134,14 @@ st.markdown("""
 def render_copy_button_html(text, unique_key):
     safe_text = text.replace("`", "\`").replace("${", "\${").replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"')
     html_code = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap');
-            body {{ margin: 0; padding: 0; background: transparent; overflow: hidden; }}
-            .copy-btn {{ width: 100%; height: 42px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; border-radius: 8px; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; }}
-            .copy-btn:hover {{ box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); transform: translateY(-1px); }}
-            .copy-btn:active {{ transform: translateY(0); background: #1d4ed8; }}
-            .copy-btn.success {{ background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }}
-        </style>
-    </head>
-    <body>
-        <button class="copy-btn" onclick="copyText(this)"><span>📋 一键复制纯文本</span></button>
-        <script>
-            function copyText(btn) {{ const text = `{safe_text}`; if (navigator.clipboard && window.isSecureContext) {{ navigator.clipboard.writeText(text).then(() => {{ showSuccess(btn); }}).catch(err => {{ fallbackCopyText(text, btn); }}); }} else {{ fallbackCopyText(text, btn); }} }}
-            function fallbackCopyText(text, btn) {{ const textArea = document.createElement("textarea"); textArea.value = text; textArea.style.position = "fixed"; textArea.style.left = "-9999px"; document.body.appendChild(textArea); textArea.focus(); textArea.select(); try {{ const successful = document.execCommand('copy'); if (successful) showSuccess(btn); }} catch (err) {{ btn.innerText = "❌"; }} document.body.removeChild(textArea); }}
-            function showSuccess(btn) {{ const originalText = btn.innerHTML; btn.innerHTML = "<span>✅ 复制成功！</span>"; btn.classList.add("success"); setTimeout(() => {{ btn.innerHTML = originalText; btn.classList.remove("success"); }}, 2000); }}
-        </script>
-    </body>
-    </html>
+    <!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap');body{{margin:0;padding:0;background:transparent;overflow:hidden;}}.copy-btn{{width:100%;height:42px;background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);color:white;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-weight:600;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,0.3);transition:all 0.2s ease;display:flex;align-items:center;justify-content:center;gap:8px;}}.copy-btn:hover{{box-shadow:0 6px 16px rgba(37,99,235,0.4);transform:translateY(-1px);}}.copy-btn:active{{transform:translateY(0);background:#1d4ed8;}}.copy-btn.success{{background:linear-gradient(135deg,#10b981 0%,#059669 100%);box-shadow:0 4px 12px rgba(16,185,129,0.3);}}</style></head><body><button class="copy-btn" onclick="copyText(this)"><span>📋 一键复制纯文本</span></button><script>function copyText(btn){{const text=`{safe_text}`;if(navigator.clipboard&&window.isSecureContext){{navigator.clipboard.writeText(text).then(()=>{{showSuccess(btn);}}).catch(err=>{{fallbackCopyText(text,btn);}});}}else{{fallbackCopyText(text,btn);}}}}function fallbackCopyText(text,btn){{const textArea=document.createElement("textarea");textArea.value=text;textArea.style.position="fixed";textArea.style.left="-9999px";document.body.appendChild(textArea);textArea.focus();textArea.select();try{{const successful=document.execCommand('copy');if(successful)showSuccess(btn);}}catch(err){{btn.innerText="❌";}}document.body.removeChild(textArea);}}function showSuccess(btn){{const originalText=btn.innerHTML;btn.innerHTML="<span>✅ 复制成功！</span>";btn.classList.add("success");setTimeout(()=>{{btn.innerHTML=originalText;btn.classList.remove("success");}},2000);}}</script></body></html>
     """
     components.html(html_code, height=50)
 
 def render_hover_copy_box(text, label="点击复制"):
     safe_text = text.replace("`", "\`").replace("${", "\${").replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"')
     html_code = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');
-            body {{ margin: 0; padding: 0; background: transparent; font-family: 'Inter', sans-serif; overflow: hidden; }}
-            .code-box {{ display: flex; align-items: center; justify-content: space-between; background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 10px; height: 36px; cursor: pointer; transition: all 0.2s ease; color: #1e293b; font-weight: 600; font-size: 13px; box-sizing: border-box; }}
-            .code-box:hover {{ border-color: #3b82f6; background-color: #ffffff; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1); }}
-            .hint {{ font-size: 12px; color: #94a3b8; font-weight: 400; }}
-            .code-box:hover .hint {{ color: #3b82f6; }}
-            .code-box.success {{ background-color: #ecfdf5; border-color: #10b981; color: #065f46; }}
-            .code-box.success .hint {{ color: #059669; }}
-        </style>
-    </head>
-    <body>
-        <div class="code-box" onclick="copyText(this)">
-            <span id="code-content">{safe_text}</span>
-            <span class="hint" id="status-text">{label}</span>
-        </div>
-        <script>
-            function copyText(box) {{ const text = `{safe_text}`; const statusText = box.querySelector("#status-text"); if (navigator.clipboard && window.isSecureContext) {{ navigator.clipboard.writeText(text).then(() => {{ showSuccess(box, statusText); }}).catch(err => {{ fallbackCopyText(text, box, statusText); }}); }} else {{ fallbackCopyText(text, box, statusText); }} }}
-            function fallbackCopyText(text, box, statusText) {{ const textArea = document.createElement("textarea"); textArea.value = text; textArea.style.position = "fixed"; textArea.style.left = "-9999px"; document.body.appendChild(textArea); textArea.focus(); textArea.select(); try {{ const successful = document.execCommand('copy'); if (successful) showSuccess(box, statusText); }} catch (err) {{ statusText.innerText = "❌"; }} document.body.removeChild(textArea); }}
-            function showSuccess(box, statusText) {{ box.classList.add("success"); const originalHint = "{label}"; statusText.innerText = "✅ 成功"; setTimeout(() => {{ box.classList.remove("success"); statusText.innerText = originalHint; }}, 1500); }}
-        </script>
-    </body>
-    </html>
+    <!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');body{{margin:0;padding:0;background:transparent;font-family:'Inter',sans-serif;overflow:hidden;}}.code-box{{display:flex;align-items:center;justify-content:space-between;background-color:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;padding:0 10px;height:36px;cursor:pointer;transition:all 0.2s ease;color:#1e293b;font-weight:600;font-size:13px;box-sizing:border-box;}}.code-box:hover{{border-color:#3b82f6;background-color:#ffffff;box-shadow:0 0 0 2px rgba(59,130,246,0.1);}}.hint{{font-size:12px;color:#94a3b8;font-weight:400;}}.code-box:hover .hint{{color:#3b82f6;}}.code-box.success{{background-color:#ecfdf5;border-color:#10b981;color:#065f46;}}.code-box.success .hint{{color:#059669;}}</style></head><body><div class="code-box" onclick="copyText(this)"><span id="code-content">{safe_text}</span><span class="hint" id="status-text">{label}</span></div><script>function copyText(box){{const text=`{safe_text}`;const statusText=box.querySelector("#status-text");if(navigator.clipboard&&window.isSecureContext){{navigator.clipboard.writeText(text).then(()=>{{showSuccess(box,statusText);}}).catch(err=>{{fallbackCopyText(text,box,statusText);}});}}else{{fallbackCopyText(text,box,statusText);}}}}function fallbackCopyText(text,box,statusText){{const textArea=document.createElement("textarea");textArea.value=text;textArea.style.position="fixed";textArea.style.left="-9999px";document.body.appendChild(textArea);textArea.focus();textArea.select();try{{const successful=document.execCommand('copy');if(successful)showSuccess(box,statusText);}}catch(err){{statusText.innerText="❌";}}document.body.removeChild(textArea);}}function showSuccess(box,statusText){{box.classList.add("success");const originalHint="{label}";statusText.innerText="✅ 成功";setTimeout(()=>{{box.classList.remove("success");statusText.innerText=originalHint;}},1500);}}</script></body></html>
     """
     components.html(html_code, height=40)
 
@@ -226,13 +188,6 @@ def check_login():
                     st.rerun()
                 else:
                     st.error(msg)
-            
-            # 管理员后门 (测试用)
-            if st.checkbox("管理员生成测试卡密"):
-                if st.button("生成 30 天卡密"):
-                    codes = generate_admin_codes(30, 1)
-                    st.code(codes[0], language='text')
-                    st.success("请复制上方卡密登录")
     return False
 
 if not check_login(): st.stop()
@@ -249,10 +204,10 @@ except:
 client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
 
 # ==========================================
-# 3. 功能模块 (完整恢复)
+# 3. 功能模块
 # ==========================================
 
-# --- A. 文案改写 (5路并发恢复) ---
+# --- A. 文案改写 ---
 def page_rewrite():
     st.markdown("## ⚡ 爆款文案改写中台")
     st.caption("AI 驱动的五路并发架构 | 40秒黄金完播率模型")
@@ -277,25 +232,19 @@ def page_rewrite():
             tasks, indices = [], []
             for i in range(1, 6):
                 text = st.session_state.get(f"input_{i}", "")
-                if text.strip():
-                    tasks.append(text)
-                    indices.append(i)
-            if not tasks:
-                st.toast("⚠️ 请先输入文案", icon="🛑")
+                if text.strip(): tasks.append(text); indices.append(i)
+            if not tasks: st.toast("⚠️ 请先输入文案", icon="🛑")
             else:
                 with st.status("☁️ 云端计算中...", expanded=True) as status:
                     with ThreadPoolExecutor(max_workers=5) as executor:
                         results_list = list(executor.map(rewrite_logic, tasks))
-                    for idx, res in zip(indices, results_list):
-                        st.session_state['results'][idx] = res
-                    status.update(label="✅ 完成！", state="complete", expanded=False)
-                    st.rerun()
+                    for idx, res in zip(indices, results_list): st.session_state['results'][idx] = res
+                    status.update(label="✅ 完成！", state="complete", expanded=False); st.rerun()
     with col_tips:
         st.markdown("""<div class="info-box-aligned">💡 指南：粘贴文案到下方窗口，点击左侧 <b>【蓝色按钮】</b> 同时处理。</div>""", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 5个工作台 (完整循环)
     for i in range(1, 6):
         with st.container(border=True):
             st.markdown(f"#### 🎬 工作台 #{i}")
@@ -308,24 +257,19 @@ def page_rewrite():
                 if b2.button(f"⚡ 仅生成 #{i}", key=f"btn_{i}", use_container_width=True):
                     val = st.session_state.get(input_key, "")
                     if val:
-                        with st.spinner("生成中..."):
-                            st.session_state['results'][i] = rewrite_logic(val)
-                            st.rerun()
+                        with st.spinner("生成中..."): st.session_state['results'][i] = rewrite_logic(val); st.rerun()
             with c2:
                 res_val = st.session_state['results'].get(i, "")
                 if res_val:
                     st.text_area(f"结果 #{i}", value=res_val, height=200, label_visibility="collapsed", key=f"res_area_{i}")
                     render_copy_button_html(res_val, f"copy_btn_{i}")
-                    # 引流
                     st.markdown("""<div style="margin-top: 10px; padding: 10px; background: #fff1f2; border-radius: 8px; border: 1px solid #fecdd3; font-size: 13px; color: #be123c;">🔥 <b>文案搞定了，不会拍？</b> <br>领取《素人KOC爆款出镜SOP》，教你对着镜头自然说话！<br><span style="color:#e11d48;font-weight:bold;">👉 复制左侧微信 W7774X 免费领</span></div>""", unsafe_allow_html=True)
                 else:
                     st.markdown("<div class='empty-state-box'><div style='font-size: 24px;'>⏳</div><div>等待指令...</div><div style='font-size: 12px; color: #94a3b8;'>Input content to generate</div></div>", unsafe_allow_html=True)
 
 # --- B. 别名创建 ---
 def page_alias_creation():
-    st.markdown("## 🎭 剧名别名生成")
-    st.caption("防屏蔽 | 矩阵分发专用")
-    st.markdown("---")
+    st.markdown("## 🎭 剧名别名生成"); st.markdown("---")
     c1, c2 = st.columns([2, 1])
     with c1: original_name = st.text_input("🎬 原剧名/原书名", placeholder="例如：霸道总裁爱上我")
     with c2: count = st.slider("生成数量", 5, 20, 10)
@@ -347,8 +291,7 @@ def page_alias_creation():
 
 # --- C. 账号起名 ---
 def page_naming():
-    st.markdown("## 🏷️ 账号/IP 起名大师")
-    st.markdown("---")
+    st.markdown("## 🏷️ 账号/IP 起名大师"); st.markdown("---")
     c1, c2 = st.columns(2)
     with c1: niche = st.selectbox("🎯 赛道", ["短剧", "小说", "口播", "情感", "带货"])
     with c2: style = st.selectbox("🎨 风格", ["高冷", "搞笑", "文艺", "粗暴", "反差"])
@@ -367,9 +310,7 @@ def page_naming():
 
 # --- D. 选题灵感库 ---
 def page_brainstorm():
-    st.markdown("## 💡 爆款选题灵感库")
-    st.caption("文案枯竭？输入关键词，AI 帮你生成 10 个“必火”的选题方向。")
-    st.markdown("---")
+    st.markdown("## 💡 爆款选题灵感库"); st.markdown("---")
     with st.container(border=True):
         c1, c2 = st.columns([3, 1])
         with c1: topic = st.text_input("🔍 输入你的赛道/关键词", placeholder="例如：职场、美妆、减肥、副业...")
@@ -386,44 +327,78 @@ def page_brainstorm():
         st.text_area("灵感列表", value=res_text, height=400, label_visibility="collapsed")
         render_copy_button_html(res_text, "brain_copy_btn")
 
-# --- E. 海报生成 (导流 + 教程) ---
+# --- E. 海报生成 ---
 def page_poster_gen():
-    st.markdown("## 🎨 AI 智能海报改图 (专业版)")
-    st.caption("基于 Flux/Banana Pro 算力集群，提供好莱坞级改图效果。")
-    st.markdown("---")
-    st.info("💡 提示：为了提供更稳定的算力支持，海报改图功能已升级至 **小提大作 独立站**。")
+    st.markdown("## 🎨 AI 智能海报改图 (专业版)"); st.info("💡 提示：为了提供更稳定的算力支持，海报改图功能已升级至 **小提大作 独立站**。")
     with st.container(border=True):
         st.markdown("### 🚀 前往 小提大作 专业版控制台")
         c1, c2 = st.columns([1, 1.5], gap="large")
-        with c1:
-            st.markdown("##### 第 1 步：复制专属邀请码")
-            st.caption("注册时填写，可获赠额外算力点数")
-            render_hover_copy_box("5yzMbpxn", "点击复制")
-        with c2:
-            st.markdown("##### 第 2 步：前往生成")
-            st.caption("点击下方按钮跳转")
-            st.markdown("""<a href="https://aixtdz.com/" target="_blank" class="redirect-btn">🚀 立即前往 小提大作 生成海报</a>""", unsafe_allow_html=True)
+        with c1: st.markdown("##### 第 1 步：复制专属邀请码"); st.caption("注册时填写，可获赠额外算力点数"); render_hover_copy_box("5yzMbpxn", "点击复制")
+        with c2: st.markdown("##### 第 2 步：前往生成"); st.caption("点击下方按钮跳转"); st.markdown("""<a href="https://aixtdz.com/" target="_blank" class="redirect-btn">🚀 立即前往 小提大作 生成海报</a>""", unsafe_allow_html=True)
         st.markdown("---")
         st.markdown("""<div style="padding: 10px; background: #f0f9ff; border-radius: 8px; border: 1px solid #bae6fd; display: flex; align-items: center; justify-content: space-between;"><div><span style="font-size: 18px;">💡</span><span style="color: #0369a1; font-weight: bold; margin-left: 5px;">想让海报动起来？做动漫视频赚收益？</span><div style="font-size: 12px; color: #64748b; margin-top: 2px;">了解【御灵AI】动漫视频变现玩法，红果/番茄拉新 + 版权分销。</div></div><a href="#" style="background: #0284c7; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: bold;">联系左侧客服</a></div>""", unsafe_allow_html=True)
-
     st.markdown("<br>", unsafe_allow_html=True)
     with st.container(border=True):
-        st.markdown("#### 📖 新手保姆级改图教程")
-        st.caption("按照以下步骤操作，1分钟搞定电影级海报")
-        st.markdown("""
-        <div class="tutorial-box">
-            <div class="tutorial-step"><div class="step-num">1</div><div>注册登录后，点击 <b>“创建自由画布”</b></div></div>
-            <div class="tutorial-step"><div class="step-num">2</div><div>根据提示 <b>双击</b> 或者 <b>右键点击</b> 空白处，选择 <b>“图生图”</b></div></div>
-            <div class="tutorial-step"><div class="step-num">3</div><div>点击组件上的 <b>“+”</b> 号，上传你需要修改的 <b>原剧海报</b></div></div>
-            <div class="tutorial-step"><div class="step-num">4</div><div>点击 <b>右边边框</b>，在下方输入指令（点击右上角复制）：</div></div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("#### 📖 新手保姆级改图教程"); st.markdown("""<div class="tutorial-box"><div class="tutorial-step"><div class="step-num">1</div><div>注册登录后，点击 <b>“创建自由画布”</b></div></div><div class="tutorial-step"><div class="step-num">2</div><div>根据提示 <b>双击</b> 或者 <b>右键点击</b> 空白处，选择 <b>“图生图”</b></div></div><div class="tutorial-step"><div class="step-num">3</div><div>点击组件上的 <b>“+”</b> 号，上传你需要修改的 <b>原剧海报</b></div></div><div class="tutorial-step"><div class="step-num">4</div><div>点击 <b>右边边框</b>，在下方输入指令（点击右上角复制）：</div></div></div>""", unsafe_allow_html=True)
         st.code("将原图剧名：原剧名\n改为：[你的新剧名]", language="text")
+
+# --- G. 管理员后台 ---
+def page_admin():
+    # 简单的管理员鉴权 (这里为了演示，直接校验 session，实际可加二次密码)
+    st.markdown("## 🕵️‍♂️ 超级管理后台")
+    st.caption("仅限管理员访问 | 卡密生成与数据统计")
+    
+    # 1. 登录
+    pwd = st.text_input("请输入管理员密码", type="password")
+    if pwd == "admin888": # 默认密码
+        # 2. 数据统计
+        conn = sqlite3.connect(DB_FILE)
+        df = pd.read_sql_query("SELECT * FROM access_codes ORDER BY create_time DESC", conn)
+        conn.close()
+        
+        c1, c2, c3 = st.columns(3)
+        c1.markdown(f"<div class='stat-card'><div class='stat-value'>{len(df)}</div><div class='stat-label'>总卡密数</div></div>", unsafe_allow_html=True)
+        c2.markdown(f"<div class='stat-card'><div class='stat-value'>{len(df[df['status']=='active'])}</div><div class='stat-label'>已激活/使用中</div></div>", unsafe_allow_html=True)
+        c3.markdown(f"<div class='stat-card'><div class='stat-value'>{len(df[df['status']=='unused'])}</div><div class='stat-label'>未使用库存</div></div>", unsafe_allow_html=True)
+        
+        st.markdown("---")
+        
+        # 3. 批量生成
+        with st.container(border=True):
+            st.markdown("#### ⚡ 批量生成卡密")
+            cc1, cc2, cc3 = st.columns(3)
+            with cc1: qty = st.number_input("生成数量", 1, 500, 10)
+            with cc2: days = st.number_input("有效天数", 1, 365, 30)
+            with cc3: 
+                st.write("")
+                st.write("")
+                if st.button("🚀 立即生成", type="primary", use_container_width=True):
+                    new_codes = []
+                    conn = sqlite3.connect(DB_FILE)
+                    c = conn.cursor()
+                    now = datetime.datetime.now()
+                    for _ in range(qty):
+                        code = "VIP-" + str(uuid.uuid4())[:8].upper()
+                        c.execute("INSERT INTO access_codes (code, duration_days, status, create_time) VALUES (?, ?, ?, ?)", (code, days, 'unused', now))
+                        new_codes.append([code, days, 'unused'])
+                    conn.commit()
+                    conn.close()
+                    st.success(f"成功生成 {qty} 个卡密！")
+                    st.rerun()
+
+        # 4. 数据展示与导出
+        st.markdown("#### 📋 卡密明细 (支持下载)")
+        st.dataframe(df, use_container_width=True)
+        
+        # 导出 CSV
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button(label="📥 下载所有数据 (CSV)", data=csv, file_name="vip_codes_export.csv", mime="text/csv", type="primary")
+    else:
+        if pwd: st.error("密码错误")
 
 # --- F. 个人中心 ---
 def page_account():
-    st.markdown("## 👤 我的账户")
-    st.markdown("---")
+    st.markdown("## 👤 我的账户"); st.markdown("---")
     valid, msg = check_code(st.session_state.get('user_code'))
     col1, col2 = st.columns(2)
     with col1:
@@ -434,7 +409,7 @@ def page_account():
     with col2:
         with st.container(border=True):
             st.markdown("#### 💬 遇到问题？")
-            st.markdown("请联系技术支持微信：`TG777188` (点击左侧可复制)")
+            st.markdown("请联系技术支持微信：`TG777188`")
 
 # ==========================================
 # 4. 侧边栏导航
@@ -445,35 +420,24 @@ with st.sidebar:
         valid, msg = check_code(st.session_state.get('user_code'))
         if valid: st.success(msg)
         else: st.error("卡密已失效")
-    
     st.markdown("---")
     st.markdown("#### 🔥 热门搞钱项目")
-    st.markdown("""
-    <div class="project-box">
-        <div class="project-title">📹 素人 KOC 孵化</div>
-        <div class="project-desc">真人出镜口播，红果/番茄拉新，0基础陪跑。</div>
-    </div>
-    <div class="project-box">
-        <div class="project-title">🎨 御灵 AI 动漫</div>
-        <div class="project-desc">小说转动漫视频，端原生+版权分销，高收益。</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("""<div class="project-box"><div class="project-title">📹 素人 KOC 孵化</div><div class="project-desc">真人出镜口播，红果/番茄拉新，0基础陪跑。</div></div><div class="project-box"><div class="project-title">🎨 御灵 AI 动漫</div><div class="project-desc">小说转动漫视频，端原生+版权分销，高收益。</div></div>""", unsafe_allow_html=True)
     
     st.markdown("<div class='wechat-contact'>", unsafe_allow_html=True)
-    st.markdown("<div class='wechat-item'><span class='wechat-label'>💼 项目咨询:</span></div>", unsafe_allow_html=True)
-    render_hover_copy_box("W7774X", "点击复制微信号")
+    st.markdown("<div class='wechat-item'><span class='wechat-label'>💼 营销咨询:</span></div>", unsafe_allow_html=True)
+    render_hover_copy_box("W7774X", "点击复制")
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
     st.markdown("<div class='wechat-item'><span class='wechat-label'>🛠️ 技术/合作:</span></div>", unsafe_allow_html=True)
-    render_hover_copy_box("TG777188", "点击复制微信号")
+    render_hover_copy_box("TG777188", "点击复制")
     st.markdown("</div>", unsafe_allow_html=True)
     
     st.markdown("---")
-    menu_option = st.radio("功能导航", ["📝 文案改写", "💡 爆款选题库", "🎭 创建别名", "🎨 海报生成", "🏷️ 账号起名", "👤 我的账户"], index=0, label_visibility="collapsed")
+    menu_option = st.radio("功能导航", ["📝 文案改写", "💡 爆款选题库", "🎨 海报生成", "🏷️ 账号起名", "👤 我的账户", "🕵️‍♂️ 管理后台"], index=0, label_visibility="collapsed")
 
 if menu_option == "📝 文案改写": page_rewrite()
 elif menu_option == "💡 爆款选题库": page_brainstorm()
-elif menu_option == "🎭 创建别名": page_alias_creation()
 elif menu_option == "🎨 海报生成": page_poster_gen()
 elif menu_option == "🏷️ 账号起名": page_naming()
 elif menu_option == "👤 我的账户": page_account()
-
+elif menu_option == "🕵️‍♂️ 管理后台": page_admin()

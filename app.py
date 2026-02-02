@@ -13,73 +13,130 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 注入 CSS：90% 自适应流体布局
+# 注入 CSS：极致 UI 美化版
 st.markdown("""
 <style>
-    /* 1. 全局背景 */
+    /* 1. 全局字体与背景 */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
     .stApp { 
-        font-family: 'Helvetica Neue', Arial, sans-serif; 
-        background-color: #f0f2f5; 
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+        background-color: #f8fafc; /* 极简冷灰背景 */
     }
     
-    /* 🔥 核心修改：宽度设置为 90% 🔥 */
+    /* 2. 布局容器：90% 宽度 + 悬浮白纸效果 */
     div.block-container {
-        max-width: 90% !important;     /* 强制占满 90% */
-        min-width: 90% !important;     /* 保证不缩得太小 */
-        background-color: #ffffff;     
-        padding: 3rem !important;      
-        margin: 2rem auto !important;  /* 上下留白，左右自动居中 */
-        border-radius: 12px;           
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+        max-width: 90% !important;
+        min-width: 90% !important;
+        background-color: #ffffff;
+        padding: 3rem !important;
+        margin: 2rem auto !important;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); /* 更柔和的高级阴影 */
     }
 
-    /* 2. 侧边栏 */
+    /* 3. 侧边栏：磨砂质感 */
     [data-testid="stSidebar"] { 
         background-color: #ffffff; 
-        border-right: 1px solid #e0e0e0; 
+        border-right: 1px solid #f1f5f9; 
     }
     
-    /* 3. 内部卡片 (工作台) */
+    /* 4. 工作台卡片：增加顶部高亮条 */
     [data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: #f8f9fa; 
-        border: 1px solid #eaeaea; 
-        border-radius: 10px; 
-        padding: 20px;
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 24px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    /* 鼠标悬停时卡片微微上浮 */
+    [data-testid="stVerticalBlockBorderWrapper"]:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
     
-    /* 4. 标题 */
-    h1 { color: #1a202c; font-weight: 800 !important; text-align: center; margin-bottom: 30px !important;}
-    h2, h3 { color: #2d3748; font-weight: 700 !important; }
+    /* 5. 标题美化 */
+    h1 { 
+        color: #0f172a; 
+        font-weight: 800 !important; 
+        letter-spacing: -0.02em; 
+        margin-bottom: 1.5rem !important;
+    }
+    h2, h3 { color: #334155; font-weight: 700 !important; }
     
-    /* 5. 按钮美化 - 蓝色系 */
+    /* 6. 按钮极致美化 🔥 */
+    
+    /* (A) 通用按钮形态 */
     div.stButton > button {
-        border-radius: 6px; 
-        font-weight: 600; 
-        border: none; 
-        height: 42px; 
-        transition: all 0.2s;
-    }
-    div.stButton > button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    
-    /* 主按钮：科技蓝渐变 */
-    div.stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);
-        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        height: 40px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* 6. 输入框 */
+    /* (B) 次级按钮（清空/单条生成）：平时是高级灰，鼠标放上去变蓝 */
+    div.stButton > button:not([kind="primary"]) {
+        background-color: #f1f5f9; /* 浅灰底 */
+        color: #475569;            /* 深灰字 */
+        border: 1px solid transparent;
+    }
+    div.stButton > button:not([kind="primary"]):hover {
+        background-color: #e0f2fe; /* 淡蓝底 */
+        color: #0284c7;            /* 亮蓝字 */
+        border-color: #bae6fd;     /* 蓝边框 */
+        transform: translateY(-1px);
+    }
+
+    /* (C) 主按钮（一键并发）：极光蓝渐变 */
+    div.stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        border: none;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); /* 弥散光影 */
+    }
+    div.stButton > button[kind="primary"]:hover {
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+        transform: translateY(-1px);
+    }
+    div.stButton > button[kind="primary"]:active {
+        transform: translateY(0);
+    }
+
+    /* 7. 输入框：聚焦光晕 */
     .stTextArea textarea, .stTextInput input {
-        border-radius: 6px; 
-        border: 1px solid #e2e8f0; 
-        background-color: #ffffff;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        background-color: #f8fafc;
+        transition: border 0.2s, box-shadow 0.2s;
     }
     .stTextArea textarea:focus, .stTextInput input:focus {
-        border-color: #3182ce;
-        box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+        background-color: #ffffff;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); /* 蓝色柔光 */
     }
+
+    /* 8. 空状态占位符（右侧等待区）美化 🔥 */
+    .empty-state-box {
+        height: 200px;
+        background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc);
+        background-position: 0 0, 10px 10px;
+        background-size: 20px 20px;
+        border: 2px dashed #e2e8f0;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        font-weight: 500;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* 登录框间距 */
+    .login-spacer { height: 10vh; }
     
-    /* 7. 登录框垂直间距 */
-    .login-spacer { height: 5vh; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -217,24 +274,38 @@ def page_rewrite():
         with st.container(border=True):
             st.markdown(f"#### 🎬 工作台 #{i}")
             c1, c2 = st.columns([1, 1], gap="large")
+            
+            # 左侧：输入区
             with c1:
                 input_key = f"input_{i}"
-                st.text_area("原始文案", height=180, key=input_key, label_visibility="collapsed", placeholder="按 Ctrl+V 粘贴...")
-                b1, b2 = st.columns([1, 3])
-                b1.button("🗑️", key=f"clr_{i}", on_click=clear_text_callback, args=(input_key,), use_container_width=True)
+                st.text_area("原始文案", height=200, key=input_key, label_visibility="collapsed", placeholder="💡在此按 Ctrl+V 粘贴提取的文案...")
+                
+                b1, b2 = st.columns([1, 2.5])
+                # 次级按钮
+                b1.button("🗑️ 清空", key=f"clr_{i}", on_click=clear_text_callback, args=(input_key,), use_container_width=True)
+                # 次级按钮
                 if b2.button(f"⚡ 仅生成 #{i}", key=f"btn_{i}", use_container_width=True):
                     val = st.session_state.get(input_key, "")
                     if val:
                         with st.spinner("生成中..."):
                             st.session_state['results'][i] = rewrite_logic(val)
                             st.rerun()
+            
+            # 右侧：结果区 (美化后的空状态)
             with c2:
                 res_val = st.session_state['results'].get(i, "")
                 if res_val:
                     st.code(res_val, language='text')
                     st.toast(f"#{i} 已生成，可复制", icon="🎉")
                 else:
-                    st.markdown("<div style='color:#ccc; text-align:center; line-height:180px;'>等待生成...</div>", unsafe_allow_html=True)
+                    # 使用 HTML/CSS 渲染美观的空状态
+                    st.markdown("""
+                    <div class="empty-state-box">
+                        <div style="font-size: 24px;">⏳</div>
+                        <div>等待指令...</div>
+                        <div style="font-size: 12px; color: #cbd5e1;">Input content to generate</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
 # --- B. 别名创建 ---
 def page_alias_creation():

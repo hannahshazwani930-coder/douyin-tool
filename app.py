@@ -4,44 +4,24 @@ import time
 from concurrent.futures import ThreadPoolExecutor 
 
 # ==========================================
-# 🎨 0. 全局 UI 与 CSS 配置
+# 🎨 0. 全局 UI 配置
 # ==========================================
 st.set_page_config(page_title="抖音爆款工场 Pro", layout="wide", page_icon="💠")
 
-# 注入 CSS：美化侧边栏、按钮和字体
+# 注入 CSS
 st.markdown("""
 <style>
-    /* 全局字体 */
     .stApp { font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, Arial, sans-serif; }
-    
-    /* 侧边栏美化 */
-    [data-testid="stSidebar"] {
-        background-color: #f0f2f6;
-        border-right: 1px solid #e0e0e0;
-    }
-    
-    /* 标题样式 */
+    [data-testid="stSidebar"] { background-color: #f0f2f6; border-right: 1px solid #e0e0e0; }
     h1, h2, h3 { color: #2C3E50; font-weight: 700 !important; }
-    
-    /* 按钮美化 */
-    div.stButton > button { 
-        border-radius: 8px; 
-        font-weight: 600; 
-        transition: all 0.3s;
-    }
-    
-    /* 结果框代码块样式优化 */
+    div.stButton > button { border-radius: 8px; font-weight: 600; transition: all 0.3s; }
     .stCode { font-size: 1.1em; }
-    
-    /* 卡片容器样式 */
     [data-testid="stVerticalBlockBorderWrapper"] {
         border-radius: 12px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         background-color: white;
         padding: 20px;
     }
-    
-    /* 暗黑模式适配 */
     @media (prefers-color-scheme: dark) {
         [data-testid="stVerticalBlockBorderWrapper"] { background-color: #262730; }
         [data-testid="stSidebar"] { background-color: #1e1e1e; border-right: 1px solid #333; }
@@ -51,7 +31,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 🔐 1. 登录与安全系统
+# 🔐 1. 登录与安全系统 (修复核心)
 # ==========================================
 
 PASSWORD = "taoge888"
@@ -72,6 +52,7 @@ def get_remote_ip():
         return "unknown_ip"
 
 def check_login():
+    # 1. 优先检查本地 Session 状态 (最快)
     if st.session_state.get('is_logged_in', False):
         return True
 
@@ -79,33 +60,47 @@ def check_login():
     current_time = time.time()
     login_cache = get_login_cache()
     
+    # 2. 检查 IP 缓存 (48小时免密)
     if user_ip in login_cache and (current_time - login_cache[user_ip] < 172800):
         st.session_state['is_logged_in'] = True 
         return True 
         
-    # --- 登录界面 ---
-    st.markdown("<br><br><br>", unsafe_allow_html=True) 
-    c1, c2, c3 = st.columns([1, 1.5, 1])
-    with c2:
-        with st.container(border=True):
-            st.markdown("<h2 style='text-align: center;'>💠 爆款工场 Pro</h2>", unsafe_allow_html=True)
-            st.info("🔑 获取密码请联系微信：TG777188", icon="💬")
-            
-            with st.form("login_form"):
-                pwd = st.text_input("请输入会员密码", type="password")
-                submitted = st.form_submit_button("🚀 立即解锁", type="primary", use_container_width=True)
+    # --- 登录界面 (使用占位符清空模式) ---
+    login_container = st.empty() # 创建一个占位符
+    
+    with login_container.container():
+        st.markdown("<br><br><br>", unsafe_allow_html=True) 
+        c1, c2, c3 = st.columns([1, 1.5, 1])
+        with c2:
+            with st.container(border=True):
+                st.markdown("<h2 style='text-align: center;'>💠 爆款工场 Pro</h2>", unsafe_allow_html=True)
+                st.info("🔑 获取密码请联系微信：TG777188", icon="💬")
                 
+                # 表单逻辑
+                with st.form("login_form"):
+                    pwd = st.text_input("请输入会员密码", type="password")
+                    # 这里的按钮只是提交表单
+                    submitted = st.form_submit_button("🚀 立即解锁", type="primary", use_container_width=True)
+                
+                # 逻辑判断放在表单外面或紧接着表单
                 if submitted:
                     if pwd == PASSWORD:
+                        # 1. 记录状态
                         login_cache[user_ip] = current_time 
                         st.session_state['is_logged_in'] = True 
-                        st.toast("验证成功！欢迎回来", icon="✅")
-                        time.sleep(0.5)
+                        # 2. 提示成功
+                        st.success("✅ 验证成功！正在进入系统...")
+                        # 3. 清空登录界面
+                        login_container.empty()
+                        # 4. 强制刷新
                         st.rerun()
                     else:
-                        st.error("❌ 密码错误")
+                        st.error("❌ 密码错误，请重试")
+    
+    # 如果没登录，返回 False，程序会在下面停止
     return False
 
+# 🛑 如果未登录，直接停止后续代码运行
 if not check_login():
     st.stop()
 
@@ -125,7 +120,7 @@ client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
 # 🧩 3. 功能模块函数化
 # ==========================================
 
-# --- 功能 A: 文案改写 (五路并发) ---
+# --- 功能 A: 文案改写 ---
 def page_rewrite():
     st.markdown("## ⚡ 爆款文案改写中台")
     st.caption("五路并发架构 | 自动清洗杂质 | 40秒黄金完播率模型")
@@ -193,3 +188,119 @@ def page_rewrite():
                 res_val = st.session_state['results'].get(i, "")
                 if res_val:
                     st.code(res_val, language='text')
+                    st.toast(f"#{i} 已生成，可复制", icon="🎉")
+                else:
+                    st.info("等待生成...", icon="⏳")
+
+# --- 功能 B: 别名创建 ---
+def page_alias_creation():
+    st.markdown("## 🎭 剧名别名生成")
+    st.caption("为短剧/小说生成高转化率的推广别名，防屏蔽、增点击、做矩阵。")
+    
+    with st.container(border=True):
+        c1, c2 = st.columns([2, 1])
+        with c1:
+            original_name = st.text_input("🎬 原剧名/原书名", placeholder="例如：霸道总裁爱上我")
+        with c2:
+            count = st.slider("生成数量", min_value=5, max_value=20, value=10)
+            
+        tags = st.multiselect("🏷️ 强化元素 (可多选)", ["高甜", "复仇", "逆袭", "悬疑", "虐恋", "豪门"], default=["逆袭", "高甜"])
+        
+        if st.button("🚀 生成推广别名", type="primary", use_container_width=True):
+            if not original_name:
+                st.toast("请先输入原名！", icon="🛑")
+            else:
+                tag_str = "、".join(tags)
+                prompt = f"""
+                你是一个短剧/小说推广专家。请将原名《{original_name}》改写为 {count} 个用于“拉新推广”的爆款别名。
+                策略：加入“{tag_str}”元素，去原名化，直击下沉市场痛点。
+                只输出别名列表，一行一个，不要带序号。
+                """
+                try:
+                    with st.spinner("正在构思爆款别名..."):
+                        res = client.chat.completions.create(
+                            model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.4
+                        )
+                        st.session_state['alias_result'] = res.choices[0].message.content
+                except Exception as e:
+                    st.error(str(e))
+
+    if 'alias_result' in st.session_state:
+        st.markdown("### ✨ 推荐别名列表")
+        st.info("💡 提示：这些名字专为“拉新”设计，点击右上角复制，直接用于视频标题或评论区引导。")
+        st.code(st.session_state['alias_result'], language='text')
+
+# --- 功能 C: 账号起名 ---
+def page_naming():
+    st.markdown("## 🏷️ 爆款账号/IP 起名大师")
+    st.caption("基于平台算法逻辑，生成高辨识度、易记忆、带人设的名称。")
+    
+    with st.container(border=True):
+        c1, c2 = st.columns(2)
+        with c1:
+            niche = st.selectbox("🎯 赛道/领域", ["短剧推广", "小说推文", "口播知识", "情感鸡汤", "带货测评", "其他"])
+        with c2:
+            style = st.selectbox("🎨 风格偏好", ["高冷专业风", "接地气/搞笑", "文艺有内涵", "简单粗暴", "神秘反差"])
+            
+        keywords = st.text_input("🔑 核心关键词 (选填)", placeholder="输入你想包含的字...")
+        
+        if st.button("🎲 生成 10 个爆款名", type="primary", use_container_width=True):
+            prompt = f"""
+            请为【{niche}】赛道的账号生成10个爆款名字。
+            风格：{style}。包含关键词：{keywords}。
+            要求：记忆点强，符合平台调性。
+            输出格式：名字 + 一句话解释。
+            """
+            try:
+                with st.spinner("正在头脑风暴中..."):
+                    res = client.chat.completions.create(
+                        model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.5
+                    )
+                    st.session_state['naming_result'] = res.choices[0].message.content
+            except Exception as e:
+                st.error(str(e))
+
+    if 'naming_result' in st.session_state:
+        st.markdown("### ✨ 生成结果")
+        st.code(st.session_state['naming_result'], language='text')
+
+# --- 功能 D: 个人中心 ---
+def page_account():
+    st.markdown("## 👤 我的账户")
+    with st.container(border=True):
+        st.metric("当前状态", "VIP 会员", delta="已激活")
+        st.text_input("绑定 IP", value=get_remote_ip(), disabled=True)
+        st.markdown("---")
+        st.markdown("**专属客服微信**：`TG777188`")
+        st.caption("如需续费或增加并发额度，请联系客服。")
+
+# ==========================================
+# 🧭 4. 侧边栏导航与主控逻辑
+# ==========================================
+
+with st.sidebar:
+    st.markdown("### 💠 爆款工场 Pro")
+    st.markdown(f"<small>IP: {get_remote_ip()}</small>", unsafe_allow_html=True)
+    st.markdown("---")
+    
+    menu_option = st.radio(
+        "功能导航",
+        ["📝 文案改写", "🎭 创建别名", "🏷️ 账号起名", "👤 我的账户"],
+        index=0,
+        label_visibility="collapsed"
+    )
+    
+    st.markdown("---")
+    with st.container(border=True):
+        st.markdown("#### 📢 公告")
+        st.caption("新增功能：\n✨ 剧名/书名智能改写\n✨ 一键生成推广矩阵名")
+
+# 路由分发
+if menu_option == "📝 文案改写":
+    page_rewrite()
+elif menu_option == "🎭 创建别名":
+    page_alias_creation()
+elif menu_option == "🏷️ 账号起名":
+    page_naming()
+elif menu_option == "👤 我的账户":
+    page_account()

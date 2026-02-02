@@ -131,3 +131,12 @@ for i in range(1, 6):
                         st.session_state['results'][i] = result
                         st.rerun()
                 else:
+                    st.warning("⚠️ 请先粘贴内容！")
+
+        # --- 右边：输出区 ---
+        with col2:
+            st.markdown(f"**📤 爆款文案 #{i}**")
+            if i in st.session_state['results']:
+                st.text_area(f"结果 #{i}", value=st.session_state['results'][i], height=285, key=f"output_{i}")
+            else:
+                st.info("等待生成...")

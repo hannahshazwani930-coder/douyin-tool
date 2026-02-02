@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 注入 CSS：极致 UI 美化版
+# 注入 CSS：修复文字颜色问题 + 极致 UI
 st.markdown("""
 <style>
     /* 1. 全局字体与背景 */
@@ -21,10 +21,10 @@ st.markdown("""
     
     .stApp { 
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
-        background-color: #f8fafc; /* 极简冷灰背景 */
+        background-color: #f8fafc; 
     }
     
-    /* 2. 布局容器：90% 宽度 + 悬浮白纸效果 */
+    /* 2. 布局容器 */
     div.block-container {
         max-width: 90% !important;
         min-width: 90% !important;
@@ -32,109 +32,91 @@ st.markdown("""
         padding: 3rem !important;
         margin: 2rem auto !important;
         border-radius: 16px;
-        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); /* 更柔和的高级阴影 */
+        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); 
     }
 
-    /* 3. 侧边栏：磨砂质感 */
+    /* 3. 侧边栏 */
     [data-testid="stSidebar"] { 
         background-color: #ffffff; 
         border-right: 1px solid #f1f5f9; 
     }
     
-    /* 4. 工作台卡片：增加顶部高亮条 */
+    /* 4. 工作台卡片 */
     [data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
         border-radius: 12px;
         padding: 24px;
         position: relative;
-        overflow: hidden;
         transition: all 0.3s ease;
     }
-    /* 鼠标悬停时卡片微微上浮 */
     [data-testid="stVerticalBlockBorderWrapper"]:hover {
         border-color: #cbd5e1;
         box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
     
-    /* 5. 标题美化 */
-    h1 { 
-        color: #0f172a; 
-        font-weight: 800 !important; 
-        letter-spacing: -0.02em; 
-        margin-bottom: 1.5rem !important;
-    }
-    h2, h3 { color: #334155; font-weight: 700 !important; }
+    /* 5. 标题 */
+    h1 { color: #0f172a !important; font-weight: 800 !important; margin-bottom: 1.5rem !important; }
+    h2, h3, h4, h5 { color: #334155 !important; font-weight: 700 !important; }
+    p, label, .stMarkdown { color: #475569 !important; }
     
-    /* 6. 按钮极致美化 🔥 */
-    
-    /* (A) 通用按钮形态 */
+    /* 6. 按钮极致美化 */
     div.stButton > button {
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 14px;
-        height: 40px;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 8px; font-weight: 600; height: 40px; transition: all 0.2s;
     }
-
-    /* (B) 次级按钮（清空/单条生成）：平时是高级灰，鼠标放上去变蓝 */
+    /* 次级按钮 */
     div.stButton > button:not([kind="primary"]) {
-        background-color: #f1f5f9; /* 浅灰底 */
-        color: #475569;            /* 深灰字 */
-        border: 1px solid transparent;
+        background-color: #f1f5f9; color: #475569 !important; border: 1px solid transparent;
     }
     div.stButton > button:not([kind="primary"]):hover {
-        background-color: #e0f2fe; /* 淡蓝底 */
-        color: #0284c7;            /* 亮蓝字 */
-        border-color: #bae6fd;     /* 蓝边框 */
-        transform: translateY(-1px);
+        background-color: #e0f2fe; color: #0284c7 !important; border-color: #bae6fd;
     }
-
-    /* (C) 主按钮（一键并发）：极光蓝渐变 */
+    /* 主按钮 */
     div.stButton > button[kind="primary"] {
         background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-        border: none;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); /* 弥散光影 */
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        color: white !important;
     }
     div.stButton > button[kind="primary"]:hover {
-        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
-        transform: translateY(-1px);
-    }
-    div.stButton > button[kind="primary"]:active {
-        transform: translateY(0);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); transform: translateY(-1px);
     }
 
-    /* 7. 输入框：聚焦光晕 */
+    /* 7. 输入框修复 🔥核心修复代码🔥 */
+    /* 强制指定文字颜色为深色，背景为白色，覆盖深色模式的默认设置 */
     .stTextArea textarea, .stTextInput input {
         border-radius: 8px;
         border: 1px solid #cbd5e1;
-        background-color: #f8fafc;
+        background-color: #f8fafc !important; /* 强制白底 */
+        color: #1e293b !important;            /* 强制黑字 */
+        caret-color: #2563eb;                 /* 蓝色光标 */
+        font-weight: 500;
+        -webkit-text-fill-color: #1e293b !important; /* 兼容 Safari */
         transition: border 0.2s, box-shadow 0.2s;
     }
     .stTextArea textarea:focus, .stTextInput input:focus {
-        background-color: #ffffff;
+        background-color: #ffffff !important;
         border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); /* 蓝色柔光 */
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
     }
+    /* 输入框的 placeholder 提示文字颜色 */
+    ::placeholder { color: #94a3b8 !important; opacity: 1; }
 
-    /* 8. 空状态占位符（右侧等待区）美化 🔥 */
+    /* 8. 空状态占位符 */
     .empty-state-box {
         height: 200px;
         background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc);
-        background-position: 0 0, 10px 10px;
         background-size: 20px 20px;
-        border: 2px dashed #e2e8f0;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #94a3b8;
-        font-weight: 500;
-        flex-direction: column;
-        gap: 10px;
+        border: 2px dashed #e2e8f0; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        color: #94a3b8; font-weight: 500; flex-direction: column; gap: 10px;
     }
 
-    /* 登录框间距 */
+    /* 选题卡片 */
+    .idea-card {
+        background-color: #f0f9ff; border-left: 4px solid #0ea5e9;
+        padding: 15px; margin-bottom: 10px; border-radius: 4px; color: #334155;
+    }
+
     .login-spacer { height: 10vh; }
     
 </style>
@@ -265,7 +247,7 @@ def page_rewrite():
                     status.update(label="✅ 完成！", state="complete", expanded=False)
                     st.rerun()
     with col_tips:
-        st.info("💡 操作指南：将不同文案粘贴到下方 1-5 号窗口，点击左侧 **【蓝色按钮】** 同时处理。", icon="📝")
+        st.info("💡 指南：粘贴文案到下方窗口，点击左侧 **【蓝色按钮】** 同时处理。", icon="📝")
 
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -274,36 +256,28 @@ def page_rewrite():
         with st.container(border=True):
             st.markdown(f"#### 🎬 工作台 #{i}")
             c1, c2 = st.columns([1, 1], gap="large")
-            
-            # 左侧：输入区
             with c1:
                 input_key = f"input_{i}"
                 st.text_area("原始文案", height=200, key=input_key, label_visibility="collapsed", placeholder="💡在此按 Ctrl+V 粘贴提取的文案...")
-                
                 b1, b2 = st.columns([1, 2.5])
-                # 次级按钮
                 b1.button("🗑️ 清空", key=f"clr_{i}", on_click=clear_text_callback, args=(input_key,), use_container_width=True)
-                # 次级按钮
                 if b2.button(f"⚡ 仅生成 #{i}", key=f"btn_{i}", use_container_width=True):
                     val = st.session_state.get(input_key, "")
                     if val:
                         with st.spinner("生成中..."):
                             st.session_state['results'][i] = rewrite_logic(val)
                             st.rerun()
-            
-            # 右侧：结果区 (美化后的空状态)
             with c2:
                 res_val = st.session_state['results'].get(i, "")
                 if res_val:
                     st.code(res_val, language='text')
                     st.toast(f"#{i} 已生成，可复制", icon="🎉")
                 else:
-                    # 使用 HTML/CSS 渲染美观的空状态
                     st.markdown("""
                     <div class="empty-state-box">
                         <div style="font-size: 24px;">⏳</div>
                         <div>等待指令...</div>
-                        <div style="font-size: 12px; color: #cbd5e1;">Input content to generate</div>
+                        <div style="font-size: 12px; color: #94a3b8;">Input content to generate</div>
                     </div>
                     """, unsafe_allow_html=True)
 
@@ -367,7 +341,51 @@ def page_naming():
     if 'naming_result' in st.session_state:
         st.code(st.session_state['naming_result'], language='text')
 
-# --- D. 个人中心 ---
+# --- D. 选题灵感库 ---
+def page_brainstorm():
+    st.markdown("## 💡 爆款选题灵感库")
+    st.caption("文案枯竭？输入关键词，AI 帮你生成 10 个“必火”的选题方向。")
+    st.markdown("---")
+
+    with st.container(border=True):
+        c1, c2 = st.columns([3, 1])
+        with c1:
+            topic = st.text_input("🔍 输入你的赛道/关键词", placeholder="例如：职场、美妆、减肥、副业...")
+        with c2:
+            st.write("") 
+            st.write("") 
+            generate_btn = st.button("🧠 帮我想选题", type="primary", use_container_width=True)
+
+    if generate_btn and topic:
+        prompt = f"""
+        我是做【{topic}】领域的。现在文案枯竭，请帮我生成 10 个绝对会火的爆款选题。
+        
+        【要求】：
+        1. 必须反直觉，打破认知。
+        2. 必须直击痛点，引发焦虑或强烈好奇。
+        3. 格式：
+        1. 标题：xxxx | 钩子：xxxx
+        2. 标题：xxxx | 钩子：xxxx
+        """
+        try:
+            with st.spinner("AI 正在疯狂头脑风暴..."):
+                res = client.chat.completions.create(
+                    model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.5
+                )
+                st.session_state['brainstorm_result'] = res.choices[0].message.content
+        except Exception as e: st.error(str(e))
+
+    if 'brainstorm_result' in st.session_state:
+        st.markdown("### ✨ 推荐选题")
+        st.info("💡 看到喜欢的，直接复制到【文案改写】里让 AI 帮你扩写！")
+        
+        ideas = st.session_state['brainstorm_result'].split('\n')
+        for idea in ideas:
+            if idea.strip():
+                st.markdown(f"<div class='idea-card'>{idea}</div>", unsafe_allow_html=True)
+
+
+# --- E. 个人中心 ---
 def page_account():
     st.markdown("## 👤 我的账户")
     st.markdown("---")
@@ -392,15 +410,16 @@ with st.sidebar:
     
     menu_option = st.radio(
         "导航",
-        ["📝 文案改写", "🎭 创建别名", "🏷️ 账号起名", "👤 我的账户"],
+        ["📝 文案改写", "💡 爆款选题库", "🎭 创建别名", "🏷️ 账号起名", "👤 我的账户"],
         index=0, label_visibility="collapsed"
     )
     
     st.markdown("---")
     with st.container(border=True):
-        st.info("已升级至 Pro 内核，速度提升 500%。", icon="🚀")
+        st.info("系统已优化：彻底修复文字输入看不见的问题。", icon="✅")
 
 if menu_option == "📝 文案改写": page_rewrite()
+elif menu_option == "💡 爆款选题库": page_brainstorm()
 elif menu_option == "🎭 创建别名": page_alias_creation()
 elif menu_option == "🏷️ 账号起名": page_naming()
 elif menu_option == "👤 我的账户": page_account()

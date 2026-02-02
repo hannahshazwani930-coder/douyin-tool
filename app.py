@@ -8,58 +8,58 @@ from concurrent.futures import ThreadPoolExecutor
 # ==========================================
 st.set_page_config(
     page_title="抖音爆款工场 Pro", 
-    layout="wide", # 保持宽屏模式，但用 CSS 勒住宽度
+    layout="wide",
     page_icon="💠",
     initial_sidebar_state="expanded"
 )
 
-# 注入 CSS：强制 80% 宽度 + 居中
-# 使用 max-width: 80% !important 强制覆盖系统默认样式
+# 注入 CSS：暴力强制居中 + 黄金宽度 (1000px)
+# 这次使用了 div.block-container，这是 Streamlit 内容区的核心容器
 st.markdown("""
 <style>
-    /* 全局字体 */
+    /* 1. 强制锁定内容宽度 */
+    div.block-container {
+        max-width: 1000px !important;  /* 核心：限制最大宽度为 1000px */
+        padding-top: 2rem !important;
+        padding-bottom: 5rem !important;
+        margin: auto !important;       /* 核心：自动居中 */
+    }
+
+    /* 2. 全局背景与字体 */
     .stApp { 
         font-family: 'Helvetica Neue', Arial, sans-serif; 
-        background-color: #f4f6f9; /* 背景色调稍微深一点，突出中间的卡片 */
+        background-color: #f4f6f9; /* 高级灰背景 */
     }
     
-    /* 🔥 核心修复：强制内容区域宽度为 80% 并居中 🔥 */
-    .main .block-container {
-        max-width: 80% !important; 
-        padding-top: 2rem;
-        padding-bottom: 5rem;
-        margin-left: auto;
-        margin-right: auto;
-    }
-    
-    /* 侧边栏美化 */
+    /* 3. 侧边栏美化 */
     [data-testid="stSidebar"] { 
         background-color: #ffffff; 
         border-right: 1px solid #e0e0e0; 
     }
     
-    /* 卡片容器：白色背景 + 阴影 */
+    /* 4. 卡片容器美化 */
     [data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff; 
         border: 1px solid #e0e0e0; 
-        border-radius: 10px; 
+        border-radius: 12px; 
         box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
-        padding: 24px;
+        padding: 30px; /* 增加内边距，显得更透气 */
     }
     
-    /* 标题美化 */
-    h1 { color: #1e293b; font-weight: 800 !important; letter-spacing: -0.5px; }
+    /* 5. 标题与排版 */
+    h1 { color: #1e293b; font-weight: 800 !important; text-align: center; }
     h2, h3 { color: #334155; font-weight: 700 !important; }
     
-    /* 按钮美化 */
+    /* 6. 按钮美化 */
     div.stButton > button {
-        border-radius: 6px; 
+        border-radius: 8px; 
         font-weight: 600; 
         border: none; 
+        height: 45px; /* 按钮加高，更有质感 */
         box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
         transition: all 0.2s;
     }
-    div.stButton > button:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    div.stButton > button:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.1); }
     
     /* 主按钮颜色 */
     div.stButton > button[kind="primary"] {
@@ -67,9 +67,9 @@ st.markdown("""
         border: none;
     }
 
-    /* 输入框 */
+    /* 7. 输入框优化 */
     .stTextArea textarea, .stTextInput input {
-        border-radius: 6px; 
+        border-radius: 8px; 
         border: 1px solid #cbd5e1; 
         background-color: #ffffff;
     }
@@ -78,8 +78,8 @@ st.markdown("""
         box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
     }
     
-    /* 登录框垂直居中辅助 */
-    .login-spacer { height: 10vh; }
+    /* 8. 登录框垂直居中 */
+    .login-spacer { height: 12vh; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -120,8 +120,8 @@ def check_login():
     login_placeholder = st.empty()
     with login_placeholder.container():
         st.markdown("<div class='login-spacer'></div>", unsafe_allow_html=True)
-        # 这里的 columns 也是为了让登录框更聚拢
-        c1, c2, c3 = st.columns([1, 1, 1])
+        # 将列比例调整为 [1, 2, 1]，让登录框更宽一点，大气一点
+        c1, c2, c3 = st.columns([1, 2, 1])
         with c2:
             with st.container(border=True):
                 st.markdown("<h2 style='text-align: center; margin-bottom: 20px;'>💠 爆款工场 Pro</h2>", unsafe_allow_html=True)
@@ -129,6 +129,8 @@ def check_login():
                 
                 with st.form("login_form"):
                     pwd = st.text_input("请输入会员密码", type="password", placeholder="******")
+                    # 加一点空行
+                    st.markdown("<br>", unsafe_allow_html=True)
                     submitted = st.form_submit_button("🚀 立即解锁", type="primary", use_container_width=True)
                 
                 if submitted:

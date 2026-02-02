@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 注入 CSS：修复文字颜色问题 + 极致 UI
+# 注入 CSS：修复按钮文字颜色 + 极致 UI
 st.markdown("""
 <style>
     /* 1. 全局字体与背景 */
@@ -55,42 +55,54 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
     
-    /* 5. 标题 */
+    /* 5. 标题与文字颜色控制 */
     h1 { color: #0f172a !important; font-weight: 800 !important; margin-bottom: 1.5rem !important; }
     h2, h3, h4, h5 { color: #334155 !important; font-weight: 700 !important; }
-    p, label, .stMarkdown { color: #475569 !important; }
+    
+    /* 普通文本颜色 (但不影响按钮) */
+    .stMarkdown p, label { color: #475569 !important; }
     
     /* 6. 按钮极致美化 */
     div.stButton > button {
         border-radius: 8px; font-weight: 600; height: 40px; transition: all 0.2s;
     }
-    /* 次级按钮 */
+    
+    /* (A) 次级按钮 (灰色) */
     div.stButton > button:not([kind="primary"]) {
-        background-color: #f1f5f9; color: #475569 !important; border: 1px solid transparent;
+        background-color: #f1f5f9; 
+        color: #475569 !important; /* 深灰字 */
+        border: 1px solid transparent;
     }
     div.stButton > button:not([kind="primary"]):hover {
-        background-color: #e0f2fe; color: #0284c7 !important; border-color: #bae6fd;
+        background-color: #e0f2fe; 
+        color: #0284c7 !important; /* 悬浮变蓝 */
+        border-color: #bae6fd;
     }
-    /* 主按钮 */
+    
+    /* (B) 主按钮 (蓝色) - 🔥核心修复🔥 */
     div.stButton > button[kind="primary"] {
         background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-        color: white !important;
+        border: none;
+    }
+    /* 强制主按钮内的所有文字变白 */
+    div.stButton > button[kind="primary"] * {
+        color: #ffffff !important; 
     }
     div.stButton > button[kind="primary"]:hover {
-        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); 
+        transform: translateY(-1px);
     }
 
-    /* 7. 输入框修复 🔥核心修复代码🔥 */
-    /* 强制指定文字颜色为深色，背景为白色，覆盖深色模式的默认设置 */
+    /* 7. 输入框修复 */
     .stTextArea textarea, .stTextInput input {
         border-radius: 8px;
         border: 1px solid #cbd5e1;
-        background-color: #f8fafc !important; /* 强制白底 */
-        color: #1e293b !important;            /* 强制黑字 */
-        caret-color: #2563eb;                 /* 蓝色光标 */
+        background-color: #f8fafc !important; 
+        color: #1e293b !important;            
+        caret-color: #2563eb;                 
         font-weight: 500;
-        -webkit-text-fill-color: #1e293b !important; /* 兼容 Safari */
+        -webkit-text-fill-color: #1e293b !important;
         transition: border 0.2s, box-shadow 0.2s;
     }
     .stTextArea textarea:focus, .stTextInput input:focus {
@@ -98,7 +110,6 @@ st.markdown("""
         border-color: #3b82f6;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
     }
-    /* 输入框的 placeholder 提示文字颜色 */
     ::placeholder { color: #94a3b8 !important; opacity: 1; }
 
     /* 8. 空状态占位符 */

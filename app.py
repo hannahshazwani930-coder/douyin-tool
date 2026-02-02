@@ -6,7 +6,7 @@ import io
 import os
 import requests
 import base64
-import streamlit.components.v1 as components # 用于注入 JS 复制功能
+import streamlit.components.v1 as components # 关键组件
 
 # ==========================================
 # 0. 核心配置
@@ -18,7 +18,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 注入 CSS：极致 UI + 商业化引导 + 教程样式
+# 注入 CSS：全局样式美化
 st.markdown("""
 <style>
     /* 1. 全局字体与背景 */
@@ -63,63 +63,28 @@ st.markdown("""
     /* 5. 标题与文字颜色控制 */
     h1 { color: #0f172a !important; font-weight: 800 !important; margin-bottom: 1.5rem !important; }
     h2, h3, h4, h5 { color: #334155 !important; font-weight: 700 !important; }
-    
-    /* 普通文本颜色 */
     .stMarkdown p, label { color: #475569 !important; }
     
-    /* 6. 按钮极致美化 */
+    /* 6. Streamlit 原生按钮美化 */
     div.stButton > button {
         border-radius: 8px; font-weight: 600; height: 40px; transition: all 0.2s;
     }
-    
-    /* (A) 次级按钮 */
     div.stButton > button:not([kind="primary"]) {
-        background-color: #f1f5f9; 
-        color: #475569 !important;
-        border: 1px solid transparent;
+        background-color: #f1f5f9; color: #475569 !important; border: 1px solid transparent;
     }
     div.stButton > button:not([kind="primary"]):hover {
-        background-color: #e0f2fe; 
-        color: #0284c7 !important;
-        border-color: #bae6fd;
+        background-color: #e0f2fe; color: #0284c7 !important; border-color: #bae6fd;
     }
-    
-    /* (B) 主按钮 */
     div.stButton > button[kind="primary"] {
         background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         border: none;
     }
-    div.stButton > button[kind="primary"] * {
-        color: #ffffff !important; 
-    }
+    div.stButton > button[kind="primary"] * { color: #ffffff !important; }
     div.stButton > button[kind="primary"]:hover {
-        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); 
-        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); transform: translateY(-1px);
     }
     
-    /* (C) 导流跳转按钮 */
-    a.redirect-btn {
-        display: block;
-        width: 100%;
-        text-align: center;
-        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-        color: white !important;
-        padding: 16px;
-        border-radius: 12px;
-        text-decoration: none;
-        font-size: 18px;
-        font-weight: 700;
-        margin-top: 10px;
-        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
-        transition: transform 0.2s;
-        border: 1px solid #7c3aed;
-    }
-    a.redirect-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
-    }
-
     /* 7. 输入框修复 */
     .stTextArea textarea, .stTextInput input {
         border-radius: 8px;
@@ -136,74 +101,133 @@ st.markdown("""
         border-color: #3b82f6;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
     }
-    ::placeholder { color: #94a3b8 !important; opacity: 1; }
-
-    /* 8. 教程样式美化 */
-    .tutorial-box {
-        background-color: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 20px;
-        margin-top: 25px;
-    }
-    .tutorial-step {
-        display: flex;
-        align-items: center;
-        margin-bottom: 15px; 
-        font-size: 15px;
-        color: #334155;
-        line-height: 1.5;
-    }
-    .step-num {
-        background-color: #e0f2fe;
-        color: #0284c7;
-        font-weight: bold;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 12px;
-        flex-shrink: 0;
-    }
-    .prompt-block {
-        background-color: #1e293b;
-        color: #cbd5e1;
-        padding: 15px;
-        border-radius: 8px;
-        font-family: monospace;
-        margin-top: 10px;
-        border-left: 4px solid #3b82f6;
-        font-size: 14px;
-    }
     
+    /* 8. 辅助样式 */
+    .empty-state-box { height: 200px; background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc); background-size: 20px 20px; border: 2px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 500; flex-direction: column; gap: 10px; }
+    a.redirect-btn { display: block; width: 100%; text-align: center; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white !important; padding: 16px; border-radius: 12px; text-decoration: none; font-size: 18px; font-weight: 700; margin-top: 10px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); transition: transform 0.2s; border: 1px solid #7c3aed; }
+    a.redirect-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4); }
+    .tutorial-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-top: 25px; }
+    .tutorial-step { display: flex; align-items: center; margin-bottom: 15px; font-size: 15px; color: #334155; line-height: 1.5; }
+    .step-num { background-color: #e0f2fe; color: #0284c7; font-weight: bold; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0; }
+    .prompt-block { background-color: #1e293b; color: #cbd5e1; padding: 15px; border-radius: 8px; font-family: monospace; margin-top: 10px; border-left: 4px solid #3b82f6; font-size: 14px; }
     .login-spacer { height: 10vh; }
-    
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 核心功能：JS 剪贴板注入
+# ⚡ 核心功能：前端 HTML 复制按钮组件
 # ==========================================
-# 这是一个黑科技函数，用于生成一个看不见的 iframe 来执行复制操作
-def copy_to_clipboard_js(text):
-    # 转义文本中的特殊字符，防止 JS 报错
-    text = text.replace('\n', '\\n').replace('"', '\\"').replace("'", "\\'")
-    js_code = f"""
-    <script>
-    function copyToClipboard(text) {{
-        const el = document.createElement('textarea');
-        el.value = text;
-        document.body.appendChild(el);
-        el.select();
-        document.execCommand('copy');
-        document.body.removeChild(el);
-    }}
-    copyToClipboard("{text}");
-    </script>
+def render_copy_button_html(text, unique_key):
     """
-    return js_code
+    生成一个完全由 HTML/CSS/JS 控制的复制按钮。
+    这绕过了 Streamlit 的 Python 重载机制，直接在浏览器端操作剪贴板。
+    """
+    # 对文本进行转义，防止 JS 语法错误
+    safe_text = text.replace("`", "\`").replace("${", "\${").replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"')
+    
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap');
+            body {{ margin: 0; padding: 0; background: transparent; overflow: hidden; }}
+            
+            /* 模仿 Streamlit 原生 Primary 按钮样式 */
+            .copy-btn {{
+                width: 100%;
+                height: 42px;
+                background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-family: 'Inter', sans-serif;
+                font-weight: 600;
+                font-size: 14px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }}
+            .copy-btn:hover {{
+                box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+                transform: translateY(-1px);
+            }}
+            .copy-btn:active {{
+                transform: translateY(0);
+                background: #1d4ed8;
+            }}
+            /* 成功状态 */
+            .copy-btn.success {{
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            }}
+        </style>
+    </head>
+    <body>
+        <button class="copy-btn" onclick="copyText(this)">
+            <span>📋 一键复制纯文本</span>
+        </button>
+
+        <script>
+            function copyText(btn) {{
+                const text = `{safe_text}`;
+                
+                // 优先使用现代 API
+                if (navigator.clipboard && window.isSecureContext) {{
+                    navigator.clipboard.writeText(text).then(() => {{
+                        showSuccess(btn);
+                    }}).catch(err => {{
+                        fallbackCopyText(text, btn);
+                    }});
+                }} else {{
+                    fallbackCopyText(text, btn);
+                }}
+            }}
+
+            // 兼容性方案 (针对没有 HTTPS 或旧浏览器)
+            function fallbackCopyText(text, btn) {{
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                
+                // 确保 textarea 不可见但可选中
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                textArea.style.top = "0";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {{
+                    const successful = document.execCommand('copy');
+                    if (successful) showSuccess(btn);
+                }} catch (err) {{
+                    console.error('Fallback: Oops, unable to copy', err);
+                    btn.innerText = "❌ 复制失败";
+                }}
+                
+                document.body.removeChild(textArea);
+            }}
+
+            function showSuccess(btn) {{
+                const originalText = btn.innerHTML;
+                btn.innerHTML = "<span>✅ 复制成功！</span>";
+                btn.classList.add("success");
+                
+                setTimeout(() => {{
+                    btn.innerHTML = originalText;
+                    btn.classList.remove("success");
+                }}, 2000);
+            }}
+        </script>
+    </body>
+    </html>
+    """
+    # 渲染组件，高度要刚好容纳按钮
+    components.html(html_code, height=50)
 
 # ==========================================
 # 1. 登录与安全系统
@@ -283,7 +307,7 @@ client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
 # 3. 功能模块
 # ==========================================
 
-# --- A. 文案改写 (带纯净复制) ---
+# --- A. 文案改写 (带前端JS复制) ---
 def page_rewrite():
     st.markdown("## ⚡ 爆款文案改写中台")
     st.caption("AI 驱动的五路并发架构 | 40秒黄金完播率模型")
@@ -352,15 +376,12 @@ def page_rewrite():
             with c2:
                 res_val = st.session_state['results'].get(i, "")
                 if res_val:
-                    # 🔥 核心修改：使用 TextArea 展示结果，而非 st.code 🔥
-                    # 这样更像一个编辑器，没有代码背景
+                    # 1. 结果显示框 (只读，纯文本)
                     st.text_area(f"结果 #{i}", value=res_val, height=200, label_visibility="collapsed", key=f"res_area_{i}")
                     
-                    # 🚀 纯净复制按钮
-                    if st.button(f"📋 复制文案 #{i}", key=f"copy_{i}", use_container_width=True):
-                        # 注入 JS 复制
-                        components.html(copy_to_clipboard_js(res_val), height=0)
-                        st.toast(f"✅ 第 {i} 条文案已复制到剪贴板！", icon="🎉")
+                    # 2. 🔥 注入前端 JS 复制按钮 (不刷新页面，极速) 🔥
+                    render_copy_button_html(res_val, f"copy_btn_{i}")
+                    
                 else:
                     st.markdown("""
                     <div class="empty-state-box">
@@ -370,7 +391,7 @@ def page_rewrite():
                     </div>
                     """, unsafe_allow_html=True)
 
-# --- B. 别名创建 (带纯净复制) ---
+# --- B. 别名创建 (带前端JS复制) ---
 def page_alias_creation():
     st.markdown("## 🎭 剧名别名生成")
     st.caption("防屏蔽 | 矩阵分发专用")
@@ -405,15 +426,12 @@ def page_alias_creation():
         res_text = st.session_state['alias_result']
         st.info("👇 别名列表已生成，点击下方按钮一键复制", icon="📋")
         
-        # 显示纯文本区域
         st.text_area("结果", value=res_text, height=300, label_visibility="collapsed")
         
-        # 复制按钮
-        if st.button("📋 一键复制全部别名", type="primary", use_container_width=True):
-            components.html(copy_to_clipboard_js(res_text), height=0)
-            st.toast("✅ 所有别名已复制！", icon="🎉")
+        # 前端复制按钮
+        render_copy_button_html(res_text, "alias_copy_btn")
 
-# --- C. 账号起名 (带纯净复制) ---
+# --- C. 账号起名 (带前端JS复制) ---
 def page_naming():
     st.markdown("## 🏷️ 账号/IP 起名大师")
     st.markdown("---")
@@ -438,11 +456,11 @@ def page_naming():
     if 'naming_result' in st.session_state:
         res_text = st.session_state['naming_result']
         st.text_area("结果", value=res_text, height=400, label_visibility="collapsed")
-        if st.button("📋 复制全部名字", type="primary", use_container_width=True):
-            components.html(copy_to_clipboard_js(res_text), height=0)
-            st.toast("✅ 已复制！", icon="🎉")
+        
+        # 前端复制按钮
+        render_copy_button_html(res_text, "name_copy_btn")
 
-# --- D. 选题灵感库 (带纯净复制) ---
+# --- D. 选题灵感库 (带前端JS复制) ---
 def page_brainstorm():
     st.markdown("## 💡 爆款选题灵感库")
     st.caption("文案枯竭？输入关键词，AI 帮你生成 10 个“必火”的选题方向。")
@@ -479,9 +497,9 @@ def page_brainstorm():
     if 'brainstorm_result' in st.session_state:
         res_text = st.session_state['brainstorm_result']
         st.text_area("灵感列表", value=res_text, height=400, label_visibility="collapsed")
-        if st.button("📋 复制所有选题", type="primary", use_container_width=True):
-            components.html(copy_to_clipboard_js(res_text), height=0)
-            st.toast("✅ 已复制！", icon="🎉")
+        
+        # 前端复制按钮
+        render_copy_button_html(res_text, "brain_copy_btn")
 
 
 # --- E. 海报生成 (跳转独立站导流版 + 精准教程) ---
@@ -505,9 +523,10 @@ def page_poster_gen():
             st.markdown("##### 第 1 步：复制专属邀请码")
             st.caption("注册时填写，可获赠额外算力点数")
             
-            # 邀请码复制
-            code_text = "5yzMbpxn"
-            st.code(code_text, language="text")
+            # 使用前端复制按钮来复制邀请码
+            invite_code = "5yzMbpxn"
+            st.text_input("邀请码", value=invite_code, disabled=True, label_visibility="collapsed")
+            render_copy_button_html(invite_code, "invite_code_btn")
             
         with c2:
             st.markdown("##### 第 2 步：前往生成")

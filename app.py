@@ -20,11 +20,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 🔑 管理员配置 (请确保你登录时使用这个手机号)
+# 🔑 管理员配置 (仅此账号可见后台)
 ADMIN_PHONE = "13065080569"
 ADMIN_INIT_PASSWORD = "ltren777188" 
 
-# 🔥 修改数据库文件名，强制生成新库，解决旧数据冲突 🔥
+# 数据库文件
 DB_FILE = 'saas_data_v2.db'
 
 # --- 数据库初始化 ---
@@ -32,27 +32,20 @@ def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     
-    # 1. 用户表
+    # 建表
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (phone TEXT PRIMARY KEY, password_hash TEXT, register_time TIMESTAMP,
                   last_login_ip TEXT, last_login_time TIMESTAMP)''')
-                  
-    # 2. 卡密表
     c.execute('''CREATE TABLE IF NOT EXISTS access_codes
                  (code TEXT PRIMARY KEY, duration_days INTEGER, activated_at TIMESTAMP, 
                   expire_at TIMESTAMP, status TEXT, create_time TIMESTAMP, bind_user TEXT)''')
-    
-    # 3. 反馈表
     c.execute('''CREATE TABLE IF NOT EXISTS feedbacks
                  (id INTEGER PRIMARY KEY AUTOINCREMENT, user_phone TEXT, content TEXT, 
                   reply TEXT, create_time TIMESTAMP, status TEXT)''')
-                  
-    # 4. 系统设置表
     c.execute('''CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)''')
     
-    # 🔥 核心修正：强制覆盖管理员账号，确保你能进后台 🔥
+    # 强制预设管理员
     admin_pwd_hash = hashlib.sha256(ADMIN_INIT_PASSWORD.encode()).hexdigest()
-    # 使用 REPLACE INTO，如果存在则更新，不存在则插入
     c.execute("REPLACE INTO users (phone, password_hash, register_time) VALUES (?, ?, ?)", 
               (ADMIN_PHONE, admin_pwd_hash, datetime.datetime.now()))
         
@@ -60,7 +53,7 @@ def init_db():
 
 init_db()
 
-# --- CSS 样式 ---
+# --- CSS 样式 (专业审美优化) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -69,30 +62,50 @@ st.markdown("""
     /* 容器 */
     div.block-container { max-width: 90% !important; background-color: #ffffff; padding: 3rem !important; border-radius: 16px; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); margin-bottom: 50px; }
     
-    /* 按钮 */
+    /* 按钮统一 */
     div.stButton > button { border-radius: 8px; font-weight: 600; height: 45px; transition: all 0.2s; width: 100%; }
     div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border: none; color: white !important; }
     div.stButton > button[kind="primary"]:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3); }
     
-    /* 底部版权栏 */
-    .footer-legal {
-        margin-top: 40px;
-        padding-top: 20px;
-        border-top: 1px solid #e2e8f0;
+    /* 🔥 首页卡片专业化 🔥 */
+    .home-card-box {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
         text-align: center;
-        color: #94a3b8;
-        font-size: 12px;
+        background: #fff;
+        height: 140px; /* 强制高度一致 */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 15px;
     }
+    .home-card-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 6px;
+    }
+    .home-card-sub {
+        font-size: 12px; /* 缩小副标题 */
+        color: #94a3b8;
+        font-weight: 400;
+    }
+    
+    /* 🔥 侧边栏优化 🔥 */
+    .project-box { background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+    .project-title { font-weight: bold; color: #0369a1; font-size: 14px; }
+    .project-desc { font-size: 11px; /* 缩小侧边栏副标题 */ color: #64748b; margin-top: 4px; line-height: 1.4; }
+    
+    /* 底部版权 */
+    .footer-legal { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 12px; }
     .footer-links a { color: #64748b; text-decoration: none; margin: 0 10px; transition: color 0.2s; }
     .footer-links a:hover { color: #2563eb; }
-    
-    /* 商业化组件 */
-    .project-box { background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
     
     /* 认证页 */
     .auth-title { text-align: center; font-weight: 800; font-size: 24px; color: #1e293b; margin-bottom: 20px; }
     .login-spacer { height: 5vh; }
-    
     .info-box-aligned { height: 50px !important; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1e40af; display: flex; align-items: center; padding: 0 16px; font-size: 14px; font-weight: 500; width: 100%; box-sizing: border-box; }
 </style>
 """, unsafe_allow_html=True)
@@ -238,7 +251,7 @@ def auth_page():
                         else: st.error(m)
                     else: st.error("验证码错误")
             with t3: st.info("请联系客服重置密码")
-    render_footer() # 🔥 登录页也显示底部法律声明
+    render_footer()
 
 if 'user_phone' not in st.session_state:
     auth_page(); st.stop()
@@ -247,13 +260,10 @@ CURRENT_USER = st.session_state['user_phone']
 IS_ADMIN = (CURRENT_USER == ADMIN_PHONE)
 IS_VIP, VIP_MSG = get_user_vip_status(CURRENT_USER)
 
-# --- 导航逻辑 (核心修复) ---
-# 定义跳转函数
+# --- 导航逻辑 ---
 def go_to(page):
     st.session_state['nav_menu'] = page
-    # st.rerun() # 在回调中不需要 rerun，Streamlit 会自动重新加载
 
-# 确保 nav_menu 初始化
 if 'nav_menu' not in st.session_state: st.session_state['nav_menu'] = "🏠 首页"
 
 # --- 侧边栏 ---
@@ -281,19 +291,15 @@ with st.sidebar:
     
     st.markdown("---")
     
+    # 动态构建菜单
     ops = ["🏠 首页", "📝 文案改写", "💡 爆款选题库", "🎨 海报生成", "🏷️ 账号起名", "👤 个人中心"]
+    # 🔥 核心控制：只有管理员账号能看到后台 🔥
     if IS_ADMIN: ops.append("🕵️‍♂️ 管理后台")
     
-    # 手动菜单逻辑
-    # 找到当前 page 在 ops 中的索引，防止报错
-    try:
-        curr_idx = ops.index(st.session_state['nav_menu'])
-    except ValueError:
-        curr_idx = 0
-        st.session_state['nav_menu'] = ops[0]
+    try: curr_idx = ops.index(st.session_state['nav_menu'])
+    except: curr_idx = 0; st.session_state['nav_menu'] = ops[0]
 
     selected = st.radio("导航", ops, index=curr_idx, label_visibility="collapsed", key="sb_radio")
-    
     if selected != st.session_state['nav_menu']:
         st.session_state['nav_menu'] = selected
         st.rerun()
@@ -301,29 +307,31 @@ with st.sidebar:
     st.markdown("---")
     if st.button("🚪 退出"): del st.session_state['user_phone']; st.rerun()
 
-# --- 路由 ---
 menu = st.session_state['nav_menu']
 
-# --- 首页 (修复点击) ---
+# --- 首页 (功能补全 + 字体优化) ---
 def page_home():
     st.markdown("## 💠 抖音爆款工场 Pro")
     st.caption("专为素人 KOC 打造的 AI 提效神器 | 文案 · 选题 · 海报 · 变现")
     st.markdown("---")
     
     c1, c2, c3, c4 = st.columns(4)
-    # 使用 on_click 回调实现跳转
-    with c1: 
-        st.info("📝 **文案改写**\n\n5路并发，爆款逻辑重组")
-        st.button("立即使用 ➜", key="go_rewrite", on_click=go_to, args=("📝 文案改写",))
-    with c2: 
-        st.info("💡 **爆款选题**\n\n解决流量焦虑，日更不断")
-        st.button("立即使用 ➜", key="go_brain", on_click=go_to, args=("💡 爆款选题库",))
-    with c3: 
-        st.info("🎨 **海报生成**\n\n对接小提大作，好莱坞级")
-        st.button("立即使用 ➜", key="go_poster", on_click=go_to, args=("🎨 海报生成",))
-    with c4: 
-        st.info("💰 **变现陪跑**\n\nKOC/御灵AI 项目实操")
-        st.button("查看详情 ➜", key="go_project", on_click=go_to, args=("👤 个人中心",))
+    
+    with c1:
+        st.markdown("""<div class="home-card-box"><div class="home-card-title">📝 文案改写</div><div class="home-card-sub">5路并发 · 爆款重组</div></div>""", unsafe_allow_html=True)
+        st.button("立即使用 ➜", key="h_btn1", on_click=go_to, args=("📝 文案改写",))
+        
+    with c2:
+        st.markdown("""<div class="home-card-box"><div class="home-card-title">💡 爆款选题</div><div class="home-card-sub">流量焦虑 · 一键解决</div></div>""", unsafe_allow_html=True)
+        st.button("立即使用 ➜", key="h_btn2", on_click=go_to, args=("💡 爆款选题库",))
+        
+    with c3:
+        st.markdown("""<div class="home-card-box"><div class="home-card-title">🎨 海报生成</div><div class="home-card-sub">小提大作 · 影视质感</div></div>""", unsafe_allow_html=True)
+        st.button("立即使用 ➜", key="h_btn3", on_click=go_to, args=("🎨 海报生成",))
+        
+    with c4:
+        st.markdown("""<div class="home-card-box"><div class="home-card-title">🏷️ 账号起名</div><div class="home-card-sub">AI 算命 · 爆款玄学</div></div>""", unsafe_allow_html=True)
+        st.button("立即使用 ➜", key="h_btn4", on_click=go_to, args=("🏷️ 账号起名",))
     
     st.markdown("<br>", unsafe_allow_html=True)
     with st.container(border=True):
@@ -337,7 +345,6 @@ def page_rewrite():
     def run_ai(txt):
         try: return client.chat.completions.create(model="deepseek-chat", messages=[{"role":"user","content":f"改写文案：{txt}"}]).choices[0].message.content
         except: return "请配置 API Key"
-    
     c1, c2 = st.columns([1, 2])
     with c1:
         if st.button("🚀 5路并发执行", type="primary", use_container_width=True):
@@ -372,10 +379,10 @@ def page_poster():
     st.code("将原图剧名：原剧名\n改为：[你的新剧名]", language="text")
 
 def page_brainstorm():
-    st.markdown("## 💡 爆款选题库"); st.write("功能开发中...")
+    st.markdown("## 💡 爆款选题库"); st.markdown("---"); st.info("🚧 选题 AI 模型正在升级优化中，敬请期待！")
 
 def page_naming():
-    st.markdown("## 🏷️ 账号起名"); st.write("功能开发中...")
+    st.markdown("## 🏷️ 账号起名"); st.markdown("---"); st.info("🚧 起名 AI 模型正在升级优化中，敬请期待！")
 
 def page_account():
     st.markdown("## 👤 个人中心"); st.markdown("---")

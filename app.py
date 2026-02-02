@@ -2,9 +2,10 @@ import streamlit as st
 from openai import OpenAI
 import time
 from concurrent.futures import ThreadPoolExecutor
-from PIL import Image, ImageDraw, ImageFont # 引入图像处理库
 import io
 import os
+import requests # 用于调用外部 API
+import base64
 
 # ==========================================
 # 0. 核心配置
@@ -16,33 +17,132 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 注入 CSS
+# 注入 CSS：修复按钮文字颜色 + 极致 UI + 商业化引导
 st.markdown("""
 <style>
+    /* 1. 全局字体与背景 */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    .stApp { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #f8fafc; }
-    div.block-container { max-width: 90% !important; min-width: 90% !important; background-color: #ffffff; padding: 3rem !important; margin: 2rem auto !important; border-radius: 16px; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); }
-    [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #f1f5f9; }
-    [data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; transition: all 0.3s ease; }
-    [data-testid="stVerticalBlockBorderWrapper"]:hover { border-color: #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+    
+    .stApp { 
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+        background-color: #f8fafc; 
+    }
+    
+    /* 2. 布局容器 */
+    div.block-container {
+        max-width: 90% !important;
+        min-width: 90% !important;
+        background-color: #ffffff;
+        padding: 3rem !important;
+        margin: 2rem auto !important;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); 
+    }
+
+    /* 3. 侧边栏 */
+    [data-testid="stSidebar"] { 
+        background-color: #ffffff; 
+        border-right: 1px solid #f1f5f9; 
+    }
+    
+    /* 4. 工作台卡片 */
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 24px;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    [data-testid="stVerticalBlockBorderWrapper"]:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    
+    /* 5. 标题与文字颜色控制 */
     h1 { color: #0f172a !important; font-weight: 800 !important; margin-bottom: 1.5rem !important; }
     h2, h3, h4, h5 { color: #334155 !important; font-weight: 700 !important; }
+    
+    /* 普通文本颜色 */
     .stMarkdown p, label { color: #475569 !important; }
-    div.stButton > button { border-radius: 8px; font-weight: 600; height: 40px; transition: all 0.2s; }
-    div.stButton > button:not([kind="primary"]) { background-color: #f1f5f9; color: #475569 !important; border: 1px solid transparent; }
-    div.stButton > button:not([kind="primary"]):hover { background-color: #e0f2fe; color: #0284c7 !important; border-color: #bae6fd; }
-    div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); border: none; }
-    div.stButton > button[kind="primary"] * { color: #ffffff !important; }
-    div.stButton > button[kind="primary"]:hover { box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); transform: translateY(-1px); }
-    .stTextArea textarea, .stTextInput input { border-radius: 8px; border: 1px solid #cbd5e1; background-color: #f8fafc !important; color: #1e293b !important; caret-color: #2563eb; font-weight: 500; -webkit-text-fill-color: #1e293b !important; transition: border 0.2s, box-shadow 0.2s; }
-    .stTextArea textarea:focus, .stTextInput input:focus { background-color: #ffffff !important; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+    
+    /* 6. 按钮极致美化 */
+    div.stButton > button {
+        border-radius: 8px; font-weight: 600; height: 40px; transition: all 0.2s;
+    }
+    
+    /* (A) 次级按钮 */
+    div.stButton > button:not([kind="primary"]) {
+        background-color: #f1f5f9; 
+        color: #475569 !important;
+        border: 1px solid transparent;
+    }
+    div.stButton > button:not([kind="primary"]):hover {
+        background-color: #e0f2fe; 
+        color: #0284c7 !important;
+        border-color: #bae6fd;
+    }
+    
+    /* (B) 主按钮 - 强制白字 */
+    div.stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        border: none;
+    }
+    div.stButton > button[kind="primary"] * {
+        color: #ffffff !important; 
+    }
+    div.stButton > button[kind="primary"]:hover {
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); 
+        transform: translateY(-1px);
+    }
+    
+    /* (C) 充值链接按钮 (显眼的渐变红/橙色，促进点击) */
+    a.recharge-btn {
+        display: block;
+        width: 100%;
+        text-align: center;
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); /* 橙色系吸引点击 */
+        color: white !important;
+        padding: 12px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 700;
+        margin-top: 10px;
+        box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+        transition: transform 0.2s;
+        border: 1px solid #d97706;
+    }
+    a.recharge-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 14px rgba(245, 158, 11, 0.4);
+    }
+
+    /* 7. 输入框修复 */
+    .stTextArea textarea, .stTextInput input {
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        background-color: #f8fafc !important; 
+        color: #1e293b !important;            
+        caret-color: #2563eb;                 
+        font-weight: 500;
+        -webkit-text-fill-color: #1e293b !important;
+        transition: border 0.2s, box-shadow 0.2s;
+    }
+    .stTextArea textarea:focus, .stTextInput input:focus {
+        background-color: #ffffff !important;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
     ::placeholder { color: #94a3b8 !important; opacity: 1; }
+
+    /* 8. 空状态占位符 */
     .empty-state-box { height: 200px; background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc); background-size: 20px 20px; border: 2px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 500; flex-direction: column; gap: 10px; }
     .idea-card { background-color: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 15px; margin-bottom: 10px; border-radius: 4px; color: #334155; }
     .login-spacer { height: 10vh; }
-    /* 海报上传区域美化 */
-    [data-testid="stFileUploader"] { background-color: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 20px; text-align: center;}
-    [data-testid="stImage"] { border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    
+    /* 海报预览图圆角 */
+    [data-testid="stImage"] img { border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -109,7 +209,7 @@ if not check_login():
     st.stop()
 
 # ==========================================
-# 2. API 配置
+# 2. API 配置 (DeepSeek - 文本用)
 # ==========================================
 
 try:
@@ -149,7 +249,6 @@ def page_rewrite():
             return res.choices[0].message.content
         except Exception as e: return f"Error: {e}"
 
-    # 总控台
     col_main, col_tips = st.columns([1, 2])
     with col_main:
         if st.button("🚀 一键并发执行 (5路全开)", type="primary", use_container_width=True):
@@ -175,7 +274,6 @@ def page_rewrite():
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 5个工作台
     for i in range(1, 6):
         with st.container(border=True):
             st.markdown(f"#### 🎬 工作台 #{i}")
@@ -301,101 +399,105 @@ def page_brainstorm():
 
     if 'brainstorm_result' in st.session_state:
         st.markdown("### ✨ 推荐选题")
-        st.info("💡 看到喜欢的，直接复制到【文案改写】里让 AI 帮你扩写！")
-        
         ideas = st.session_state['brainstorm_result'].split('\n')
         for idea in ideas:
             if idea.strip():
                 st.markdown(f"<div class='idea-card'>{idea}</div>", unsafe_allow_html=True)
 
-# --- 🔥 E. 新增功能：海报生成 (PIL实现) ---
+
+# --- E. 海报生成 (调用 bj.nfai.lol - Nano Banana Pro) ---
 def page_poster_gen():
-    st.markdown("## 🎨 剧名海报生成")
-    st.caption("上传原海报，自动在底部添加新剧名横幅，覆盖原有信息。")
+    st.markdown("## 🎨 剧名海报生成 (Banana Pro)")
+    st.caption("基于 Nano Banana Pro 模型，智能替换海报文字。")
     st.markdown("---")
+
+    # 1. 检查 Key 是否配置
+    user_api_key = st.session_state.get('baojian_api_key', '')
+    
+    if not user_api_key:
+        st.warning("⚠️ 需配置 **豹剪 API Key** 方可使用商业版模型。")
+        st.info("👇 请查看左侧侧边栏底部，获取或填入 Key。")
+        return
 
     with st.container(border=True):
         c1, c2 = st.columns([1, 1], gap="large")
         with c1:
-            uploaded_file = st.file_uploader("📤 上传原剧海报 (支持 JPG/PNG)", type=["jpg", "jpeg", "png"])
+            uploaded_file = st.file_uploader("📤 上传原海报 (支持 JPG/PNG)", type=["jpg", "png", "jpeg"])
         with c2:
-            new_title = st.text_input("🎬 输入新的推广别名", placeholder="例如：重生之我在豪门当保姆")
+            new_title = st.text_input("🎬 输入新剧名", placeholder="例如：重生之我在豪门当保姆")
+            st.caption("提示：将调用 `Nano Banana Pro` 模型进行智能重绘。")
             
-            # 字体选择逻辑
-            font_path = "font.ttf" # 默认寻找当前目录下的 font.ttf
-            font_status = "✅ 已检测到自定义字体 (font.ttf)" if os.path.exists(font_path) else "⚠️ 未检测到 font.ttf，将使用系统默认字体（中文可能显示为方框）"
-            st.caption(font_status)
-
-            generate_btn = st.button("✨ 生成新海报", type="primary", use_container_width=True, disabled=(not uploaded_file or not new_title))
+            generate_btn = st.button("✨ 立即生成新海报", type="primary", use_container_width=True, disabled=(not uploaded_file or not new_title))
 
     if generate_btn and uploaded_file and new_title:
         try:
-            with st.spinner("正在绘制海报..."):
-                # 1. 打开图片
-                image = Image.open(uploaded_file).convert("RGBA")
-                width, height = image.size
+            with st.spinner("🍌 正在呼叫 Nano Banana Pro 模型进行绘图..."):
                 
-                # 2. 创建绘图对象
-                draw = ImageDraw.Draw(image)
+                # 1. 图片转 Base64
+                image_bytes = uploaded_file.getvalue()
+                base64_image = base64.b64encode(image_bytes).decode('utf-8')
                 
-                # 3. 定义底部横幅区域 (高度为总高度的 15%)
-                banner_height = int(height * 0.15)
-                banner_y_start = height - banner_height
+                # 2. 构建请求
+                # 目标：bj.nfai.lol
+                # 模型：Nano Banana Pro
+                api_url = "https://bj.nfai.lol/v1/chat/completions" 
                 
-                # 绘制半透明黑色横幅背景 (覆盖原文字)
-                # (左上x, 左上y, 右下x, 右下y), fill=(R,G,B,Alpha)
-                draw.rectangle(
-                    [(0, banner_y_start), (width, height)],
-                    fill=(0, 0, 0, 200) # 黑色，200透明度
-                )
+                headers = {
+                    "Authorization": f"Bearer {user_api_key}",
+                    "Content-Type": "application/json"
+                }
                 
-                # 4. 加载字体
-                font_size = int(banner_height * 0.5) # 字号为横幅高度的一半
-                try:
-                    if os.path.exists(font_path):
-                        font = ImageFont.truetype(font_path, font_size)
-                    else:
-                        # 如果没有自定义字体，尝试加载系统默认字体（效果差）
-                        font = ImageFont.load_default() 
-                        st.toast("⚠️ 使用了默认字体，中文可能无法显示，请上传 font.ttf", icon="⚠️")
-                except Exception as e:
-                     st.error(f"字体加载失败: {e}")
-                     font = ImageFont.load_default()
-
-                # 5. 计算文字位置使其居中
-                # 获取文字的边界框 (left, top, right, bottom)
-                text_bbox = draw.textbbox((0, 0), new_title, font=font)
-                text_width = text_bbox[2] - text_bbox[0]
-                text_height = text_bbox[3] - text_bbox[1]
-
-                text_x = (width - text_width) / 2
-                # 垂直居中公式：横幅起始Y + (横幅高度 - 文字高度) / 2 - 文字顶部基线偏移
-                text_y = banner_y_start + (banner_height - text_height) / 2 - text_bbox[1]
-
-                # 6. 绘制白色文字
-                draw.text((text_x, text_y), new_title, font=font, fill=(255, 255, 255, 255))
+                # 构造多模态 Payload (Vision 格式)
+                data = {
+                    "model": "Nano Banana Pro", # 强制指定模型
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "text", 
+                                    "text": f"将海报上的剧名文字修改为：{new_title}。保持海报原有设计风格，字体大气，无痕替换。"
+                                },
+                                {
+                                    "type": "image_url", 
+                                    "image_url": {
+                                        "url": f"data:image/jpeg;base64,{base64_image}"
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    "stream": False
+                }
                 
-                # 7. 显示结果
-                st.markdown("### ✨ 生成结果")
-                st.image(image, use_column_width=True)
+                # 3. 发送请求
+                response = requests.post(api_url, headers=headers, json=data, timeout=60)
                 
-                # 8. 提供下载按钮
-                # 将图片保存到内存 buffer
-                buf = io.BytesIO()
-                image.convert("RGB").save(buf, format="JPEG", quality=95)
-                byte_im = buf.getvalue()
-                
-                st.download_button(
-                    label="⬇️ 下载海报图片",
-                    data=byte_im,
-                    file_name=f"poster_{int(time.time())}.jpg",
-                    mime="image/jpeg",
-                    type="primary"
-                )
+                if response.status_code == 200:
+                    res_json = response.json()
+                    # 假设返回格式为 OpenAI 兼容格式，内容在 content 中
+                    # 对于生图/改图模型，通常 URL 会在 content 里，或者是以 markdown 图片格式返回
+                    try:
+                        content = res_json['choices'][0]['message']['content']
+                        
+                        st.success("🎉 生成成功！")
+                        st.markdown("### ✨ 生成结果")
+                        
+                        # 解析返回内容，如果是 URL 直接显示，如果是 Markdown 图片提取显示
+                        # 这里简单处理：直接把 content 渲染出来，通常模型会返回 ![](url)
+                        st.markdown(content) 
+                        
+                        # 如果 API 返回的是纯 URL 文本，尝试自动提取并显示图片组件以便下载
+                        if content.startswith("http"):
+                             st.image(content)
+                             
+                    except Exception as parse_err:
+                        st.error(f"解析响应失败: {parse_err} | 原始返回: {res_json}")
+                else:
+                    st.error(f"API 请求失败 (状态码 {response.status_code}): {response.text}")
 
         except Exception as e:
-            st.error(f"海报生成失败: {e}")
-
+            st.error(f"请求发生错误: {e}")
 
 # --- F. 个人中心 ---
 def page_account():
@@ -412,12 +514,26 @@ def page_account():
             st.markdown("**微信 ID**: `TG777188`")
 
 # ==========================================
-# 4. 侧边栏导航
+# 4. 侧边栏导航 (含 API 配置与充值)
 # ==========================================
 
 with st.sidebar:
     st.markdown("### 💠 爆款工场 Pro")
     st.markdown(f"<small>IP: {get_remote_ip()}</small>", unsafe_allow_html=True)
+    st.markdown("---")
+    
+    # 🔥 商业化核心：API Key 配置区 🔥
+    with st.expander("🔑 豹剪 Key 配置", expanded=True):
+        st.caption("使用海报改图功能需配置 Key")
+        baojian_key = st.text_input("输入 Key", type="password", key="baojian_api_key", label_visibility="collapsed")
+        
+        # 充值直达按钮 (带分销参数)
+        st.markdown("""
+            <a href="https://bj.nfai.lol/register?aff=Mzx2" target="_blank" class="recharge-btn">
+                ⚡ 前往获取 / 充值 Key
+            </a>
+        """, unsafe_allow_html=True)
+    
     st.markdown("---")
     
     menu_option = st.radio(
@@ -428,7 +544,7 @@ with st.sidebar:
     
     st.markdown("---")
     with st.container(border=True):
-        st.info("全新功能上线：\n🎨 **海报生成**：一键替换剧名，批量做图神器！", icon="🎉")
+        st.info("系统更新：\n🎨 海报生成已接入 **Nano Banana Pro** 模型。", icon="🍌")
 
 if menu_option == "📝 文案改写": page_rewrite()
 elif menu_option == "💡 爆款选题库": page_brainstorm()

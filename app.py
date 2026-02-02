@@ -17,7 +17,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 注入 CSS：极致 UI + 商业化引导 + 导流卡片
+# 注入 CSS：极致 UI + 商业化引导 + 教程样式
 st.markdown("""
 <style>
     /* 1. 全局字体与背景 */
@@ -83,7 +83,7 @@ st.markdown("""
         border-color: #bae6fd;
     }
     
-    /* (B) 主按钮 - 强制白字 */
+    /* (B) 主按钮 */
     div.stButton > button[kind="primary"] {
         background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
@@ -97,7 +97,7 @@ st.markdown("""
         transform: translateY(-1px);
     }
     
-    /* (C) 导流跳转按钮 (紫色系，突出高级感) */
+    /* (C) 导流跳转按钮 */
     a.redirect-btn {
         display: block;
         width: 100%;
@@ -137,9 +137,44 @@ st.markdown("""
     }
     ::placeholder { color: #94a3b8 !important; opacity: 1; }
 
-    /* 8. 辅助样式 */
-    .empty-state-box { height: 200px; background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc); background-size: 20px 20px; border: 2px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 500; flex-direction: column; gap: 10px; }
-    .idea-card { background-color: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 15px; margin-bottom: 10px; border-radius: 4px; color: #334155; }
+    /* 8. 教程样式美化 */
+    .tutorial-box {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 25px;
+    }
+    .tutorial-step {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+        font-size: 15px;
+        color: #334155;
+    }
+    .step-num {
+        background-color: #e0f2fe;
+        color: #0284c7;
+        font-weight: bold;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+    .prompt-block {
+        background-color: #1e293b;
+        color: #cbd5e1;
+        padding: 15px;
+        border-radius: 8px;
+        font-family: monospace;
+        margin-top: 10px;
+        border-left: 4px solid #3b82f6;
+    }
+    
     .login-spacer { height: 10vh; }
     
 </style>
@@ -404,18 +439,18 @@ def page_brainstorm():
                 st.markdown(f"<div class='idea-card'>{idea}</div>", unsafe_allow_html=True)
 
 
-# --- E. 海报生成 (跳转独立站导流版) ---
+# --- E. 海报生成 (跳转独立站导流版 + 教程) ---
 def page_poster_gen():
     st.markdown("## 🎨 AI 智能海报改图 (专业版)")
     st.caption("基于 Flux/Banana Pro 算力集群，提供好莱坞级改图效果。")
     st.markdown("---")
 
-    st.info("💡 提示：为了提供更稳定的算力支持，海报改图功能已升级至 **AIXT 独立站**。")
+    st.info("💡 提示：为了提供更稳定的算力支持，海报改图功能已升级至 **小提大作 独立站**。")
 
     # 导流卡片
     with st.container(border=True):
         
-        st.markdown("### 🚀 前往 AIXT 专业版控制台")
+        st.markdown("### 🚀 前往 小提大作 专业版控制台")
         st.markdown("支持：**智能去字、无痕融合、艺术字特效、4K高清导出**。")
         st.markdown("<br>", unsafe_allow_html=True)
 
@@ -429,12 +464,43 @@ def page_poster_gen():
         with c2:
             st.markdown("##### 第 2 步：前往生成")
             st.caption("点击下方按钮跳转至 aixtdz.com")
-            # 渲染一个超大的跳转按钮
             st.markdown("""
                 <a href="https://aixtdz.com/" target="_blank" class="redirect-btn">
-                    🚀 立即前往 AIXT 生成海报
+                    🚀 立即前往 小提大作 生成海报
                 </a>
             """, unsafe_allow_html=True)
+
+    # 🔥 新增：保姆级教程 🔥
+    st.markdown("<br>", unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown("#### 📖 新手保姆级改图教程")
+        st.caption("按照以下步骤操作，1分钟搞定电影级海报")
+        
+        st.markdown("""
+        <div class="tutorial-box">
+            <div class="tutorial-step">
+                <div class="step-num">1</div>
+                <div>注册登录后，在网页空白处 <b>右键点击</b>，选择 <b>“上传图片”</b></div>
+            </div>
+            <div class="tutorial-step">
+                <div class="step-num">2</div>
+                <div>在工具栏选择 <b>“图生图”</b> 模式</div>
+            </div>
+            <div class="tutorial-step">
+                <div class="step-num">3</div>
+                <div>上传你需要修改的 <b>原剧海报</b></div>
+            </div>
+            <div class="tutorial-step">
+                <div class="step-num">4</div>
+                <div>点击“图生图”输入框，复制下方咒语（Prompt）并修改：</div>
+            </div>
+            
+            <div class="prompt-block">
+                将原图剧名：阿祝的诈尸人生<br>
+                改为：[这里填你的新剧名]
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
     st.markdown("---")
     st.caption("如有疑问，请联系客服微信：TG777188")

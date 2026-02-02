@@ -148,9 +148,10 @@ st.markdown("""
     .tutorial-step {
         display: flex;
         align-items: center;
-        margin-bottom: 12px;
+        margin-bottom: 15px; /* 稍微增加间距 */
         font-size: 15px;
         color: #334155;
+        line-height: 1.5;
     }
     .step-num {
         background-color: #e0f2fe;
@@ -173,6 +174,7 @@ st.markdown("""
         font-family: monospace;
         margin-top: 10px;
         border-left: 4px solid #3b82f6;
+        font-size: 14px;
     }
     
     .login-spacer { height: 10vh; }
@@ -439,7 +441,7 @@ def page_brainstorm():
                 st.markdown(f"<div class='idea-card'>{idea}</div>", unsafe_allow_html=True)
 
 
-# --- E. 海报生成 (跳转独立站导流版 + 教程) ---
+# --- E. 海报生成 (跳转独立站导流版 + 精准教程) ---
 def page_poster_gen():
     st.markdown("## 🎨 AI 智能海报改图 (专业版)")
     st.caption("基于 Flux/Banana Pro 算力集群，提供好莱坞级改图效果。")
@@ -470,7 +472,7 @@ def page_poster_gen():
                 </a>
             """, unsafe_allow_html=True)
 
-    # 🔥 新增：保姆级教程 🔥
+    # 🔥 新增：保姆级教程 (内容已更新) 🔥
     st.markdown("<br>", unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("#### 📖 新手保姆级改图教程")
@@ -480,24 +482,24 @@ def page_poster_gen():
         <div class="tutorial-box">
             <div class="tutorial-step">
                 <div class="step-num">1</div>
-                <div>注册登录后，在网页空白处 <b>右键点击</b>，选择 <b>“上传图片”</b></div>
+                <div>注册登录后，点击 <b>“创建自由画布”</b></div>
             </div>
             <div class="tutorial-step">
                 <div class="step-num">2</div>
-                <div>在工具栏选择 <b>“图生图”</b> 模式</div>
+                <div>根据提示 <b>双击</b> 或者 <b>右键点击</b> 空白处，选择 <b>“图生图”</b></div>
             </div>
             <div class="tutorial-step">
                 <div class="step-num">3</div>
-                <div>上传你需要修改的 <b>原剧海报</b></div>
+                <div>点击组件上的 <b>“+”</b> 号，上传你需要修改的 <b>原剧海报</b></div>
             </div>
             <div class="tutorial-step">
                 <div class="step-num">4</div>
-                <div>点击“图生图”输入框，复制下方咒语（Prompt）并修改：</div>
+                <div>点击 <b>右边边框</b>，在下方输入指令（Prompt）：</div>
             </div>
             
             <div class="prompt-block">
-                将原图剧名：阿祝的诈尸人生<br>
-                改为：[这里填你的新剧名]
+                将原图剧名：原剧名<br>
+                改为：[你的新剧名]
             </div>
         </div>
         """, unsafe_allow_html=True)

@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 注入 CSS：全局样式 + 对齐修复
+# 注入 CSS：全局样式 + 像素级对齐修复
 st.markdown("""
 <style>
     /* 1. 全局字体与背景 */
@@ -61,9 +61,16 @@ st.markdown("""
     h2, h3, h4, h5 { color: #334155 !important; font-weight: 700 !important; }
     .stMarkdown p, label { color: #475569 !important; }
     
-    /* 6. Streamlit 原生按钮美化 */
+    /* ------------------------------------------------------- */
+    /* 🔥 核心修复：强制统一所有主要交互元素的高度为 50px 🔥 */
+    /* ------------------------------------------------------- */
+    
+    /* (A) Streamlit 原生按钮 */
     div.stButton > button {
-        border-radius: 8px; font-weight: 600; height: 40px; transition: all 0.2s;
+        border-radius: 8px !important; 
+        font-weight: 600 !important; 
+        height: 50px !important; /* 强制高度 */
+        transition: all 0.2s !important;
     }
     div.stButton > button:not([kind="primary"]) {
         background-color: #f1f5f9; color: #475569 !important; border: 1px solid transparent;
@@ -81,6 +88,22 @@ st.markdown("""
         box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); transform: translateY(-1px);
     }
     
+    /* (B) 顶部文案改写区的“指南”提示框 (替代 st.info) */
+    .info-box-aligned {
+        height: 50px !important; /* 与按钮严格对齐 */
+        background-color: #eff6ff; /* 浅蓝背景 */
+        border: 1px solid #bfdbfe; /* 浅蓝边框 */
+        border-radius: 8px;
+        color: #1e40af;
+        display: flex;
+        align-items: center; /* 垂直居中 */
+        padding: 0 16px;
+        font-size: 14px;
+        font-weight: 500;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
     /* 7. 输入框修复 */
     .stTextArea textarea, .stTextInput input {
         border-radius: 8px;
@@ -102,21 +125,21 @@ st.markdown("""
     /* 8. 辅助样式 */
     .empty-state-box { height: 200px; background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc); background-size: 20px 20px; border: 2px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 500; flex-direction: column; gap: 10px; }
     
-    /* 🔥 修复对齐的核心 CSS 🔥 */
+    /* 跳转按钮 (海报页) - 强制对齐 */
     a.redirect-btn { 
-        display: flex !important; /* 使用 Flex 布局实现完美居中 */
+        display: flex !important; 
         align-items: center;
         justify-content: center;
         width: 100%; 
-        height: 54px !important; /* 强制高度与左侧输入框一致 */
+        height: 52px !important; /* 加上边框共 54px，与左侧复制框视觉一致 */
         background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); 
         color: white !important; 
-        padding: 0 !important; /* 移除 Padding，完全靠 Flex 居中 */
-        border-radius: 8px; /* 圆角稍微改小一点，与左侧更协调 */
+        padding: 0 !important; 
+        border-radius: 8px; 
         text-decoration: none; 
         font-size: 16px; 
         font-weight: 700; 
-        margin-top: 0px !important; /* 移除顶部间距，实现水平对齐 */
+        margin-top: 0px !important; 
         box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); 
         transition: transform 0.2s; 
         border: 1px solid #7c3aed; 
@@ -176,7 +199,7 @@ def render_copy_button_html(text, unique_key):
 # ==========================================
 def render_hover_copy_box(text):
     """
-    已修复：高度调整为 54px，与右侧按钮完全对齐
+    高度精确调整，与右侧按钮对齐
     """
     safe_text = text.replace("`", "\`").replace("${", "\${").replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"')
     
@@ -196,7 +219,7 @@ def render_hover_copy_box(text):
                 border: 1px solid #cbd5e1;
                 border-radius: 8px;
                 padding: 0 16px;
-                height: 52px; /* 🔥 核心：设置为 52px (加边框共 54px) */
+                height: 52px; /* 🔥 核心：与跳转按钮保持视觉高度一致 */
                 cursor: pointer;
                 transition: all 0.2s ease;
                 position: relative;
@@ -204,7 +227,7 @@ def render_hover_copy_box(text):
                 font-weight: 600;
                 font-size: 16px;
                 letter-spacing: 0.5px;
-                box-sizing: border-box; /* 确保 padding 不撑大 */
+                box-sizing: border-box;
             }}
             
             .code-box:hover {{
@@ -266,7 +289,6 @@ def render_hover_copy_box(text):
     </body>
     </html>
     """
-    # iframe 高度给 60，确保没有滚动条
     components.html(html_code, height=60)
 
 # ==========================================
@@ -372,7 +394,8 @@ def page_rewrite():
             return res.choices[0].message.content
         except Exception as e: return f"Error: {e}"
 
-    col_main, col_tips = st.columns([1, 2])
+    # 🔥 修复对齐：左侧按钮，右侧自定义 HTML 框 🔥
+    col_main, col_tips = st.columns([1, 2], gap="medium")
     with col_main:
         if st.button("🚀 一键并发执行 (5路全开)", type="primary", use_container_width=True):
             tasks, indices = [], []
@@ -393,7 +416,12 @@ def page_rewrite():
                     status.update(label="✅ 完成！", state="complete", expanded=False)
                     st.rerun()
     with col_tips:
-        st.info("💡 指南：粘贴文案到下方窗口，点击左侧 **【蓝色按钮】** 同时处理。", icon="📝")
+        # 使用自定义 DIV 替代 st.info，确保高度与左侧按钮完美对齐 (50px)
+        st.markdown(f"""
+        <div class="info-box-aligned">
+            💡 指南：粘贴文案到下方窗口，点击左侧 <b>【蓝色按钮】</b> 同时处理。
+        </div>
+        """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -546,7 +574,6 @@ def page_poster_gen():
         st.markdown("支持：**智能去字、无痕融合、艺术字特效、4K高清导出**。")
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # 🔥 调整了列宽比例，并添加了 gap 🔥
         c1, c2 = st.columns([1, 1.5], gap="large")
         
         with c1:
@@ -567,7 +594,7 @@ def page_poster_gen():
                 </a>
             """, unsafe_allow_html=True)
 
-    # 🔥 保姆级教程 🔥
+    # 🔥 新增：保姆级教程 🔥
     st.markdown("<br>", unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("#### 📖 新手保姆级改图教程")

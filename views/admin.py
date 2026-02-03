@@ -2,7 +2,7 @@
 import streamlit as st
 import pandas as pd
 from database import get_stats, get_all_feedbacks_admin, reply_feedback, create_announcement, delete_announcement, get_active_announcements, generate_bulk_cards, update_setting, get_setting, get_conn
-from utils import render_page_banner
+from utils import load_isolated_css
 
 def view_admin():
     render_page_banner("管理后台", "系统监控、用户管理、卡密分发中心。")
@@ -66,3 +66,4 @@ def view_admin():
                     if st.button("发送", key=f"b_{fid}"):
                         reply_feedback(fid, r_txt)
                         st.rerun()
+

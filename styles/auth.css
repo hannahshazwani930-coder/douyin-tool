@@ -1,27 +1,39 @@
 /* styles/auth.css */
 header, [data-testid="stHeader"] { visibility: hidden; }
 
+/* 页面深色背景 */
 .stApp {
-    background: linear-gradient(135deg, #050a18 0%, #1e3a8a 100%) !important;
+    background: #050a18 !important;
 }
 
-/* 强制 Tab 标签颜色为白色，解决看不清的问题 */
+/* 蓝色品牌盒子样式 */
+.brand-box {
+    background: linear-gradient(135deg, #2563eb, #1e3a8a);
+    padding: 40px 30px;
+    border-radius: 24px;
+    height: 100%;
+    color: white;
+}
+
+/* 所有的 Tab 标签美化 */
 button[data-baseweb="tab"] {
+    color: rgba(255,255,255,0.6) !important;
+}
+button[aria-selected="true"] {
     color: white !important;
 }
 
-/* 表单背景：半透明毛玻璃，更有高级感 */
-[data-testid="stVerticalBlock"] > div:has(form) {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 30px;
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+/* 输入框和表单美化 */
+[data-testid="stForm"] {
+    background: white;
+    padding: 30px !important;
+    border-radius: 24px;
+    border: none !important;
 }
 
-/* 登录按钮美化 */
+/* 按钮大气蓝 */
 button[kind="primaryFormSubmit"] {
-    background: #2563eb !important;
-    border: none !important;
+    background: #1e3a8a !important;
     height: 45px;
-    font-weight: bold;
+    border-radius: 10px !important;
 }

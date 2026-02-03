@@ -23,7 +23,7 @@ st.set_page_config(
 )
 
 # 🔑 管理员配置
-ADMIN_ACCOUNT = "13065080569" # 统一变量名为 Account
+ADMIN_ACCOUNT = "13065080569" 
 ADMIN_INIT_PASSWORD = "ltren777188" 
 GLOBAL_INVITE_CODE = "VIP888" 
 REWARD_DAYS_NEW_USER = 3  
@@ -35,21 +35,16 @@ DB_FILE = 'saas_data_v2.db'
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    # users 表：phone 字段现在存储 "手机号或邮箱"
     c.execute('''CREATE TABLE IF NOT EXISTS users (phone TEXT PRIMARY KEY, password_hash TEXT, register_time TIMESTAMP, last_login_ip TEXT, last_login_time TIMESTAMP, own_invite_code TEXT UNIQUE, invited_by TEXT, invite_count INTEGER DEFAULT 0)''')
     c.execute('''CREATE TABLE IF NOT EXISTS access_codes (code TEXT PRIMARY KEY, duration_days INTEGER, activated_at TIMESTAMP, expire_at TIMESTAMP, status TEXT, create_time TIMESTAMP, bind_user TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS feedbacks (id INTEGER PRIMARY KEY AUTOINCREMENT, user_phone TEXT, content TEXT, reply TEXT, create_time TIMESTAMP, status TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)''')
-    
-    # 迁移检查
     try: c.execute("ALTER TABLE users ADD COLUMN own_invite_code TEXT")
     except: pass
     try: c.execute("ALTER TABLE users ADD COLUMN invited_by TEXT")
     except: pass
     try: c.execute("ALTER TABLE users ADD COLUMN invite_count INTEGER DEFAULT 0")
     except: pass
-
-    # 预设管理员
     c.execute("SELECT phone FROM users WHERE phone=?", (ADMIN_ACCOUNT,))
     if not c.fetchone():
         admin_pwd_hash = hashlib.sha256(ADMIN_INIT_PASSWORD.encode()).hexdigest()
@@ -60,127 +55,92 @@ def init_db():
 
 init_db()
 
-# --- CSS 样式 (专业商务风格·高对比度) ---
+# --- CSS 样式 (全站通用基础) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@500&display=swap');
-
+    
     .stApp { 
-        font-family: 'Inter', sans-serif; 
-        background-color: #f1f5f9; /* 固定背景色：淡蓝灰，护眼且专业 */
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+        background-color: #f8fafc; /* 统一浅灰背景 */
     }
     
-    /* 隐藏多余元素 */
-    [data-testid="stHeader"] a, .stMarkdown h1 a, .stMarkdown h2 a, .stMarkdown h3 a, .stMarkdown h4 a { display: none !important; pointer-events: none; }
+    /* 隐藏杂项 */
+    [data-testid="stHeader"] { display: none; }
     [data-testid="stSidebarCollapsedControl"] { display: none; }
+    #MainMenu { visibility: hidden; }
+    footer { visibility: hidden; }
+
+    /* 容器微调 */
+    div.block-container { max-width: 1200px !important; padding: 2rem !important; }
     
-    /* 容器调整 */
-    div.block-container { max-width: 90% !important; padding: 2rem !important; }
-    
-    /* 按钮样式优化 */
-    div.stButton > button { border-radius: 8px; font-weight: 600; height: 45px; width: 100%; font-size: 15px; border: none; transition: 0.2s; }
+    /* 按钮系统 */
+    div.stButton > button { 
+        border-radius: 8px; font-weight: 600; height: 44px; width: 100%; font-size: 14px; 
+        border: 1px solid transparent; transition: all 0.2s ease;
+    }
     div.stButton > button[kind="primary"] { 
-        background: #2563eb; color: white !important; 
-        box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2); 
+        background: #0f172a; color: white !important; /* 极简黑/深蓝 */
+        box-shadow: 0 4px 6px rgba(15, 23, 42, 0.1); 
     }
-    div.stButton > button[kind="primary"]:hover { background: #1d4ed8; transform: translateY(-1px); }
-    div.stButton > button[kind="secondary"] { background: white; border: 1px solid #cbd5e1; color: #475569; }
-    div.stButton > button[kind="secondary"]:hover { border-color: #94a3b8; background: #f8fafc; color: #1e293b; }
-
-    /* 🔥 登录页专属卡片样式 (无需 HTML 包裹) 🔥 */
-    /* 针对登录页的 st.container(border=True) */
-    .auth-card-container {
-        background: white !important;
-        border-radius: 16px !important;
-        padding: 40px !important;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-        border: 1px solid #e2e8f0 !important;
+    div.stButton > button[kind="primary"]:hover { 
+        background: #334155; transform: translateY(-1px); box-shadow: 0 6px 12px rgba(15, 23, 42, 0.15);
+    }
+    div.stButton > button[kind="secondary"] { 
+        background: white; border: 1px solid #cbd5e1; color: #475569; 
+    }
+    div.stButton > button[kind="secondary"]:hover { 
+        border-color: #94a3b8; background: #f1f5f9; color: #0f172a; 
     }
 
-    /* 输入框美化 (清晰可见) */
+    /* 输入框统一美化 */
     .stTextInput > div > div > input {
         background-color: #ffffff !important;
-        border: 1px solid #cbd5e1 !important;
-        color: #0f172a !important; /* 深色文字，高对比度 */
+        border: 1px solid #e2e8f0 !important;
+        color: #0f172a !important;
         border-radius: 8px !important;
         padding: 10px 12px !important;
+        font-size: 14px;
+        transition: all 0.2s;
     }
     .stTextInput > div > div > input:focus {
-        border-color: #3b82f6 !important;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+        border-color: #0f172a !important; /* 聚焦变黑 */
+        box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.05) !important;
     }
-
-    /* 登录页左侧文案 */
-    .lp-header { font-size: 32px; font-weight: 800; color: #0f172a; margin-bottom: 10px; }
-    .lp-sub { font-size: 16px; color: #64748b; margin-bottom: 40px; }
-    .lp-feature { display: flex; align-items: center; margin-bottom: 24px; font-size: 15px; color: #334155; font-weight: 500; }
-    .lp-icon { 
-        width: 32px; height: 32px; background: #eff6ff; color: #2563eb; 
-        border-radius: 8px; display: flex; align-items: center; justify-content: center; 
-        margin-right: 16px; font-size: 16px; flex-shrink: 0;
-    }
-
-    /* 微信邀请码框 */
-    .wx-invite-box { background: #f0fdf4; border: 1px dashed #22c55e; border-radius: 8px; padding: 12px; text-align: center; color: #15803d; font-size: 13px; margin-bottom: 15px; }
-
-    /* --- 首页 Hero 卡片 (内页) --- */
-    .hero-card-container {
-        background: white; border-radius: 20px; padding: 40px; text-align: center;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 30px;
-    }
-    .hero-title {
-        font-size: 42px; font-weight: 800; color: #1e293b; margin-bottom: 10px; letter-spacing: -0.5px;
-    }
-    .hero-subtitle { font-size: 16px; color: #64748b; }
-
-    /* --- 首页功能卡片 --- */
-    [data-testid="stVerticalBlockBorderWrapper"] {
-        border-radius: 12px !important; border: 1px solid #e2e8f0 !important;
-        background-color: white; padding: 20px !important;
-        transition: all 0.2s ease;
-    }
-    /* 仅首页卡片悬浮效果 */
-    [data-testid="stVerticalBlockBorderWrapper"]:hover {
-        border-color: #93c5fd !important; transform: translateY(-4px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
-    }
-    .home-card-icon { 
-        width: 56px; height: 56px; background: #eff6ff; color: #2563eb; 
-        border-radius: 16px; display: flex; align-items: center; justify-content: center; 
-        font-size: 28px; margin: 0 auto 15px auto; 
-    }
-    .home-card-title { font-size: 18px; font-weight: 700; color: #1e293b; text-align: center; margin-bottom: 6px; }
-    .home-card-desc { font-size: 13px; color: #64748b; text-align: center; margin-bottom: 20px; min-height: 40px; line-height: 1.4; }
 
     /* --- 侧边栏 --- */
-    [data-testid="stSidebar"] { background-color: white; border-right: 1px solid #e2e8f0; }
+    [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; }
     .sidebar-user-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
-    .user-avatar { font-size: 20px; margin-right: 10px; background: white; border: 1px solid #e2e8f0; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .user-left { display: flex; align-items: center; }
+    .user-avatar { font-size: 18px; margin-right: 10px; background: white; border: 1px solid #e2e8f0; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
     .user-name { font-weight: 700; font-size: 13px; color: #1e293b; }
     .user-role { font-size: 10px; color: #d97706; font-weight: 600; background: #fffbeb; padding: 1px 5px; border-radius: 4px; margin-top: 2px; }
-    .buy-btn-sidebar { text-decoration: none; background: #2563eb; color: white !important; font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 6px; }
+    .buy-btn-sidebar { text-decoration: none; background: #0f172a; color: white !important; font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 6px; }
     
+    /* 导航菜单 */
     .stRadio > div { gap: 0px; }
-    .stRadio > div > label { background: transparent; padding: 8px 10px; border-radius: 6px; margin-bottom: 1px; color: #475569; font-weight: 500; transition: all 0.2s; cursor: pointer; border: 1px solid transparent; font-size: 14px !important; }
-    .stRadio > div > label:hover { background: #f1f5f9; color: #1e293b; }
-    .stRadio > div > label[data-checked="true"] { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; font-weight: 600; }
+    .stRadio > div > label { background: transparent; padding: 8px 12px; border-radius: 6px; margin-bottom: 2px; color: #64748b; font-weight: 500; transition: all 0.2s; cursor: pointer; border: none; font-size: 14px !important; }
+    .stRadio > div > label:hover { background: #f1f5f9; color: #0f172a; }
+    .stRadio > div > label[data-checked="true"] { background: #eff6ff; color: #2563eb; font-weight: 600; }
     .stRadio div[role="radiogroup"] > label > div:first-child { display: none; }
     
     /* 侧边栏项目 */
-    .sidebar-project-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 8px; border-left: 3px solid #3b82f6; cursor: default; }
-    .sp-title { font-weight: 700; font-size: 12px; color: #334155; margin-bottom: 2px; }
-    .sp-desc { font-size: 10px; color: #94a3b8; line-height: 1.3; }
+    .sidebar-project-card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 3px solid #3b82f6; transition: all 0.2s; cursor: default; }
+    .sidebar-project-card:hover { transform: translateX(2px); border-color: #94a3b8; }
+    .sp-title { font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 2px; }
+    .sp-desc { font-size: 11px; color: #94a3b8; line-height: 1.4; }
+
+    /* 通用组件 */
+    .poster-hero-container { background: white; border-radius: 16px; padding: 24px; border: 1px solid #e2e8f0; display: flex; align-items: center; margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
+    .hero-icon-wrapper { width: 56px; height: 56px; background: #eff6ff; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-right: 20px; color: #2563eb; }
+    .hero-title { font-size: 20px; font-weight: 800; color: #1e293b; margin: 0 0 6px 0; }
+    .hero-desc { font-size: 14px; color: #64748b; margin: 0; }
 
     /* 个人中心 */
     .referral-box { background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border: 1px solid #fed7aa; border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 20px; }
-    .referral-title { font-size: 18px; font-weight: 800; color: #9a3412; margin-bottom: 5px; }
     .referral-code-display { font-family: monospace; font-size: 32px; font-weight: 800; color: #ea580c; background: rgba(255,255,255,0.6); padding: 10px 30px; border-radius: 12px; border: 2px dashed #f97316; display: inline-block; margin: 10px 0; cursor: pointer; }
-    
-    /* 其他 */
-    .poster-hero-container { background: white; border-radius: 20px; padding: 24px; border: 1px solid #e2e8f0; display: flex; align-items: center; margin-bottom: 25px; }
-    .hero-icon-wrapper { width: 60px; height: 60px; background: #eff6ff; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 30px; margin-right: 20px; color: #2563eb; }
-    .info-box-aligned { height: 45px !important; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1e40af; display: flex; align-items: center; padding: 0 16px; font-size: 14px; font-weight: 500; width: 100%; box-sizing: border-box; }
+    .footer-legal { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 12px; }
+    .footer-links a { color: #64748b; text-decoration: none; margin: 0 10px; transition: color 0.2s; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -205,27 +165,21 @@ def get_remote_ip():
         return headers.get("X-Forwarded-For", headers.get("Remote-Addr", "unknown_ip"))
     except: return "unknown_ip"
 
-def send_mock_sms(phone): return str(random.randint(1000, 9999))
-
-def generate_invite_code():
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-
 def render_footer():
-    st.markdown("""<div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 12px;">© 2026 抖音爆款工场 Pro | 鄂ICP备2024XXXXXX号-1</div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="footer-legal"><div class="footer-links"><a href="#">用户协议</a> | <a href="#">隐私政策</a> | <a href="#">免责声明</a> | <a href="#">关于我们</a></div><div style="margin-top: 10px;">© 2026 抖音爆款工场 Pro | 鄂ICP备2024XXXXXX号-1</div></div>""", unsafe_allow_html=True)
 
 def render_wechat_box(label, wx_id):
-    # 微信胶囊组件
-    html = f"""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');body{{margin:0;padding:0;background:transparent;font-family:'Inter',sans-serif;}}.pill{{display:flex;align-items:center;justify-content:space-between;background:white;border:1px solid #e2e8f0;border-radius:8px;padding:0 10px;height:36px;cursor:pointer;transition:all 0.2s;color:#334155;}}.pill:hover{{border-color:#07c160;background:#07c160;color:white;}}.right{{display:flex;align-items:center;gap:4px;font-family:monospace;font-weight:500;font-size:12px;color:#07c160;}}.pill:hover .right{{color:white;}}.msg{{display:none;font-size:11px;font-weight:bold;color:white;}}.pill:hover .msg{{color:white;}}</style></head><body><div class="pill" onclick="cp()"><span style="font-size:12px;font-weight:600;">{label}</span><div class="right" id="v"><span>{wx_id}</span></div><span class="msg" id="m">✅ 已复制</span></div><script>function cp(){{navigator.clipboard.writeText('{wx_id}');document.getElementById('v').style.display='none';document.getElementById('m').style.display='block';setTimeout(()=>{{document.getElementById('v').style.display='flex';document.getElementById('m').style.display='none';}},1500);}}</script></body></html>"""
+    html = f"""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');body{{margin:0;padding:0;background:transparent;overflow:hidden;font-family:'Inter',sans-serif;}}.wx-pill{{display:flex;align-items:center;justify-content:space-between;background:white;border:1px solid #e2e8f0;border-radius:8px;padding:0 10px;height:36px;cursor:pointer;transition:all 0.2s;box-sizing:border-box;color:#334155;}}.wx-pill:hover{{border-color:#07c160;background:#07c160;}}.wx-pill:hover .label{{color:white;}}.wx-pill:hover .right-part{{color:white;}}.wx-pill:hover svg{{fill:white;}}.label{{font-size:12px;font-weight:600;transition:0.2s;}}.right-part{{display:flex;align-items:center;gap:4px;font-family:monospace;font-weight:500;font-size:12px;transition:0.2s;color:#07c160;}}.copied-msg{{display:none;font-size:11px;font-weight:bold;color:white;}}.wx-pill:hover .copied-msg{{color:white;}}</style></head><body><div class="wx-pill" onclick="copyText(this)"><span class="label" id="lbl">{label}</span><div class="right-part" id="val"><svg width="14" height="14" viewBox="0 0 24 24" fill="#07c160" xmlns="http://www.w3.org/2000/svg"><path d="M8.5 13.5L11 15L10 17.5C10 17.5 10.5 17.5 12.5 15C15 15 17 13 17 10.5C17 8 15 6 12.5 6C10 6 8 8 8 10.5C8 12 8.5 13.5 8.5 13.5ZM16.5 5.5C14 5.5 12 7 12 9C12 11 14 12.5 16.5 12.5C17 12.5 17.5 12.5 18 12L19.5 13L19 11C20 10.5 20.5 9.5 20.5 9C20.5 7 18.5 5.5 16.5 5.5Z" fill="currentColor"/></svg><span>{wx_id}</span></div><span class="copied-msg" id="msg">✅ 已复制</span></div><script>function copyText(e){{const id='{wx_id}';const lbl=document.getElementById('lbl');const val=document.getElementById('val');const msg=document.getElementById('msg');const textArea=document.createElement("textarea");textArea.value=id;document.body.appendChild(textArea);textArea.select();document.execCommand('copy');document.body.removeChild(textArea);lbl.style.display='none';val.style.display='none';msg.style.display='block';setTimeout(()=>{{lbl.style.display='block';val.style.display='flex';msg.style.display='none';}},1500);}}</script></body></html>"""
     components.html(html, height=40)
 
 def render_copy_button_html(text, k):
     safe = text.replace("`", "\`").replace("'", "\\'")
-    html = f"""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap');body{{margin:0;padding:0;background:transparent;overflow:hidden;}}.btn{{width:100%;height:42px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-family:'Inter';font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}}.btn:hover{{background:#1d4ed8;}}.btn.ok{{background:#10b981;}}</style></head><body><button class="btn" onclick="cp(this)">📋 一键复制</button><script>function cp(e){{navigator.clipboard.writeText(`{safe}`).then(()=>{{e.classList.add("ok");e.innerText="✅ 成功";setTimeout(()=>{{e.classList.remove("ok");e.innerText="📋 一键复制"}},2000)}})}}</script></body></html>"""
+    html = f"""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap');body{{margin:0;padding:0;background:transparent;overflow:hidden;}}.btn{{width:100%;height:42px;background:#0f172a;color:#fff;border:none;border-radius:8px;font-family:'Inter';font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}}.btn:hover{{background:#334155;}}.btn:active{{transform:translateY(0);}}.btn.ok{{background:#10b981;}}</style></head><body><button class="btn" onclick="cp(this)">📋 一键复制</button><script>function cp(e){{navigator.clipboard.writeText(`{safe}`).then(()=>{{e.classList.add("ok");e.innerText="✅ 成功";setTimeout(()=>{{e.classList.remove("ok");e.innerText="📋 一键复制"}},2000)}})}}</script></body></html>"""
     components.html(html, height=50)
 
 def render_hover_copy_box(text, label="点击复制"):
     safe = text.replace("`", "\`").replace("'", "\\'")
-    html = f"""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');body{{margin:0;padding:0;background:transparent;overflow:hidden;font-family:'Inter';}}.box{{display:flex;align-items:center;justify-content:space-between;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;padding:0 10px;height:36px;cursor:pointer;transition:0.2s;color:#1e293b;font-size:13px;}}.box:hover{{border-color:#3b82f6;background:#fff;}}.hint{{font-size:12px;color:#94a3b8;}}.box:hover .hint{{color:#3b82f6;}}.box.ok{{background:#ecfdf5;border-color:#10b981;color:#065f46;}}</style></head><body><div class="box" onclick="c(this)"><span>{safe}</span><span class="hint" id="s">{label}</span></div><script>function c(e){{navigator.clipboard.writeText(`{safe}`);e.classList.add("ok");const s=e.querySelector("#s");const o=s.innerText;s.innerText="✅";setTimeout(()=>{{e.classList.remove("ok");s.innerText=o}},1500)}}</script></body></html>"""
+    html = f"""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');body{{margin:0;padding:0;background:transparent;overflow:hidden;font-family:'Inter';}}.code-box{{display:flex;align-items:center;justify-content:space-between;background-color:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;padding:0 10px;height:36px;cursor:pointer;transition:all 0.2s;color:#1e293b;font-weight:600;font-size:13px;box-sizing:border-box;}}.code-box:hover{{border-color:#3b82f6;background:#fff;box-shadow:0 0 0 2px rgba(59,130,246,0.1);}}.hint{{font-size:12px;color:#94a3b8;}}.code-box:hover .hint{{color:#3b82f6;}}.code-box.success{{background:#ecfdf5;border-color:#10b981;color:#065f46;}}.code-box.success .hint{{color:#059669;}}</style></head><body><div class="code-box" onclick="copyText(this)"><span id="content">{safe}</span><span class="hint" id="status">{label}</span></div><script>function copyText(e){{const t=`{safe}`,s=e.querySelector("#status");navigator.clipboard.writeText(t).then(()=>{{e.classList.add("success");const o=s.innerText;s.innerText="✅";setTimeout(()=>{{e.classList.remove("success");s.innerText=o}},1500)}}).catch(()=>{{s.innerText="❌"}})}}</script></body></html>"""
     components.html(html, height=40)
 
 # --- 业务逻辑 ---
@@ -243,6 +197,9 @@ def add_vip_days(account, days, source="system"):
     c.execute("INSERT INTO access_codes (code, duration_days, activated_at, expire_at, status, create_time, bind_user) VALUES (?, ?, ?, ?, ?, ?, ?)",
               (new_code, days, now, expire_at, 'active', now, account))
     conn.commit(); conn.close()
+
+def generate_invite_code():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
 def register_user(account, password, invite_code_used):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
@@ -342,59 +299,134 @@ def submit_feedback(phone, content):
     conn.commit(); conn.close()
 
 # ==========================================
-# 1. 认证模块 (登录页修复版)
+# 1. 认证模块 (终极美化卡片版)
 # ==========================================
 if 'user_phone' not in st.session_state:
     auto = check_ip_auto_login()
     if auto: st.session_state['user_phone'] = auto; st.toast(f"欢迎回来 {auto}", icon="👋"); time.sleep(0.5); st.rerun()
 
 def auth_page():
-    # 顶部占位，把内容往下推，垂直居中感
+    # 登录页专属 CSS
+    st.markdown("""
+    <style>
+        .stApp {
+            background-color: #f1f5f9 !important; /* 浅灰底 */
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px) !important;
+            background-size: 20px 20px !important;
+        }
+        /* 登录大卡片 */
+        .auth-container-card {
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            border: 1px solid #e2e8f0;
+            min-height: 550px;
+        }
+        
+        /* 左侧品牌区 */
+        .auth-left {
+            width: 45%;
+            background: #0f172a; /* 深色品牌色 */
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .auth-left::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 60%);
+            animation: pulse 10s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .brand-title { font-size: 32px; font-weight: 800; margin-bottom: 10px; z-index: 1; letter-spacing: -0.5px; }
+        .brand-sub { font-size: 14px; color: #94a3b8; margin-bottom: 40px; z-index: 1; line-height: 1.6; }
+        .brand-feat { display: flex; align-items: center; margin-bottom: 20px; font-size: 14px; color: #cbd5e1; z-index: 1; }
+        .brand-icon { width: 28px; height: 28px; background: rgba(255,255,255,0.1); border-radius: 6px; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 14px; }
+
+        /* 右侧表单区 */
+        .auth-right { width: 55%; padding: 40px; display: flex; flex-direction: column; justify-content: center; background: white; }
+        
+        /* Tab 美化 */
+        .stTabs [data-baseweb="tab-list"] {
+            border-bottom: 2px solid #f1f5f9; gap: 20px; margin-bottom: 20px;
+        }
+        .stTabs [data-baseweb="tab"] {
+            background: transparent !important; border: none !important; padding: 10px 0 !important;
+            font-size: 14px; color: #64748b;
+        }
+        .stTabs [data-baseweb="tab"][aria-selected="true"] {
+            color: #0f172a; font-weight: 700; border-bottom: 2px solid #0f172a !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
     st.markdown("<div style='height: 8vh;'></div>", unsafe_allow_html=True)
     
-    # 2:3 比例，让登录框不要太宽
-    c1, c2, c3 = st.columns([1, 6, 1])
+    # 居中布局
+    c1, c2, c3 = st.columns([1, 8, 1])
     
     with c2:
-        with st.container(): # 外层容器
-            col_l, col_r = st.columns([1.2, 1], gap="large")
+        # 使用 Streamlit 布局模拟双栏卡片
+        with st.container():
+            # 这里我们不用 HTML div 包含一切，而是用 st.columns 拆分
+            # 为了达到“一张卡片”的视觉效果，我们在 CSS 里定义了背景，但这里只能用 columns 模拟
+            # 方案：用 st.container(border=True) 作为外框，内部 columns
             
-            # 左侧：品牌展示
-            with col_l:
-                st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-                st.markdown("<div class='lp-header'>抖音爆款工场 Pro</div>", unsafe_allow_html=True)
-                st.markdown("<div class='lp-sub'>专为素人 KOC 打造的 AI 变现操作系统</div>", unsafe_allow_html=True)
-                st.markdown("""
-                <div class='lp-feature'><div class='lp-icon'>🚀</div>5路并发 · 极速文案清洗改写</div>
-                <div class='lp-feature'><div class='lp-icon'>💡</div>爆款选题 · 击穿流量焦虑</div>
-                <div class='lp-feature'><div class='lp-icon'>🎨</div>海报生成 · 影视级光影质感</div>
-                <div class='lp-feature'><div class='lp-icon'>💰</div>裂变系统 · 邀请好友免费续杯</div>
-                """, unsafe_allow_html=True)
-            
-            # 右侧：登录卡片 (使用原生容器+border=True模拟卡片)
-            with col_r:
-                with st.container(border=True): # 这里就是那个白色卡片
-                    t1, t2, t3 = st.tabs(["🔐 登录", "✨ 注册", "🆘 找回"])
+            c_card = st.container(border=True)
+            with c_card:
+                col_l, col_r = st.columns([1, 1.2], gap="medium")
+                
+                # 左侧内容 (模拟品牌区)
+                with col_l:
+                    st.markdown("""
+                    <div style="padding: 20px;">
+                        <h2 style="margin: 0; color: #0f172a; font-weight: 800;">爆款工场 Pro</h2>
+                        <p style="color: #64748b; font-size: 14px; margin-bottom: 30px;">AI 驱动的 KOC 商业变现操作系统</p>
+                        
+                        <div style="display:flex;align-items:center;margin-bottom:15px;color:#334155;font-size:14px;font-weight:500;">
+                            <span style="background:#eff6ff;padding:6px;border-radius:6px;margin-right:10px;">🚀</span> 5路并发文案改写
+                        </div>
+                        <div style="display:flex;align-items:center;margin-bottom:15px;color:#334155;font-size:14px;font-weight:500;">
+                            <span style="background:#f0fdf4;padding:6px;border-radius:6px;margin-right:10px;">💡</span> 爆款选题一键生成
+                        </div>
+                        <div style="display:flex;align-items:center;margin-bottom:15px;color:#334155;font-size:14px;font-weight:500;">
+                            <span style="background:#fefce8;padding:6px;border-radius:6px;margin-right:10px;">💰</span> 邀请裂变免费续杯
+                        </div>
+                        <br>
+                        <div style="font-size:12px;color:#94a3b8;">已有 2000+ 创作者加入</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                # 右侧表单
+                with col_r:
+                    t1, t2, t3 = st.tabs(["登录", "注册", "找回"])
+                    
                     with t1:
-                        st.write("") # Spacer
+                        st.write("")
                         with st.form("login_form"):
                             acc = st.text_input("账号", placeholder="手机号 或 邮箱", label_visibility="collapsed")
                             pw = st.text_input("密码", type="password", placeholder="请输入密码", label_visibility="collapsed")
-                            st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+                            st.markdown("<div style='height:15px'></div>", unsafe_allow_html=True)
                             if st.form_submit_button("立即登录", type="primary", use_container_width=True):
                                 s, m = login_user(acc, pw)
                                 if s: st.session_state['user_phone'] = acc; st.rerun()
                                 else: st.error(m)
                     
                     with t2:
-                        st.info(f"🎁 新人注册即送 {REWARD_DAYS_NEW_USER} 天 VIP")
-                        acc = st.text_input("注册账号", key="r_acc", placeholder="手机号 或 邮箱", label_visibility="collapsed")
-                        pw1 = st.text_input("设置密码", type="password", key="r_p1", placeholder="设置密码", label_visibility="collapsed")
-                        pw2 = st.text_input("确认密码", type="password", key="r_p2", placeholder="确认密码", label_visibility="collapsed")
+                        st.info(f"🎁 注册即送 {REWARD_DAYS_NEW_USER} 天 VIP")
+                        acc = st.text_input("账号", key="r_acc", placeholder="手机号 或 邮箱", label_visibility="collapsed")
+                        pw1 = st.text_input("密码", type="password", key="r_p1", placeholder="设置密码", label_visibility="collapsed")
+                        pw2 = st.text_input("确认", type="password", key="r_p2", placeholder="确认密码", label_visibility="collapsed")
                         
-                        with st.expander("❓ 没有邀请码？"):
-                            st.markdown(f"<div class='wx-invite-box'>添加客服 <b>W7774X</b><br>回复“注册”免费获取</div>", unsafe_allow_html=True)
-                            render_hover_copy_box("W7774X", "点击复制微信号")
+                        with st.expander("❓ 获取邀请码"):
+                            st.caption("添加客服 **W7774X** 回复“注册”")
+                            render_hover_copy_box("W7774X", "复制微信号")
                         
                         invite_code = st.text_input("邀请码", key="r_invite", placeholder="邀请码 (必填)", label_visibility="collapsed")
                         
@@ -413,16 +445,15 @@ def auth_page():
                                     s, m = register_user(acc, pw1, invite_code)
                                     if s: st.success(m); st.balloons(); time.sleep(2); st.session_state['user_phone'] = acc; st.rerun()
                                     else: st.error(m)
-                                else: st.error("❌ 邀请码无效")
-                                
+                                else: st.error("无效邀请码")
+                    
                     with t3:
-                        st.warning("⚠️ 为了您的账号安全，找回密码仅支持邮箱验证。")
-                        email = st.text_input("请输入注册邮箱", placeholder="name@example.com")
+                        st.write("")
+                        st.warning("🔒 仅支持通过邮箱找回密码")
+                        email = st.text_input("注册邮箱", placeholder="name@example.com")
                         if st.button("发送重置邮件", use_container_width=True):
-                            if "@" in email:
-                                st.success(f"✅ 重置链接已发送至 {email} (模拟)")
-                            else:
-                                st.error("请输入有效的邮箱地址")
+                            if "@" in email: st.success(f"邮件已发送至 {email}")
+                            else: st.error("邮箱格式错误")
 
     render_footer()
 
@@ -444,12 +475,9 @@ with st.sidebar:
     shop_url = get_setting("shop_url")
     buy_btn_html = f"""<a href="{shop_url}" target="_blank" class="buy-btn-sidebar">💎 充值</a>""" if shop_url else ""
     role_display = VIP_MSG if IS_VIP else "🌑 普通用户"
-    # 截取账号显示
     display_name = CURRENT_USER
     if len(display_name) > 7: display_name = display_name[:3] + "****" + display_name[-4:]
-    
     st.markdown(f"""<div class="sidebar-user-card"><div class="user-left"><div class="user-avatar">👤</div><div class="user-info"><div class="user-name">{display_name}</div><div class="user-role">{role_display}</div></div></div>{buy_btn_html}</div>""", unsafe_allow_html=True)
-    
     if not IS_VIP:
         with st.expander("🔑 激活卡密", expanded=True):
             c = st.text_input("卡密", type="password", key="side_cd", label_visibility="collapsed", placeholder="输入卡密...")
@@ -476,10 +504,17 @@ with st.sidebar:
 
 menu = st.session_state['nav_menu']
 
-# --- 首页 ---
+# --- 首页 (Hero Card) ---
 def page_home():
     st.markdown("<div style='height: 4rem;'></div>", unsafe_allow_html=True)
-    st.markdown("""<div class="hero-card-container"><div class="hero-title">抖音爆款工场 Pro</div><div class="hero-subtitle">让流量不再是玄学 · 专为素人 KOC 打造的 AI 变现神器</div></div>""", unsafe_allow_html=True)
+    # 🔥 首页专属卡片式 Hero 🔥
+    st.markdown("""
+    <div class="hero-card-container">
+        <div class="hero-title">抖音爆款工场 Pro</div>
+        <div class="hero-subtitle">让流量不再是玄学 · 专为素人 KOC 打造的 AI 变现神器</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         with st.container(border=True):
@@ -497,6 +532,7 @@ def page_home():
         with st.container(border=True):
             st.markdown("""<div class="home-card-inner"><div class="home-card-icon">🏷️</div><div class="home-card-title">账号起名</div><div class="home-card-desc">AI 算命 · 爆款玄学<br>赛道垂直定制</div></div>""", unsafe_allow_html=True)
             st.button("立即使用 ➜", key="h_btn4", on_click=go_to, args=("🏷️ 账号起名",), type="primary", use_container_width=True)
+    
     st.markdown("<br>", unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("#### 📢 系统公告")

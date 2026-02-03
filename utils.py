@@ -17,21 +17,16 @@ def generate_invite_code():
 # ==============================================================================
 
 def inject_css(page_id="auth"):
-    # 1. 全局基础 - 隐藏原生组件
+    # 1. 全局基础
     base_css = """
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        html, body, [class*="css"] { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
         
-        /* 全局字体 */
-        html, body, [class*="css"] { 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
-        }
-        
-        /* 隐藏 Streamlit 顶栏 */
+        /* 隐藏原生组件 */
         header[data-testid="stHeader"] { display: none !important; height: 0 !important; visibility: hidden !important; }
-        [data-testid="stToolbar"] { display: none !important; }
-        [data-testid="stDecoration"] { display: none !important; }
         #MainMenu { display: none !important; }
+        [data-testid="stSidebarCollapsedControl"] { display: none !important; }
         
         /* 侧边栏 */
         [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
@@ -71,88 +66,86 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 首页 (Home) - 保持无白框完美状态
+    # 🔒 [LOCKED] 首页独立设计 - 悬浮岛式 (Floating Island)
     # ----------------------------------------------------------------
     elif page_id == "home":
         st.markdown("""
         <style>
-            /* 1. 容器清理：物理归零 */
-            div[data-testid="block-container"] { 
+            .stApp { background-color: #f8fafc; }
+            
+            /* 1. 容器：不再尝试去填满顶部，而是留出优雅的间距 */
+            div.block-container { 
                 max-width: 1200px !important; 
-                padding-top: 0px !important;
-                padding-left: 40px !important;
-                padding-right: 40px !important;
-                margin-top: 20px !important; /* 顶部留出一点灰色的空间，而不是白框 */
-                background-color: transparent !important; /* 确保无背景色 */
+                padding: 1rem 40px 50px 40px !important; /* 顶部留白，不再强行置顶 */
             }
-            .stApp, div[data-testid="stAppViewContainer"] { background-color: #f8fafc !important; }
 
-            /* 悬浮岛头图 */
+            /* 2. 悬浮岛头图 (Card Header) - 独立卡片，不与顶部粘连 */
             .home-header-card {
                 background: linear-gradient(120deg, #2563eb, #1d4ed8);
-                border-radius: 20px; padding: 50px 40px; text-align: center; color: white;
+                border-radius: 20px;
+                padding: 50px 40px;
+                text-align: center; color: white;
                 box-shadow: 0 15px 40px -10px rgba(37, 99, 235, 0.4); 
-                margin-bottom: 30px; position: relative; overflow: hidden;
+                margin-bottom: 30px;
+                position: relative;
+                overflow: hidden;
             }
+            /* 增加一点极光纹理 */
             .home-header-card::before {
                 content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
                 background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
                 animation: rotateLight 20s linear infinite;
             }
             @keyframes rotateLight { from {transform: rotate(0deg);} to {transform: rotate(360deg);} }
-            .header-title-v3 { font-size: 36px; font-weight: 800; margin-bottom: 10px; position: relative; z-index: 2; }
-            .header-sub-v3 { font-size: 15px; opacity: 0.95; font-weight: 400; position: relative; z-index: 2; }
+            
+            .header-title { font-size: 36px; font-weight: 800; margin-bottom: 10px; position: relative; z-index: 2; }
+            .header-sub { font-size: 15px; opacity: 0.95; font-weight: 400; position: relative; z-index: 2; }
 
-            /* 核心功能 */
-            .feature-box-v3 {
+            /* 3. 栏目标题 */
+            .section-label { 
+                font-size: 18px; font-weight: 800; color: #1e293b; 
+                margin-bottom: 15px; display: flex; align-items: center; gap: 8px; 
+            }
+            .section-label::before { content: ""; display: block; width: 4px; height: 18px; background: #3b82f6; border-radius: 2px; }
+
+            /* 4. 核心功能卡片 */
+            .feature-card-pro {
                 background: white; border: 1px solid #e2e8f0; border-radius: 16px;
                 padding: 25px 20px; text-align: center; height: 160px;
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
                 transition: all 0.3s ease; position: relative; overflow: hidden;
             }
-            .feature-box-v3:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); border-color: #bfdbfe; }
-            .feat-icon-v3 { font-size: 32px; margin-bottom: 12px; } 
-            .feat-title-v3 { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
-            .feat-desc-v3 { font-size: 12px; color: #64748b; line-height: 1.4; }
+            .feature-card-pro:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08);
+                border-color: #bfdbfe;
+            }
+            .feat-icon { font-size: 32px; margin-bottom: 12px; } 
+            .feat-title { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
+            .feat-desc { font-size: 12px; color: #64748b; line-height: 1.4; }
 
-            /* 公告 */
-            .news-box-v3 {
+            /* 5. 系统公告 (静态悬浮条) */
+            .news-container {
                 background: white; border: 1px solid #fed7aa; border-radius: 12px;
                 padding: 12px 15px; display: flex; align-items: center; gap: 15px;
-                box-shadow: 0 4px 10px -2px rgba(249, 115, 22, 0.1); margin-bottom: 30px;
+                box-shadow: 0 4px 10px -2px rgba(249, 115, 22, 0.1);
+                margin-bottom: 30px;
             }
-            .news-tag-v3 { background: #fff7ed; color: #ea580c; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 4px; border: 1px solid #ffedd5; flex-shrink: 0; }
-            .news-text-v3 { font-size: 14px; color: #334155; font-weight: 500; }
-
-            /* 标题与中控 */
-            .section-title-v3 { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-            .section-title-v3::before { content: ""; display: block; width: 4px; height: 18px; background: #3b82f6; border-radius: 2px; }
-            .creation-console { background: white; border-radius: 24px; padding: 10px 40px 40px 40px; margin-top: 0px; }
-            div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 10; }
+            .news-badge { 
+                background: #fff7ed; color: #ea580c; font-size: 11px; font-weight: 800; 
+                padding: 3px 8px; border-radius: 4px; border: 1px solid #ffedd5; flex-shrink: 0;
+            }
+            .news-content { font-size: 14px; color: #334155; font-weight: 500; }
+            
+            /* 隐形按钮 */
+            div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 5; }
             div.stButton button:hover { background: transparent; }
-
-            /* 变现项目 V7 */
-            .proj-card-v7 {
-                background: white; border-radius: 16px; border: 1px solid #e2e8f0;
-                padding: 24px; height: 100%; display: flex; flex-direction: column;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            .proj-card-v7:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(0,0,0,0.08); border-color: #3b82f6; }
-            .pure-head { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
-            .pure-icon { font-size: 24px; }
-            .pure-title { font-size: 16px; font-weight: 700; color: #0f172a; }
-            .pure-desc { font-size: 13px; color: #64748b; line-height: 1.6; flex-grow: 1; margin-bottom: 20px; }
-            .pure-footer {
-                margin-top: auto; padding-top: 15px; border-top: 1px dashed #e2e8f0;
-                color: #64748b; font-size: 12px; display: flex; align-items: center; gap: 6px; font-family: monospace;
-            }
-            .footer-icon { font-size: 14px; }
         </style>
         """, unsafe_allow_html=True)
 
-    # ============================================================
-    # 📝 [NEW] 文案改写页 (Rewrite) - 去白框修复版
-    # ============================================================
+    # ----------------------------------------------------------------
+    # 📝 [NEW] 文案改写页 (Rewrite) - 全新设计
+    # ----------------------------------------------------------------
     elif page_id == "rewrite":
         st.markdown("""
         <style>
@@ -160,15 +153,13 @@ def inject_css(page_id="auth"):
             .stApp, div[data-testid="stAppViewContainer"] { 
                 background-color: #f8fafc !important; 
             }
-            
-            /* 🔴 核心修复：容器背景设为透明，消除“白色长条” */
             div[data-testid="block-container"] { 
-                background-color: transparent !important; /* 关键！ */
+                background-color: transparent !important; 
                 max-width: 1300px !important; 
-                padding-top: 0px !important; /* 物理消除顶部间距 */
+                padding-top: 0px !important; 
                 padding-left: 40px !important; 
                 padding-right: 40px !important; 
-                margin-top: 20px !important; /* 顶部自然呼吸感，透出灰色背景 */
+                margin-top: 20px !important; 
             }
 
             /* 2. 顶部头图 (移植自首页，保持一致性) */
@@ -207,12 +198,14 @@ def inject_css(page_id="auth"):
                 background-color: #f8fafc !important;
                 font-size: 15px !important;
                 padding: 15px !important;
+                transition: all 0.2s;
             }
             .stTextArea textarea:focus {
                 border-color: #3b82f6 !important;
                 box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
                 background-color: white !important;
             }
+            .stTextArea label { font-weight: 600; color: #334155; }
             
             /* 5. 按钮样式 */
             div.stButton button[kind="primary"] {
@@ -224,17 +217,13 @@ def inject_css(page_id="auth"):
                 height: 42px;
                 box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
             }
-            div.stButton button[kind="primary"]:hover {
-                transform: translateY(-2px);
-            }
-            div.stButton button[kind="secondary"] {
-                width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; color: #475569; height: 42px;
-            }
+            div.stButton button[kind="primary"]:hover { transform: translateY(-2px); }
+            div.stButton button[kind="secondary"] { width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; color: #475569; height: 42px; }
         </style>
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 其他页面 (General/Admin) - 保持原样
+    # 🔒 [LOCKED] 其他页面
     # ----------------------------------------------------------------
     elif page_id == "general":
         st.markdown("""<style>.stApp { background-color: #f8fafc; } div.block-container { max-width: 1200px !important; padding: 2rem 40px 50px 40px !important; } .page-banner { background: linear-gradient(120deg, #2563eb, #1d4ed8); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4); } .banner-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; } .banner-desc { font-size: 15px; opacity: 0.9; line-height: 1.5; } div[data-testid="stVerticalBlock"] > div { background: transparent; } .stButton > button { border-radius: 8px; font-weight: 600; border: none; } </style>""", unsafe_allow_html=True)
@@ -266,19 +255,75 @@ def render_page_banner(title, desc): st.markdown(f"""<div class="page-banner"><d
 def render_conversion_tip(): st.markdown("""<div class="conversion-tip"><span>💰</span><span><b>商业化建议：</b> 已自动植入私域钩子，预计提升 30% 导流效率。</span></div>""", unsafe_allow_html=True)
 def render_feature_card_home(icon, title, desc): return ""
 
-# 🔴 纯 HTML 渲染卡片 (无乱码，无交互，纯展示) - [LOCKED]
-def render_pure_html_card(icon, title, desc, wx_id):
+# 🔴 全新的卡片组件：高度压缩版 (高度从 270px -> 190px, iframe 200px)
+# [CRITICAL RESTORATION]: 恢复为 render_project_card 以匹配 home.py 的调用
+def render_project_card(icon, title, desc, wx_id):
+    safe_text = wx_id.replace("'", "\\'")
+    
     html = f"""
-    <div class="proj-card-v7">
-        <div class="pure-head">
-            <span class="pure-icon">{icon}</span>
-            <span class="pure-title">{title}</span>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {{
+            margin: 0; padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+            overflow: hidden;
+            box-sizing: border-box;
+        }}
+        .card-container {{
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            display: flex; flex-direction: column; justify-content: space-between;
+            height: 190px;
+            transition: all 0.3s ease;
+            cursor: pointer; position: relative; overflow: hidden;
+        }}
+        .card-container:hover {{ border-color: #bfdbfe; box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.1); transform: translateY(-4px); }}
+        .card-content {{ padding: 18px 18px 10px 18px; }}
+        .header {{ display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }}
+        .icon {{ font-size: 22px; }}
+        .title {{ font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; }}
+        .desc {{ font-size: 12px; color: #64748b; line-height: 1.4; margin: 0; }}
+        
+        .action-btn {{
+            background-color: #ecfdf5; color: #059669; width: 100%; padding: 10px 0;
+            text-align: center; font-size: 12px; font-weight: 600; border-top: 1px solid #e2e8f0;
+            transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+        }}
+        .card-container:hover .action-btn {{ background-color: #10b981; color: white; border-color: #10b981; }}
+        .action-btn:active {{ background-color: #059669; }}
+    </style>
+    </head>
+    <body>
+        <div class="card-container" onclick="copyAction()">
+            <div class="card-content">
+                <div class="header">
+                    <span class="icon">{icon}</span>
+                    <span class="title">{title}</span>
+                </div>
+                <div class="desc">{desc}</div>
+            </div>
+            <div class="action-btn" id="btn-text">
+                <span>📋</span> 复制微信领取资料 ({wx_id})
+            </div>
         </div>
-        <div class="pure-desc">{desc}</div>
-        <div class="pure-footer">
-            <span class="footer-icon">📋</span>
-            <span>资料领取: {wx_id}</span>
-        </div>
-    </div>
+        <script>
+            function copyAction() {{
+                const text = "{safe_text}";
+                navigator.clipboard.writeText(text).then(() => {{
+                    const btn = document.getElementById('btn-text');
+                    const originalHTML = btn.innerHTML;
+                    btn.innerHTML = '✅ 已复制！请去微信添加';
+                    btn.style.backgroundColor = '#10b981'; btn.style.color = 'white';
+                    setTimeout(() => {{ btn.innerHTML = originalHTML; btn.style.backgroundColor = ''; btn.style.color = ''; }}, 2000);
+                }}).catch(err => {{ alert('复制失败: ' + text); }});
+            }}
+        </script>
+    </body>
+    </html>
     """
-    st.markdown(html, unsafe_allow_html=True)
+    components.html(html, height=200)

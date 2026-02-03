@@ -338,33 +338,66 @@ if 'user_phone' not in st.session_state:
     if auto: st.session_state['user_phone'] = auto; st.toast(f"欢迎回来 {auto}", icon="👋"); time.sleep(0.5); st.rerun()
 
 def auth_page():
-    # 🔥 登录页专属 CSS (隔离: 仅在登录态生效，且通过特定类名控制) 🔥
+    # 🔥 登录页专属 CSS (隔离: 仅在登录态生效) 🔥
     st.markdown("""
     <style>
-        /* 动态流光背景 - 仅针对登录页 */
+        /* 动态流光背景 */
         .stApp {
             background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
+            background-size: 400% 400%; animation: gradientBG 15s ease infinite;
         }
         @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
-        
         [data-testid="stSidebarCollapsedControl"] { display: none; }
         
+        /* 玻璃卡片优化 */
         .login-glass-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.75); /* 增加一点不透明度 */
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             border-radius: 24px; padding: 40px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15); /* 柔和阴影 */
             animation: fadein 0.8s;
         }
         @keyframes fadein { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
+        /* 左侧文字优化 */
         .lp-header { font-size: 36px; font-weight: 800; color: #1e293b; letter-spacing: -1px; margin-bottom: 8px; }
         .lp-sub { font-size: 16px; color: #475569; margin-bottom: 30px; font-weight: 500; }
-        .lp-feature { display: flex; align-items: center; margin-bottom: 18px; font-size: 15px; color: #334155; font-weight: 600; }
-        .lp-icon { width: 32px; height: 32px; background: rgba(255,255,255,0.8); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 18px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .lp-feature { display: flex; align-items: center; margin-bottom: 20px; font-size: 15px; color: #334155; font-weight: 600; }
+        
+        /* 🔥 新增：SVG渐变图标容器 */
+        .lp-icon-svg {
+            width: 36px; height: 36px; background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            margin-right: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        /* 🔥 核心：强制覆盖 Streamlit 输入框样式，使其透明/高级 🔥 */
+        /* 针对文本输入框和密码框 */
+        .stTextInput > div > div > input {
+            background-color: rgba(255, 255, 255, 0.5) !important; /* 半透明背景 */
+            border: 1px solid rgba(255, 255, 255, 0.8) !important; /* 极细白边框 */
+            color: #1e293b !important; /* 深色文字 */
+            border-radius: 12px !important; /* 更圆润 */
+            padding: 12px 15px !important; /* 更大内边距 */
+            font-weight: 500 !important;
+            transition: all 0.3s ease !important;
+        }
+        /* 聚焦状态 - 蓝色微光 */
+        .stTextInput > div > div > input:focus {
+            border-color: #3b82f6 !important;
+            background-color: rgba(255, 255, 255, 0.9) !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+        }
+        /* 隐藏输入框上方的 label，让界面更干净 */
+        .stTextInput > label { display: none !important; }
+        
+        /* Tab 样式微调 */
+        .stTabs [data-baseweb="tab-list"] {
+            background-color: rgba(255,255,255,0.5);
+            padding: 5px; border-radius: 12px; margin-bottom: 20px;
+        }
+        .stTabs [data-baseweb="tab"] { height: 40px; border-radius: 8px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -373,41 +406,42 @@ def auth_page():
     c1, c2, c3 = st.columns([1, 10, 1])
     with c2:
         with st.container():
-            # 使用自定义HTML结构模拟左右分栏
             c_left, c_right = st.columns([1.1, 1], gap="large")
-            
             with c_left:
                 st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
                 st.markdown("<div class='lp-header'>抖音爆款工场 Pro</div>", unsafe_allow_html=True)
                 st.markdown("<div class='lp-sub'>全网首个 AI + KOC 商业变现操作系统</div>", unsafe_allow_html=True)
+                # 使用 SVG 图标替代 Emoji
                 st.markdown("""
-                <div class='lp-feature'><div class='lp-icon'>🚀</div>5路并发 · 极速文案清洗改写</div>
-                <div class='lp-feature'><div class='lp-icon'>💡</div>爆款选题 · 击穿流量焦虑</div>
-                <div class='lp-feature'><div class='lp-icon'>🎨</div>海报生成 · 影视级光影质感</div>
-                <div class='lp-feature'><div class='lp-icon'>💰</div>裂变系统 · 邀请好友免费续杯</div>
+                <div class='lp-feature'><div class='lp-icon-svg'><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#grad1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#3b82f6" /><stop offset="100%" style="stop-color:#8b5cf6" /></linearGradient></defs><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>5路并发 · 极速文案清洗改写</div>
+                <div class='lp-feature'><div class='lp-icon-svg'><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#grad2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#f59e0b" /><stop offset="100%" style="stop-color:#ef4444" /></linearGradient></defs><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>爆款选题 · 击穿流量焦虑</div>
+                <div class='lp-feature'><div class='lp-icon-svg'><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#grad3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#10b981" /><stop offset="100%" style="stop-color:#059669" /></linearGradient></defs><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>海报生成 · 影视级光影质感</div>
+                <div class='lp-feature'><div class='lp-icon-svg'><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#grad4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#6366f1" /><stop offset="100%" style="stop-color:#ec4899" /></linearGradient></defs><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>裂变系统 · 邀请好友免费续杯</div>
                 """, unsafe_allow_html=True)
             
             with c_right:
-                # 登录框容器
                 st.markdown('<div class="login-glass-card">', unsafe_allow_html=True)
                 t1, t2, t3 = st.tabs(["🔐 登录", "✨ 注册", "🆘 找回"])
                 with t1:
                     with st.form("login_form"):
-                        ph = st.text_input("手机号", placeholder="请输入手机号")
-                        pw = st.text_input("密码", type="password", placeholder="请输入密码")
+                        # label_visibility="collapsed" 配合CSS隐藏label，更简洁
+                        ph = st.text_input("手机号", placeholder="请输入手机号", label_visibility="collapsed")
+                        pw = st.text_input("密码", type="password", placeholder="请输入密码", label_visibility="collapsed")
+                        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True) # 间距
                         if st.form_submit_button("立即登录", type="primary", use_container_width=True):
                             s, m = login_user(ph, pw)
                             if s: st.session_state['user_phone'] = ph; st.rerun()
                             else: st.error(m)
                 with t2:
                     st.info(f"🎁 新人福利：注册即送 {REWARD_DAYS_NEW_USER} 天 VIP")
-                    ph = st.text_input("手机号", key="r_ph")
-                    pw1 = st.text_input("设置密码", type="password", key="r_p1")
-                    pw2 = st.text_input("确认密码", type="password", key="r_p2")
+                    ph = st.text_input("手机号", key="r_ph", placeholder="手机号", label_visibility="collapsed")
+                    pw1 = st.text_input("设置密码", type="password", key="r_p1", placeholder="设置密码", label_visibility="collapsed")
+                    pw2 = st.text_input("确认密码", type="password", key="r_p2", placeholder="确认密码", label_visibility="collapsed")
                     with st.expander("❓ 没有邀请码？"):
                         st.markdown(f"<div class='wx-invite-box'>添加客服 <b>W7774X</b> 回复“注册”获取</div>", unsafe_allow_html=True)
                         render_hover_copy_box("W7774X", "点击复制微信号")
-                    invite_code = st.text_input("邀请码", key="r_invite", placeholder="VIP888")
+                    invite_code = st.text_input("邀请码", key="r_invite", placeholder="邀请码 (必填)", label_visibility="collapsed")
+                    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
                     if st.button("立即注册", type="primary", use_container_width=True):
                         if pw1 != pw2: st.error("两次密码不一致")
                         elif not invite_code: st.error("请输入邀请码")
@@ -425,7 +459,7 @@ def auth_page():
                                 else: st.error(m)
                             else: st.error("❌ 邀请码无效")
                 with t3: st.info("请联系客服微信：W7774X 重置密码")
-                st.markdown('</div>', unsafe_allow_html=True) # Close card
+                st.markdown('</div>', unsafe_allow_html=True)
 
     render_footer()
 

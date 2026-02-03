@@ -1,36 +1,23 @@
+# views/admin.py
 import streamlit as st
-import pandas as pd
-import uuid
-import datetime
-from database import get_conn
-from config import ADMIN_ACCOUNT
 from utils import load_isolated_css
 
 def view_admin():
-    if st.session_state.get('user_phone') != ADMIN_ACCOUNT:
-        st.error("无权访问")
-        return
-        
-    st.markdown("### 🕵️‍♂️ 管理后台")
+    load_isolated_css("admin") # 🔒 锁定样式
     
-    t1, t2 = st.tabs(["用户管理", "卡密生成"])
-    with t1:
-        conn = get_conn()
-        # 简单查询前50个用户
-        df = pd.read_sql("SELECT phone, invite_count, register_time FROM users ORDER BY register_time DESC LIMIT 50", conn)
-        st.dataframe(df, use_container_width=True)
-        conn.close()
-        
-    with t2:
-        days = st.number_input("天数", value=30)
-        count = st.number_input("数量", value=10)
-        if st.button("生成卡密"):
-            conn = get_conn(); c = conn.cursor()
-            new_codes = []
-            for _ in range(count):
-                code = f"VIP-{uuid.uuid4().hex[:8].upper()}"
-                c.execute("INSERT INTO access_codes (code, duration_days, status, create_time) VALUES (?, ?, ?, ?)", (code, days, 'unused', datetime.datetime.now()))
-                new_codes.append([code, days])
-            conn.commit(); conn.close()
-            st.success(f"已生成 {count} 个卡密")
-            st.dataframe(pd.DataFrame(new_codes, columns=["卡密", "天数"]))
+    st.markdown("### 🕵️‍♂️ 系统管理后台")
+    
+    # 模拟数据统计
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown('<div class="stat-card"><small>总用户数</small><div class="stat-value">1,280</div></div>', unsafe_allow_html=True)
+    with col2:
+        st.markdown('<div class="stat-card"><small>今日注册</small><div class="stat-value">42</div></div>', unsafe_allow_html=True)
+    with col3:
+        st.markdown('<div class="stat-card"><small>激活卡密数</small><div class="stat-value">856</div></div>', unsafe_allow_html=True)
+    
+    st.write("")
+    tab1, tab2 = st.tabs(["🎫 卡密管理", "📢 系统公告"])
+    with tab1:
+        st.button("➕ 生成新卡密")
+        st.table({"卡密": ["VIP-888", "VIP-999"], "天数": [30, 365], "状态": ["未使用", "已使用"]})

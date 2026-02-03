@@ -1,62 +1,71 @@
 # main.py
 import streamlit as st
+from config import ADMIN_ACCOUNT
+from database import init_db, get_user_vip_status
+from utils import inject_css, render_wechat_pill
 from views.auth import view_auth
-from views.home import view_home
 
-def main():
-    # --- 1. 全局配置：必须放在第一行 ---
-    st.set_page_config(page_title="爆款工厂PRO", layout="wide", initial_sidebar_state="expanded")
+# --- 页面配置 (必须是第一行) ---
+st.set_page_config(
+    page_title=抖音爆款工场 Pro, 
+    layout=wide,
+    page_icon=💠,
+    initial_sidebar_state=expanded
+)
 
-    # --- 2. 核心 CSS 修复：精准隐藏顶部，保留侧边栏控制 ---
-    st.markdown("""
-<style>
-    /* 仅隐藏顶部黑条和装饰，不影响侧边栏按钮 */
-    [data-testid="stHeader"] { 
-        background-color: rgba(0,0,0,0) !important;
-        color: transparent !important;
-    }
-    
-    /* 侧边栏大师级美化：纯白、单线、14px */
-    [data-testid="stSidebar"] {
-        background-color: #FFFFFF !important;
-        border-right: 1px solid #F1F5F9 !important;
-    }
-    
-    /* 侧边栏导航文字样式锁定 */
-    [data-testid="stSidebarNav"] span {
-        font-size: 14px !important;
-        color: #475569 !important;
-    }
-</style>
-""", unsafe_allow_html=True)
+# --- 初始化数据库 ---
+init_db()
 
-    # --- 3. 登录状态逻辑拦截 ---
-    if 'user_phone' not in st.session_state:
-        # 未登录：强制显示锁定版的登录页
+# --- 主程序逻辑 ---
+def main()
+    if 'user_phone' not in st.session_state
+        # 未登录 - 显示登录页
         view_auth()
-    else:
-        # 已登录：展示侧边栏和主页面内容
-        with st.sidebar:
-            st.markdown("<h2 style='color: #1E3A8A; font-size: 20px; padding-left: 10px;'>爆款工厂PRO</h2>", unsafe_allow_html=True)
-            st.write("\n")
+    else
+        # 已登录 - 显示主界面
+        inject_css(app) # 注入系统样式
+        
+        # --- 侧边栏导航 ---
+        with st.sidebar
+            current_user = st.session_state['user_phone']
+            is_vip, msg = get_user_vip_status(current_user)
             
-            # 这种方式是手动侧边栏导航，更稳固
-            menu = st.radio(
-                "导航中心",
-                ["首页大盘", "算法嗅探", "神经编辑", "系统设置"],
-                label_visibility="collapsed"
-            )
+            st.markdown(f👤 用户：{current_user})
+            if is_vip st.success(f{msg})
+            else st.warning(普通用户)
             
-            st.write("\n" * 15)
-            if st.button("安全退出", use_container_width=True):
+            # 菜单选项
+            ops = [🏠 首页, 📝 文案改写, 💡 爆款选题, 🎨 海报生成, 🏷️ 账号起名, 👤 个人中心]
+            if current_user == ADMIN_ACCOUNT
+                ops.append(🕵️‍♂️ 管理后台)
+                
+            nav = st.radio(导航, ops, index=0, label_visibility=collapsed)
+            
+            st.markdown(---)
+            render_wechat_pill(🎁 领取资料, W7774X)
+            st.markdown(div style='height10px'div, unsafe_allow_html=True)
+            if st.button(🚪 退出登录, use_container_width=True)
                 del st.session_state['user_phone']
                 st.rerun()
 
-        # 根据选择渲染页面
-        if menu == "首页大盘":
-            view_home()
-        else:
-            st.info(f"正在前往 {menu} 模块...")
+        # --- 页面路由 (占位符) ---
+        if nav == 🏠 首页
+            st.info(🚧 首页功能正在迁移中...) # 暂时占位
+        elif nav == 📝 文案改写
+            st.info(🚧 文案功能正在迁移中...)
+        elif nav == 💡 爆款选题
+            st.info(🚧 选题功能正在迁移中...)
+        elif nav == 🎨 海报生成
+            st.info(🚧 海报功能正在迁移中...)
+        elif nav == 🏷️ 账号起名
+            st.info(🚧 起名功能正在迁移中...)
+        elif nav == 👤 个人中心
+            st.info(🚧 个人中心正在迁移中...)
+        elif nav == 🕵️‍♂️ 管理后台
+            st.info(🚧 后台功能正在迁移中...)
+        
+        # 底部 Footer
+        st.markdown(div style='margin-top50px; text-aligncenter; color#cbd5e1; font-size12px;'© 2026 抖音爆款工场 Pro System (Modular Ver.)div, unsafe_allow_html=True)
 
-if __name__ == "__main__":
+if __name__ == __main__
     main()

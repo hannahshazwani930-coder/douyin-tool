@@ -35,25 +35,35 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS access_codes (code TEXT PRIMARY KEY, duration_days INTEGER, activated_at TIMESTAMP, expire_at TIMESTAMP, status TEXT, create_time TIMESTAMP, bind_user TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS feedbacks (id INTEGER PRIMARY KEY AUTOINCREMENT, user_phone TEXT, content TEXT, reply TEXT, create_time TIMESTAMP, status TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)''')
+    
+    # 强制预设管理员
     admin_pwd_hash = hashlib.sha256(ADMIN_INIT_PASSWORD.encode()).hexdigest()
     c.execute("REPLACE INTO users (phone, password_hash, register_time) VALUES (?, ?, ?)", (ADMIN_PHONE, admin_pwd_hash, datetime.datetime.now()))
     conn.commit(); conn.close()
 
 init_db()
 
-# --- CSS 样式 (v4.9 巅峰颜值) ---
+# --- CSS 样式 (极致美化 + 细节修复) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@500&display=swap'); /* 引入等宽字体 */
+    @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@500&display=swap');
 
     .stApp { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+    
+    /* 🔥 核心修复：隐藏所有标题旁的锚点链接符号 (🔗) 🔥 */
+    [data-testid="stHeader"] a, .stMarkdown h1 a, .stMarkdown h2 a, .stMarkdown h3 a, .stMarkdown h4 a { 
+        display: none !important; 
+        pointer-events: none;
+    }
     
     /* 容器 */
     div.block-container { max-width: 90% !important; background-color: #ffffff; padding: 3rem !important; border-radius: 24px; box-shadow: 0 20px 60px -20px rgba(0,0,0,0.1); margin-bottom: 50px; }
     
     /* 按钮全局优化 */
     div.stButton > button { border-radius: 10px; font-weight: 600; height: 48px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); width: 100%; font-size: 15px; }
+    
+    /* 主按钮 */
     div.stButton > button[kind="primary"] { 
         background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
         border: none; color: white !important; 
@@ -61,68 +71,55 @@ st.markdown("""
     }
     div.stButton > button[kind="primary"]:hover { 
         transform: translateY(-2px); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
     }
     
-    /* 🔥 海报页面：顶部 Banner 终极美化 🔥 */
-    .poster-hero-container {
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 24px;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.05);
-        border: 1px solid #edf2f7;
-        display: flex;
-        align-items: center;
-        margin-bottom: 35px;
-        position: relative;
-        overflow: hidden;
+    /* 次级按钮 */
+    div.stButton > button[kind="secondary"] { background-color: #f1f5f9; color: #475569; border: 1px solid transparent; }
+    div.stButton > button[kind="secondary"]:hover { background-color: #e2e8f0; color: #1e293b; border-color: #cbd5e1; }
+
+    /* 首页卡片 */
+    .home-card-box { 
+        border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center; background: #fff; 
+        height: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center; 
+        margin-bottom: 15px; transition: all 0.3s ease;
     }
-    /* 极光背景光晕 */
+    .home-card-box:hover { border-color: #bfdbfe; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+    .home-card-title { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
+    .home-card-sub { font-size: 12px; color: #94a3b8; font-weight: 400; }
+    
+    /* 🔥 海报页面：顶部 Banner 🔥 */
+    .poster-hero-container {
+        background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.05);
+        border: 1px solid #edf2f7; display: flex; align-items: center; margin-bottom: 35px; position: relative; overflow: hidden;
+    }
     .poster-hero-container::before {
         content: ''; position: absolute; top: -50%; right: -10%; width: 400px; height: 400px;
         background: radial-gradient(circle, rgba(167, 139, 250, 0.15) 0%, rgba(255,255,255,0) 70%);
         border-radius: 50%; z-index: 0; pointer-events: none;
     }
     .hero-icon-wrapper {
-        width: 68px; height: 68px;
-        background: linear-gradient(135deg, #c4b5fd, #818cf8); /* 柔和蓝紫渐变 */
+        width: 68px; height: 68px; background: linear-gradient(135deg, #c4b5fd, #818cf8);
         border-radius: 16px; display: flex; align-items: center; justify-content: center;
-        font-size: 34px; margin-right: 24px;
-        box-shadow: 0 10px 20px -5px rgba(129, 140, 248, 0.5);
-        z-index: 1; color: white;
+        font-size: 34px; margin-right: 24px; box-shadow: 0 10px 20px -5px rgba(129, 140, 248, 0.5); z-index: 1; color: white;
     }
-    .hero-text-content { z-index: 1; }
-    .hero-title { font-size: 22px; font-weight: 800; color: #1e293b; margin: 0 0 8px 0; letter-spacing: -0.5px; }
-    .hero-desc { font-size: 15px; color: #64748b; margin: 0; font-weight: 500; }
+    .hero-title { font-size: 22px; font-weight: 800; color: #1e293b; margin: 0 0 8px 0; letter-spacing: -0.5px; z-index: 1; position: relative; }
+    .hero-desc { font-size: 15px; color: #64748b; margin: 0; font-weight: 500; z-index: 1; position: relative; }
 
-    /* 🔥 海报页面：底部指令终端 终极美化 🔥 */
+    /* 🔥 海报页面：指令终端 (增加间距) 🔥 */
     .terminal-box {
-        background: #0f172a; /* 深色背景 */
-        border-radius: 12px;
-        overflow: hidden;
-        margin-top: 30px;
-        box-shadow: 0 15px 40px rgba(15, 23, 42, 0.2);
-        border: 1px solid #334155;
+        background: #0f172a; border-radius: 12px; overflow: hidden; margin-top: 30px;
+        box-shadow: 0 15px 40px rgba(15, 23, 42, 0.2); border: 1px solid #334155;
+        margin-bottom: 25px; /* 🔥 增加底部间距，与按钮拉开距离 */
     }
-    .terminal-header {
-        background: #1e293b;
-        padding: 10px 16px;
-        display: flex; align-items: center;
-        border-bottom: 1px solid #334155;
-    }
+    .terminal-header { background: #1e293b; padding: 10px 16px; display: flex; align-items: center; border-bottom: 1px solid #334155; }
     .traffic-lights { display: flex; gap: 8px; margin-right: 16px; }
     .light { width: 12px; height: 12px; border-radius: 50%; }
     .light.red { background: #ef4444; } .light.yellow { background: #f59e0b; } .light.green { background: #22c55e; }
     .terminal-title-text { color: #94a3b8; font-size: 13px; font-weight: 600; font-family: monospace; }
-    .terminal-body {
-        padding: 24px;
-        font-family: 'Fira Code', monospace;
-        font-size: 16px;
-        color: #e2e8f0;
-        line-height: 1.6;
-        display: flex; align-items: center;
-    }
+    .terminal-body { padding: 24px; font-family: 'Fira Code', monospace; font-size: 16px; color: #e2e8f0; line-height: 1.6; display: flex; align-items: center; }
     .prompt-sign { color: #22c55e; margin-right: 12px; user-select: none; }
-    .command-highlight { color: #a78bfa; font-weight: bold; } /* 高亮紫色 */
+    .command-highlight { color: #a78bfa; font-weight: bold; }
 
     /* 双卡片 */
     .action-card-container { display: flex; gap: 20px; width: 100%; }
@@ -144,12 +141,6 @@ st.markdown("""
     .step-content h4 { margin: 0 0 4px; font-size: 15px; color: #1e293b; font-weight: 700; }
     .step-content p { margin: 0; font-size: 13px; color: #64748b; }
 
-    /* 首页卡片 */
-    .home-card-box { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center; background: #fff; height: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 15px; transition: all 0.3s ease; }
-    .home-card-box:hover { border-color: #bfdbfe; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-    .home-card-title { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
-    .home-card-sub { font-size: 12px; color: #94a3b8; font-weight: 400; }
-    
     /* 侧边栏/通用 */
     .project-box { background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
     .project-title { font-weight: bold; color: #0369a1; font-size: 14px; }
@@ -441,7 +432,27 @@ def page_poster():
             <div class="jump-sub-text">第二步：点击跳转，开启创作</div>
         </a>
     </div>
-    <script>function copyText(e){navigator.clipboard.writeText('5yzMbpxn').then(()=>{const hint=e.querySelector('#status-code');hint.innerText='✅ 复制成功！';hint.style.opacity='1';hint.style.color='#10b981';setTimeout(()=>{hint.innerText='点击立即复制';hint.style.opacity='0';hint.style.color='#94a3b8';},2000);});}</script>
+    
+    <script>
+    function copyText(e){
+        // 强制使用备用方案，兼容性更好
+        const textArea = document.createElement("textarea");
+        textArea.value = '5yzMbpxn';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            const hint = e.querySelector('#status-code');
+            hint.innerText = '✅ 复制成功！';
+            hint.style.opacity = '1';
+            hint.style.color = '#10b981';
+            setTimeout(()=>{ hint.innerText = '点击立即复制'; hint.style.opacity = '0'; hint.style.color = '#94a3b8'; }, 2000);
+        } catch (err) {
+            console.error('Fallback copy failed', err);
+        }
+        document.body.removeChild(textArea);
+    }
+    </script>
     """, unsafe_allow_html=True)
     
     st.write("")

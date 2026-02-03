@@ -35,14 +35,13 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS access_codes (code TEXT PRIMARY KEY, duration_days INTEGER, activated_at TIMESTAMP, expire_at TIMESTAMP, status TEXT, create_time TIMESTAMP, bind_user TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS feedbacks (id INTEGER PRIMARY KEY AUTOINCREMENT, user_phone TEXT, content TEXT, reply TEXT, create_time TIMESTAMP, status TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)''')
-    # 强制管理员
     admin_pwd_hash = hashlib.sha256(ADMIN_INIT_PASSWORD.encode()).hexdigest()
     c.execute("REPLACE INTO users (phone, password_hash, register_time) VALUES (?, ?, ?)", (ADMIN_PHONE, admin_pwd_hash, datetime.datetime.now()))
     conn.commit(); conn.close()
 
 init_db()
 
-# --- CSS 样式 ---
+# --- CSS 样式 (首页按钮美化) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -51,20 +50,42 @@ st.markdown("""
     /* 容器 */
     div.block-container { max-width: 90% !important; background-color: #ffffff; padding: 3rem !important; border-radius: 16px; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); margin-bottom: 50px; }
     
-    /* 按钮全局优化 */
+    /* 通用按钮 */
     div.stButton > button { border-radius: 8px; font-weight: 600; height: 45px; transition: all 0.2s; width: 100%; }
-    div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border: none; color: white !important; }
-    div.stButton > button[kind="primary"]:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3); }
+    div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border: none; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+    div.stButton > button[kind="primary"]:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); }
     
-    /* 次级按钮 (清空/单生成) */
+    /* 次级按钮 */
     div.stButton > button[kind="secondary"] { background-color: #f1f5f9; color: #475569; border: 1px solid transparent; }
     div.stButton > button[kind="secondary"]:hover { background-color: #e2e8f0; color: #1e293b; border-color: #cbd5e1; }
 
-    /* 首页卡片 */
-    .home-card-box { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center; background: #fff; height: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 15px; }
+    /* 🔥 首页卡片优化 🔥 */
+    .home-card-box { 
+        border: 1px solid #e2e8f0; 
+        border-radius: 12px; 
+        padding: 20px; 
+        text-align: center; 
+        background: #fff; 
+        height: 160px; /* 稍微增高以容纳新按钮 */
+        display: flex; 
+        flex-direction: column; 
+        justify-content: center; 
+        align-items: center; 
+        margin-bottom: 15px;
+        transition: all 0.2s;
+    }
+    .home-card-box:hover {
+        border-color: #bfdbfe;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.03);
+        transform: translateY(-2px);
+    }
     .home-card-title { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
-    .home-card-sub { font-size: 12px; color: #94a3b8; font-weight: 400; }
+    .home-card-sub { font-size: 12px; color: #94a3b8; font-weight: 400; margin-bottom: 15px; }
     
+    /* 🔥 首页专属按钮样式 (强制覆盖) 🔥 */
+    /* Streamlit 的 key 对应生成的 css class比较复杂，这里统一用 primary 样式覆盖 */
+    /* 只要在首页调用 st.button 时设置 type="primary"，就会应用上面的蓝色渐变样式 */
+
     /* 侧边栏 */
     .project-box { background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
     .project-title { font-weight: bold; color: #0369a1; font-size: 14px; }
@@ -75,7 +96,6 @@ st.markdown("""
     .footer-links a { color: #64748b; text-decoration: none; margin: 0 10px; transition: color 0.2s; }
     .auth-title { text-align: center; font-weight: 800; font-size: 24px; color: #1e293b; margin-bottom: 20px; }
     .login-spacer { height: 5vh; }
-    
     .info-box-aligned { height: 45px !important; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1e40af; display: flex; align-items: center; padding: 0 16px; font-size: 14px; font-weight: 500; width: 100%; box-sizing: border-box; }
     .empty-state-box { height: 200px; background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc); background-size: 20px 20px; border: 2px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 500; flex-direction: column; gap: 10px; }
 </style>
@@ -271,31 +291,32 @@ def page_home():
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         st.markdown("""<div class="home-card-box"><div class="home-card-title">📝 文案改写</div><div class="home-card-sub">5路并发 · 爆款重组</div></div>""", unsafe_allow_html=True)
-        st.button("立即使用 ➜", key="h_btn1", on_click=go_to, args=("📝 文案改写",))
+        # 🔥 修改：添加 type="primary" 应用蓝色样式 🔥
+        st.button("立即使用 ➜", key="h_btn1", on_click=go_to, args=("📝 文案改写",), type="primary")
+        
     with c2:
         st.markdown("""<div class="home-card-box"><div class="home-card-title">💡 爆款选题</div><div class="home-card-sub">流量焦虑 · 一键解决</div></div>""", unsafe_allow_html=True)
-        st.button("立即使用 ➜", key="h_btn2", on_click=go_to, args=("💡 爆款选题库",))
+        st.button("立即使用 ➜", key="h_btn2", on_click=go_to, args=("💡 爆款选题库",), type="primary")
+        
     with c3:
         st.markdown("""<div class="home-card-box"><div class="home-card-title">🎨 海报生成</div><div class="home-card-sub">小提大作 · 影视质感</div></div>""", unsafe_allow_html=True)
-        st.button("立即使用 ➜", key="h_btn3", on_click=go_to, args=("🎨 海报生成",))
+        st.button("立即使用 ➜", key="h_btn3", on_click=go_to, args=("🎨 海报生成",), type="primary")
+        
     with c4:
         st.markdown("""<div class="home-card-box"><div class="home-card-title">🏷️ 账号起名</div><div class="home-card-sub">AI 算命 · 爆款玄学</div></div>""", unsafe_allow_html=True)
-        st.button("立即使用 ➜", key="h_btn4", on_click=go_to, args=("🏷️ 账号起名",))
+        st.button("立即使用 ➜", key="h_btn4", on_click=go_to, args=("🏷️ 账号起名",), type="primary")
     
     st.markdown("<br>", unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("#### 📢 系统公告")
         st.info("🎉 欢迎使用 Pro 版！如需开通会员，请联系侧边栏客服获取卡密。", icon="👋")
 
-# --- 文案改写 (功能完整恢复) ---
+# --- 文案改写 ---
 def page_rewrite():
     st.markdown("## 📝 爆款文案改写"); st.markdown("---")
-    
-    # 状态初始化
     if 'results' not in st.session_state: st.session_state['results'] = {}
     client = OpenAI(api_key=st.secrets.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com")
     
-    # 核心逻辑
     def rewrite_logic(content):
         if not content or len(content.strip()) < 5: return "⚠️ 内容过短"
         prompt = f"你是一个抖音千万粉的口播博主。原始素材：{content}。任务：清洗数据，改写为原创爆款文案。公式：黄金3秒开头+中间情绪饱满+结尾强引导。输出：直接输出文案，不要任何markdown格式。"
@@ -304,7 +325,6 @@ def page_rewrite():
 
     def clear_text(k): st.session_state[k] = ""
 
-    # 顶部全局操作
     c1, c2 = st.columns([1, 2], gap="medium")
     with c1:
         if st.button("🚀 5路并发执行", type="primary", use_container_width=True):
@@ -321,19 +341,13 @@ def page_rewrite():
     with c2: st.markdown("""<div class="info-box-aligned">💡 提示：将文案粘贴到下方窗口，点击左侧蓝色按钮可批量处理。</div>""", unsafe_allow_html=True)
     
     st.write("")
-    
-    # 5个独立工作台
     for i in range(1, 6):
         with st.container(border=True):
             st.markdown(f"**📝 工作台 #{i}**")
             col_in, col_out = st.columns([1, 1], gap="large")
-            
-            # 左侧输入
             with col_in:
                 input_key = f"input_{i}"
                 st.text_area("原始文案", height=200, key=input_key, placeholder="粘贴文案到这里...", label_visibility="collapsed")
-                
-                # 小按钮行
                 b1, b2 = st.columns([1, 2])
                 b1.button("🗑️ 清空", key=f"clr_{i}", on_click=clear_text, args=(input_key,), use_container_width=True)
                 if b2.button(f"⚡ 仅生成 #{i}", key=f"gen_{i}", type="primary", use_container_width=True):
@@ -342,14 +356,11 @@ def page_rewrite():
                         with st.spinner("生成中..."):
                             st.session_state['results'][i] = rewrite_logic(val)
                             st.rerun()
-            
-            # 右侧输出
             with col_out:
                 res = st.session_state['results'].get(i, "")
                 if res:
                     st.text_area("结果", value=res, height=200, label_visibility="collapsed", key=f"res_area_{i}")
                     render_copy_button_html(res, f"cp_{i}")
-                    # 广告植入
                     st.markdown("""<div style="margin-top:5px;padding:8px;background:#fff1f2;border-radius:6px;border:1px solid #fecdd3;font-size:12px;color:#be123c;display:flex;justify-content:space-between;align-items:center;"><span>🔥 <b>不会拍？</b>领《素人KOC出镜SOP》</span><span style="color:#e11d48;font-weight:bold;">👉 微信 W7774X</span></div>""", unsafe_allow_html=True)
                 else:
                     st.markdown("<div class='empty-state-box'><div style='font-size: 24px;'>⏳</div><div>等待指令...</div><div style='font-size: 12px; color: #94a3b8;'>Input content to generate</div></div>", unsafe_allow_html=True)
@@ -431,7 +442,7 @@ def page_admin():
                         c.execute("UPDATE feedbacks SET reply=?, status='replied' WHERE id=?", (reply, r['id']))
                         conn.commit(); conn.close(); st.rerun()
 
-# --- 路由 ---
+# --- 路由逻辑 ---
 if not IS_VIP and menu not in ["🏠 首页", "👤 个人中心", "🕵️‍♂️ 管理后台"]:
     st.warning("⚠️ 会员功能，请先激活"); st.stop()
 

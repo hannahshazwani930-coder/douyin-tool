@@ -1,19 +1,18 @@
-/* * 🔐 [ULTRA-PRO PRODUCTION - FINAL SUCCESS] 
- * 锁定目标：解决所有截图中的偏移、溢出和白块问题。
+/* * 🔐 [FINAL SUCCESS: ULTRA-PRO PRODUCTION] 
+ * 强制执行：物理边距锁定与组件重叠修正
  */
 
-/* 1. 屏蔽一切原生 UI 杂项 */
+/* 1. 隐藏干扰元素 */
 header, [data-testid="stHeader"], [data-testid="stSidebar"], [data-testid="stToolbar"] { 
     display: none !important; 
 }
 
-/* 2. 全局背景：深邃星空蓝 */
+/* 2. 背景：极致深邃蓝 */
 .stApp {
     background: #050a18 !important;
-    overflow: hidden !important;
 }
 
-/* 3. 根容器改造成 850x520 的白卡片 (强制居中) */
+/* 3. 核心：强制 850x520 的白卡片居中锁定 */
 div.block-container {
     max-width: 850px !important;
     height: 520px !important;
@@ -25,47 +24,32 @@ div.block-container {
     background: white !important;
     border-radius: 32px !important;
     box-shadow: 0 50px 100px rgba(0,0,0,0.8) !important;
-    display: flex !important;
-    z-index: 999;
+    overflow: hidden !important;
+    z-index: 100;
 }
 
-/* 4. 左侧蓝色面板 (CSS 伪元素实现，永不偏移) */
-div.block-container::before {
-    content: "";
-    position: absolute;
-    left: 0; top: 0;
-    width: 350px; /* 品牌区宽度 */
-    height: 100%;
-    background: linear-gradient(135deg, #2563eb, #1e3a8a);
-    z-index: 1000;
-}
-
-/* 5. 品牌内容覆盖 */
-.brand-overlay-lock {
+/* 4. 左侧品牌区：使用绝对定位确保永不移动 */
+.brand-sidebar {
     position: absolute;
     left: 0; top: 0;
     width: 350px;
     height: 520px;
+    background: linear-gradient(135deg, #2563eb, #1e3a8a);
     padding: 60px 45px;
     color: white;
-    z-index: 1001;
-    pointer-events: none;
+    z-index: 101;
+    pointer-events: none; /* 防止遮挡右侧表单点击 */
 }
 
-/* 6. 核心：强制把 Streamlit 所有表单组件“压”入右侧 500px 区域 */
-[data-testid="stVerticalBlock"] {
-    gap: 0 !important;
+/* 5. 核心修正：解决组件飞出去的问题 */
+/* 强制所有 Streamlit 组件在 350px 之后开始显示 */
+[data-testid="stVerticalBlock"] > div:not(.brand-sidebar) {
+    margin-left: 350px !important;
+    padding: 0 50px !important;
+    max-width: 500px !important;
 }
 
-/* 针对所有表单和输入框的物理偏移 */
-[data-testid="stForm"], [data-testid="stMarkdownContainer"], .stTextInput, .stButton {
-    margin-left: 350px !important; /* 物理推移：避开左侧蓝色区 */
-    padding-left: 50px !important;
-    padding-right: 50px !important;
-    width: 850px !important; /* 保持总宽一致防止拉伸 */
-}
-
-/* 7. 输入框美化 */
+/* 6. 统一输入框与按钮样式 */
 .stTextInput input {
     height: 48px !important;
     border-radius: 12px !important;
@@ -73,7 +57,6 @@ div.block-container::before {
     background: #f8fafc !important;
 }
 
-/* 8. 登录按钮 */
 div.stButton > button {
     width: 100% !important;
     height: 50px !important;
@@ -82,15 +65,16 @@ div.stButton > button {
     border-radius: 12px !important;
     font-weight: 700 !important;
     border: none !important;
+    margin-top: 10px !important;
 }
 
-/* 9. 底部免责声明 (独立于卡片) */
-.footer-disclaimer-fixed {
+/* 7. 外部免责声明 */
+.footer-lock {
     position: fixed;
     bottom: 30px;
     width: 100%;
     text-align: center;
-    color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.4);
     font-size: 12px;
-    z-index: 9999;
+    z-index: 200;
 }

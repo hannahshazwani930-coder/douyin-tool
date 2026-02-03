@@ -17,21 +17,18 @@ def generate_invite_code():
 # ==============================================================================
 
 def inject_css(page_id="auth"):
-    # 1. 全局基础 - 彻底隐藏原生元素
+    # 1. 全局基础 - 隐藏原生组件
     base_css = """
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        html, body, [class*="css"] { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
         
-        /* 全局字体强制 */
-        html, body, [class*="css"] { 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
-        }
-        
-        /* 🔴 核弹级隐藏：彻底移除 Streamlit 顶部的所有原生占位符 */
-        header[data-testid="stHeader"] { display: none !important; visibility: hidden !important; height: 0 !important; }
-        [data-testid="stToolbar"] { display: none !important; }
-        [data-testid="stDecoration"] { display: none !important; } /* 隐藏顶部的彩虹条 */
+        /* 隐藏 Streamlit 顶栏 */
+        header[data-testid="stHeader"] { display: none !important; height: 0 !important; visibility: hidden !important; }
         #MainMenu { display: none !important; }
+        [data-testid="stSidebarCollapsedControl"] { display: none !important; }
+        [data-testid="stToolbar"] { display: none !important; }
+        [data-testid="stDecoration"] { display: none !important; }
         
         /* 侧边栏 */
         [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
@@ -71,21 +68,26 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ============================================================
-    # 🏠 [NEW] 首页 - 终极无白框 + V6卡片
+    # 🏠 [NEW] 首页 - 视觉欺骗去白框法
     # ============================================================
     elif page_id == "home":
         st.markdown("""
         <style>
-            /* 1. 强制统一背景色，消除色差 */
-            .stApp { background-color: #f8fafc; }
+            /* 1. 背景同化术：将所有层级背景强制设为灰色，这样就算漏出缝隙也是灰色的 */
+            .stApp, 
+            div[data-testid="stAppViewContainer"], 
+            div[data-testid="block-container"] {
+                background-color: #f8fafc !important;
+            }
             
-            /* 2. 容器物理清零 */
+            /* 2. 容器物理位置修正 */
             div[data-testid="block-container"] { 
                 max-width: 1200px !important; 
-                padding-top: 1rem !important; /* 仅留极小顶部间距 */
+                padding-top: 0px !important; /* 强制归零 */
                 padding-left: 40px !important;
                 padding-right: 40px !important;
-                margin-top: -50px !important; /* 向上提拉，覆盖所有潜在白边 */
+                /* 只要背景色一致，这里不需要负太多，稍微提一提对齐即可 */
+                margin-top: -40px !important; 
             }
 
             /* 悬浮岛头图 */
@@ -93,7 +95,7 @@ def inject_css(page_id="auth"):
                 background: linear-gradient(120deg, #2563eb, #1d4ed8);
                 border-radius: 20px; padding: 50px 40px; text-align: center; color: white;
                 box-shadow: 0 15px 40px -10px rgba(37, 99, 235, 0.4); 
-                margin-top: 30px; /* 视觉修正 */
+                margin-top: 30px; 
                 margin-bottom: 30px; position: relative; overflow: hidden;
             }
             .home-header-card::before {
@@ -133,7 +135,7 @@ def inject_css(page_id="auth"):
             div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 10; }
             div.stButton button:hover { background: transparent; }
 
-            /* --- 变现项目 V6 (纯CSS实现，无白框，无乱码) --- */
+            /* --- 变现项目 V6 (无复制功能，纯展示) --- */
             .proj-card-v6 {
                 background: white;
                 border-radius: 16px;
@@ -236,7 +238,7 @@ def inject_css(page_id="auth"):
         </style>
         """, unsafe_allow_html=True)
 
-# --- 组件函数 ---
+# --- 组件函数 (保持原样) ---
 def render_sidebar_user_card(username, vip_info):
     status_bg = "#eff6ff" if "VIP" in vip_info or "管理员" in vip_info else "#f1f5f9"
     st.sidebar.markdown(f"""<div style="background: {status_bg}; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 20px;"><div style="display:flex; align-items:center; margin-bottom: 8px;"><div style="width: 32px; height: 32px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 10px; border: 1px solid #e2e8f0;">👤</div><div style="font-weight: 700; color: #0f172a; font-size: 14px; overflow: hidden; text-overflow: ellipsis;">{username}</div></div><div style="background: white; padding: 6px 10px; border-radius: 6px; font-size: 12px; color: #2563eb; font-weight: 600; border: 1px solid #e2e8f0; text-align: center;">{vip_info}</div></div>""", unsafe_allow_html=True)
@@ -260,3 +262,4 @@ def render_home_project_card(icon, title, desc, tag): return ""
 def render_page_banner(title, desc): st.markdown(f"""<div class="page-banner"><div class="banner-title">{title}</div><div class="banner-desc">{desc}</div></div>""", unsafe_allow_html=True)
 def render_conversion_tip(): st.markdown("""<div class="conversion-tip"><span>💰</span><span><b>商业化建议：</b> 已自动植入私域钩子，预计提升 30% 导流效率。</span></div>""", unsafe_allow_html=True)
 def render_feature_card_home(icon, title, desc): return ""
+# (渲染一体化卡片函数已不再需要，直接在views/home.py中写死HTML)

@@ -3,7 +3,7 @@ import streamlit as st
 import time
 from config import ADMIN_ACCOUNT
 from database import init_db, get_user_vip_status, login_user, register_user
-from utils import inject_css, render_wechat_pill
+from utils import inject_css, render_wechat_pill, render_sidebar_user_card
 
 # --- 导入视图 ---
 from views.home import view_home
@@ -26,20 +26,16 @@ st.set_page_config(
 init_db()
 
 # ==========================================
-# 💎 登录 / 注册 页面 (大卡片设计)
+# 💎 登录 / 注册 页面
 # ==========================================
 def login_page():
     inject_css(mode="auth")
     
-    # 布局：在 CSS 控制的大卡片内部进行分栏
-    # 左侧 1.2 : 右侧 1 (右侧窄一点，更显精致)
     col_left, col_right = st.columns([1.2, 1], gap="large")
     
-    # --- 左侧：品牌文案区 ---
     with col_left:
         st.markdown("<div style='padding-right: 20px; padding-top: 20px;'>", unsafe_allow_html=True)
-        st.markdown('<div class="hero-decoration"></div>', unsafe_allow_html=True) # 蓝色装饰条
-        
+        st.markdown('<div class="hero-decoration"></div>', unsafe_allow_html=True)
         st.markdown("""
         <div class="hero-title">
             打造爆款<br>
@@ -52,7 +48,6 @@ def login_page():
         </div>
         """, unsafe_allow_html=True)
         
-        # 底部小图标
         st.markdown("""
         <div style="display:flex; gap:15px; margin-top:30px;">
             <span style="background:#eff6ff; color:#3b82f6; padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600;">🚀 极速生成</span>
@@ -61,14 +56,11 @@ def login_page():
         """, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # --- 右侧：登录/注册 表单 ---
     with col_right:
-        # 添加一点顶部边距，让 Tabs 不贴顶
         st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
         
         tab_login, tab_register = st.tabs(["账号登录", "注册新号"])
         
-        # === 登录模块 ===
         with tab_login:
             with st.form("login_form"):
                 st.write("") 
@@ -92,19 +84,15 @@ def login_page():
                         else:
                             st.error(f"⛔ {msg}")
 
-        # === 注册模块 ===
         with tab_register:
             with st.form("register_form"):
                 st.write("")
                 new_user = st.text_input("注册账号", placeholder="请输入手机号或邮箱", label_visibility="collapsed")
                 st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-                
                 new_pass = st.text_input("设置密码", type="password", placeholder="设置密码 (≥6位)", label_visibility="collapsed")
                 st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
                 confirm_pass = st.text_input("确认密码", type="password", placeholder="再次确认密码", label_visibility="collapsed")
                 st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-                
-                # 邀请码
                 invite_input = st.text_input("邀请码", placeholder="邀请码 (默认888888)", label_visibility="collapsed")
                 
                 st.markdown("<div style='height:25px'></div>", unsafe_allow_html=True)
@@ -123,15 +111,11 @@ def login_page():
                         else:
                             st.error(f"⛔ {msg}")
     
-    # --- 底部：版权与免责声明 (Issue 2) ---
     st.markdown("""
     <div class="auth-footer">
         © 2026 抖音爆款工场 Pro System. All Rights Reserved.<br>
         <div style="margin-top: 8px;">
-            <a href="#">用户协议</a> • 
-            <a href="#">隐私政策</a> • 
-            <a href="#">免责声明</a> • 
-            <a href="#">联系客服</a>
+            <a href="#">用户协议</a> • <a href="#">隐私政策</a> • <a href="#">免责声明</a> • <a href="#">联系客服</a>
         </div>
         <div style="margin-top: 8px; color: #cbd5e1; font-size: 11px;">
             本系统仅供辅助创作使用，请遵守相关法律法规。
@@ -139,18 +123,32 @@ def login_page():
     </div>
     """, unsafe_allow_html=True)
 
-# --- 主程序逻辑 ---
+# --- 主程序逻辑 (侧边栏终极美化版) ---
 def main():
     if 'user_phone' not in st.session_state:
         login_page()
     else:
+        # 1. 首先注入系统 CSS (解决样式乱码的关键)
         inject_css("app")
+        
+        current_user = st.session_state['user_phone']
+        is_vip, msg = get_user_vip_status(current_user)
+        
+        # 2. 侧边栏构建
         with st.sidebar:
-            current_user = st.session_state['user_phone']
-            is_vip, msg = get_user_vip_status(current_user)
+            # 顶部 Logo 区域
+            st.markdown("""
+            <div style="display:flex; align-items:center; gap:10px; padding-bottom: 20px; border-bottom: 1px solid #f1f5f9; margin-bottom: 20px;">
+                <div style="background:#2563eb; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">P</div>
+                <div style="font-weight:700; font-size:18px; color:#0f172a;">爆款工场 Pro</div>
+            </div>
+            """, unsafe_allow_html=True)
             
-            st.markdown(f"**👤 {current_user}**")
-            st.info(f"{msg}") if is_vip else st.warning("普通用户")
+            # 用户信息卡片 (使用 utils 里的美化函数)
+            render_sidebar_user_card(current_user, msg)
+            
+            # 导航菜单
+            st.markdown("<div style='font-size:12px; font-weight:600; color:#94a3b8; margin-bottom:10px; margin-top:10px;'>功能导航</div>", unsafe_allow_html=True)
             
             menu_opts = ["🏠 首页", "📝 文案改写", "💡 爆款选题", "🎨 海报生成", "🏷️ 账号起名", "👤 个人中心"]
             if current_user == ADMIN_ACCOUNT: menu_opts.append("🕵️‍♂️ 管理后台")
@@ -161,15 +159,19 @@ def main():
                     default_idx = menu_opts.index(st.session_state['nav_menu_selection'])
                 del st.session_state['nav_menu_selection']
 
-            nav = st.radio("系统导航", menu_opts, index=default_idx, label_visibility="collapsed")
+            # 导航 Radio (已被 CSS 美化为按钮)
+            nav = st.radio("导航", menu_opts, index=default_idx, label_visibility="collapsed")
             
+            # 底部区域
+            st.markdown("<div style='flex-grow:1;'></div>", unsafe_allow_html=True) # 占位撑开
             st.markdown("---")
             render_wechat_pill("🎁 客服支持", "W7774X")
             st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-            if st.button("🚪 退出", use_container_width=True):
+            if st.button("🚪 退出登录", use_container_width=True):
                 del st.session_state['user_phone']
                 st.rerun()
 
+        # 3. 路由分发
         if nav == "🏠 首页": view_home()
         elif nav == "📝 文案改写": view_rewrite()
         elif nav == "💡 爆款选题": view_brainstorm()

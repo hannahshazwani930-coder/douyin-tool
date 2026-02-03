@@ -35,13 +35,15 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS access_codes (code TEXT PRIMARY KEY, duration_days INTEGER, activated_at TIMESTAMP, expire_at TIMESTAMP, status TEXT, create_time TIMESTAMP, bind_user TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS feedbacks (id INTEGER PRIMARY KEY AUTOINCREMENT, user_phone TEXT, content TEXT, reply TEXT, create_time TIMESTAMP, status TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)''')
+    
+    # 强制预设管理员
     admin_pwd_hash = hashlib.sha256(ADMIN_INIT_PASSWORD.encode()).hexdigest()
     c.execute("REPLACE INTO users (phone, password_hash, register_time) VALUES (?, ?, ?)", (ADMIN_PHONE, admin_pwd_hash, datetime.datetime.now()))
     conn.commit(); conn.close()
 
 init_db()
 
-# --- CSS 样式 (首页按钮美化) ---
+# --- CSS 样式 (极致美化) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -50,42 +52,37 @@ st.markdown("""
     /* 容器 */
     div.block-container { max-width: 90% !important; background-color: #ffffff; padding: 3rem !important; border-radius: 16px; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); margin-bottom: 50px; }
     
-    /* 通用按钮 */
-    div.stButton > button { border-radius: 8px; font-weight: 600; height: 45px; transition: all 0.2s; width: 100%; }
-    div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border: none; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
-    div.stButton > button[kind="primary"]:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); }
+    /* 按钮全局优化 */
+    div.stButton > button { border-radius: 8px; font-weight: 600; height: 45px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); width: 100%; }
+    
+    /* 主按钮 (Primary) - 首页及核心功能 */
+    div.stButton > button[kind="primary"] { 
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); 
+        border: none; 
+        color: white !important; 
+        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1), 0 2px 4px -1px rgba(37, 99, 235, 0.06);
+    }
+    div.stButton > button[kind="primary"]:hover { 
+        transform: translateY(-2px); 
+        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3), 0 4px 6px -2px rgba(37, 99, 235, 0.1);
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); /* 悬浮变色更深 */
+    }
+    div.stButton > button[kind="primary"]:active { transform: translateY(0); }
     
     /* 次级按钮 */
     div.stButton > button[kind="secondary"] { background-color: #f1f5f9; color: #475569; border: 1px solid transparent; }
     div.stButton > button[kind="secondary"]:hover { background-color: #e2e8f0; color: #1e293b; border-color: #cbd5e1; }
 
-    /* 🔥 首页卡片优化 🔥 */
+    /* 首页卡片 */
     .home-card-box { 
-        border: 1px solid #e2e8f0; 
-        border-radius: 12px; 
-        padding: 20px; 
-        text-align: center; 
-        background: #fff; 
-        height: 160px; /* 稍微增高以容纳新按钮 */
-        display: flex; 
-        flex-direction: column; 
-        justify-content: center; 
-        align-items: center; 
-        margin-bottom: 15px;
-        transition: all 0.2s;
+        border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center; background: #fff; 
+        height: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center; 
+        margin-bottom: 15px; transition: all 0.3s ease;
     }
-    .home-card-box:hover {
-        border-color: #bfdbfe;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.03);
-        transform: translateY(-2px);
-    }
+    .home-card-box:hover { border-color: #bfdbfe; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
     .home-card-title { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
-    .home-card-sub { font-size: 12px; color: #94a3b8; font-weight: 400; margin-bottom: 15px; }
+    .home-card-sub { font-size: 12px; color: #94a3b8; font-weight: 400; }
     
-    /* 🔥 首页专属按钮样式 (强制覆盖) 🔥 */
-    /* Streamlit 的 key 对应生成的 css class比较复杂，这里统一用 primary 样式覆盖 */
-    /* 只要在首页调用 st.button 时设置 type="primary"，就会应用上面的蓝色渐变样式 */
-
     /* 侧边栏 */
     .project-box { background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
     .project-title { font-weight: bold; color: #0369a1; font-size: 14px; }
@@ -96,6 +93,7 @@ st.markdown("""
     .footer-links a { color: #64748b; text-decoration: none; margin: 0 10px; transition: color 0.2s; }
     .auth-title { text-align: center; font-weight: 800; font-size: 24px; color: #1e293b; margin-bottom: 20px; }
     .login-spacer { height: 5vh; }
+    
     .info-box-aligned { height: 45px !important; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1e40af; display: flex; align-items: center; padding: 0 16px; font-size: 14px; font-weight: 500; width: 100%; box-sizing: border-box; }
     .empty-state-box { height: 200px; background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc); background-size: 20px 20px; border: 2px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 500; flex-direction: column; gap: 10px; }
 </style>
@@ -291,17 +289,13 @@ def page_home():
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         st.markdown("""<div class="home-card-box"><div class="home-card-title">📝 文案改写</div><div class="home-card-sub">5路并发 · 爆款重组</div></div>""", unsafe_allow_html=True)
-        # 🔥 修改：添加 type="primary" 应用蓝色样式 🔥
         st.button("立即使用 ➜", key="h_btn1", on_click=go_to, args=("📝 文案改写",), type="primary")
-        
     with c2:
         st.markdown("""<div class="home-card-box"><div class="home-card-title">💡 爆款选题</div><div class="home-card-sub">流量焦虑 · 一键解决</div></div>""", unsafe_allow_html=True)
         st.button("立即使用 ➜", key="h_btn2", on_click=go_to, args=("💡 爆款选题库",), type="primary")
-        
     with c3:
         st.markdown("""<div class="home-card-box"><div class="home-card-title">🎨 海报生成</div><div class="home-card-sub">小提大作 · 影视质感</div></div>""", unsafe_allow_html=True)
         st.button("立即使用 ➜", key="h_btn3", on_click=go_to, args=("🎨 海报生成",), type="primary")
-        
     with c4:
         st.markdown("""<div class="home-card-box"><div class="home-card-title">🏷️ 账号起名</div><div class="home-card-sub">AI 算命 · 爆款玄学</div></div>""", unsafe_allow_html=True)
         st.button("立即使用 ➜", key="h_btn4", on_click=go_to, args=("🏷️ 账号起名",), type="primary")
@@ -377,10 +371,41 @@ def page_poster():
     st.code("将原图剧名：原剧名\n改为：[你的新剧名]", language="text")
 
 def page_brainstorm():
-    st.markdown("## 💡 爆款选题库"); st.info("🚧 选题 AI 模型正在升级优化中，敬请期待！")
+    st.markdown("## 💡 爆款选题灵感库"); st.markdown("---")
+    client = OpenAI(api_key=st.secrets.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com")
+    c1, c2 = st.columns([3, 1])
+    with c1: topic = st.text_input("🔍 输入你的赛道/关键词", placeholder="例如：职场、美妆、减肥、副业...")
+    with c2: st.write(""); st.write(""); generate_btn = st.button("🧠 帮我想选题", type="primary", use_container_width=True)
+    if generate_btn and topic:
+        prompt = f"我是做【{topic}】领域的。现在文案枯竭，请帮我生成 10 个绝对会火的爆款选题。要求：1. 必须反直觉，打破认知。2. 必须直击痛点，引发焦虑或强烈好奇。3. 格式：1. 标题：xxxx | 钩子：xxxx"
+        try:
+            with st.spinner("AI 正在疯狂头脑风暴..."):
+                res = client.chat.completions.create(model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.5)
+                st.session_state['brainstorm_result'] = res.choices[0].message.content
+        except Exception as e: st.error(str(e))
+    if 'brainstorm_result' in st.session_state:
+        res = st.session_state['brainstorm_result']
+        st.text_area("灵感列表", value=res, height=400, label_visibility="collapsed")
+        render_copy_button_html(res, "brain_copy_btn")
 
 def page_naming():
-    st.markdown("## 🏷️ 账号起名"); st.info("🚧 起名 AI 模型正在升级优化中，敬请期待！")
+    st.markdown("## 🏷️ 账号/IP 起名大师"); st.markdown("---")
+    client = OpenAI(api_key=st.secrets.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com")
+    c1, c2 = st.columns(2)
+    with c1: niche = st.selectbox("🎯 赛道", ["短剧", "小说", "口播", "情感", "带货"])
+    with c2: style = st.selectbox("🎨 风格", ["高冷", "搞笑", "文艺", "粗暴", "反差"])
+    keywords = st.text_input("🔑 关键词 (选填)")
+    if st.button("🎲 生成名字", type="primary", use_container_width=True):
+        prompt = f"为【{niche}】赛道生成10个{style}风格账号名，含关键词：{keywords}。格式：名字+解释。"
+        try:
+            with st.spinner("生成中..."):
+                res = client.chat.completions.create(model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.5)
+                st.session_state['naming_result'] = res.choices[0].message.content
+        except Exception as e: st.error(str(e))
+    if 'naming_result' in st.session_state:
+        res = st.session_state['naming_result']
+        st.text_area("结果", value=res, height=400, label_visibility="collapsed")
+        render_copy_button_html(res, "name_copy_btn")
 
 def page_account():
     st.markdown("## 👤 个人中心"); st.markdown("---")

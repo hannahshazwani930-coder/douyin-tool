@@ -66,7 +66,7 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ============================================================
-    # 🏠 [LOCKED] 首页悬浮岛设计 - 严格保留您满意的版本
+    # 🏠 [LOCKED] 首页独立设计 - 悬浮岛式 (Floating Island)
     # ============================================================
     elif page_id == "home":
         st.markdown("""
@@ -144,7 +144,7 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 其他页面保持原样
+    # 🔒 [LOCKED] 其他页面
     # ----------------------------------------------------------------
     elif page_id == "rewrite":
         st.markdown("""<style>.stApp { background-color: #f8fafc; } div.block-container { max-width: 1400px !important; padding: 0 40px 50px 40px !important; margin-top: 0 !important; } .flowing-header { background: linear-gradient(-45deg, #1e3a8a, #2563eb, #3b82f6, #0ea5e9); background-size: 400% 400%; animation: gradientBG 10s ease infinite; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; padding: 60px 40px 180px 40px; color: white; text-align: center; margin: -60px -40px -100px -40px; box-shadow: 0 20px 50px rgba(37, 99, 235, 0.3); position: relative; z-index: 0; } @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} } .header-title { font-size: 42px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); } .header-sub { font-size: 15px; opacity: 0.95; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 30px; backdrop-filter: blur(10px); display: inline-block; border: 1px solid rgba(255,255,255,0.2); } div.stButton button[kind="primary"], div.stButton button[kind="secondary"] { position: relative; z-index: 20; } .creation-console { background: white; border-radius: 24px; padding: 10px 40px 40px 40px; box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; position: relative; z-index: 10; margin-top: -50px; } .stTextArea > div { border: none !important; box-shadow: none !important; background: transparent !important; } .stTextArea > label { display: none !important; } .stTextArea textarea { background-color: #ffffff !important; border: 2px solid #e2e8f0 !important; border-radius: 12px; padding: 15px; font-size: 15px; line-height: 1.6; color: #334155; } .stTextArea textarea:focus { border-color: #3b82f6 !important; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important; } .custom-label { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: block; } div[data-baseweb="select"] > div { height: 48px !important; border-radius: 10px !important; background-color: #f8fafc; } div.stButton button[kind="primary"] { width: 100%; height: 48px !important; border: none !important; background: linear-gradient(90deg, #2563eb, #3b82f6) !important; color: white !important; border-radius: 10px !important; font-size: 16px !important; box-shadow: 0 8px 20px -5px rgba(37, 99, 235, 0.4) !important; } div.stButton button[kind="primary"]:hover { transform: translateY(-2px); } div.stButton button[kind="secondary"] { height: 48px !important; border: 1px solid #e2e8f0 !important; background: white !important; color: #64748b !important; font-weight: 600 !important; } .info-box { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 0 20px; border-radius: 10px; font-size: 15px; display: flex; align-items: center; gap: 10px; height: 48px; } .conversion-tip { margin-top: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 10px 15px; border-radius: 10px; font-size: 13px; display: flex; align-items: center; gap: 10px; } </style>""", unsafe_allow_html=True)
@@ -178,7 +178,7 @@ def render_page_banner(title, desc): st.markdown(f"""<div class="page-banner"><d
 def render_conversion_tip(): st.markdown("""<div class="conversion-tip"><span>💰</span><span><b>商业化建议：</b> 已自动植入私域钩子，预计提升 30% 导流效率。</span></div>""", unsafe_allow_html=True)
 def render_feature_card_home(icon, title, desc): return ""
 
-# 🔴 全新的卡片组件：使用 iframe 渲染，彻底避免乱码
+# 🔴 全新的卡片组件：高度压缩版 (高度从 270px -> 190px, iframe 200px)
 def render_project_card(icon, title, desc, wx_id):
     safe_text = wx_id.replace("'", "\\'")
     
@@ -204,7 +204,7 @@ def render_project_card(icon, title, desc, wx_id):
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            height: 270px; 
+            height: 190px; /* 🔴 调整：高度大幅减小 */
             transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
@@ -218,31 +218,31 @@ def render_project_card(icon, title, desc, wx_id):
         }}
         
         .card-content {{
-            padding: 25px 25px 15px 25px;
+            padding: 18px 18px 10px 18px; /* 🔴 调整：内边距减小 */
         }}
         
         .header {{
-            display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 8px; margin-bottom: 8px; /* 🔴 调整：间距减小 */
         }}
         
-        .icon {{ font-size: 26px; }}
-        .title {{ font-size: 16px; font-weight: 700; color: #0f172a; margin: 0; }}
-        .desc {{ font-size: 13px; color: #64748b; line-height: 1.5; margin: 0; }}
+        .icon {{ font-size: 22px; }} /* 🔴 调整：图标稍小 */
+        .title {{ font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; }} /* 🔴 调整：字号稍小 */
+        .desc {{ font-size: 12px; color: #64748b; line-height: 1.4; margin: 0; }} /* 🔴 调整：字号稍小 */
         
         /* 底部长条按钮 */
         .action-btn {{
-            background-color: #ecfdf5; /* 浅绿背景 */
-            color: #059669; /* 深绿文字 */
+            background-color: #ecfdf5;
+            color: #059669;
             width: 100%;
-            padding: 14px 0;
+            padding: 10px 0; /* 🔴 调整：按钮高度略减 */
             text-align: center;
-            font-size: 13px; font-weight: 600;
+            font-size: 12px; /* 🔴 调整：按钮字号 */
+            font-weight: 600;
             border-top: 1px solid #e2e8f0;
             transition: all 0.2s;
             display: flex; align-items: center; justify-content: center; gap: 6px;
         }}
         
-        /* 鼠标悬停时的按钮变色 */
         .card-container:hover .action-btn {{
             background-color: #10b981;
             color: white;
@@ -291,4 +291,4 @@ def render_project_card(icon, title, desc, wx_id):
     </body>
     </html>
     """
-    components.html(html, height=280)
+    components.html(html, height=200) # 🔴 调整：iframe 高度配合卡片高度

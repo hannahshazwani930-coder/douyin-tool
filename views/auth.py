@@ -3,90 +3,79 @@ import streamlit as st
 from database import login_user, register_user
 
 def view_auth():
-    # --- 1. 工业级强效 CSS 补丁 (彻底重写，确保文字 100% 显现) ---
+    # --- 1. 强力样式补丁：确保文字显示与 UI 净化 ---
     st.markdown("""
         <style>
-            /* 【核心物理屏蔽】锁定 Streamlit 专门存放提示语的底层容器，彻底杀掉 Press Enter */
-            [data-testid="stFormInstructions"] {
-                display: none !important;
-            }
+            /* 抹除表单指令提示语 */
+            [data-testid="stFormInstructions"] { display: none !important; }
+            .stForm [data-testid="stMarkdownContainer"] p:not(:only-child) { display: none !important; }
 
-            /* 【精准拦截】防止点击输入框时出现的任何动态提示，但不触碰按钮 */
-            .stForm [data-testid="stMarkdownContainer"] p:not(:only-child) {
-                display: none !important;
-            }
-
-            /* 【强制找回文字】重点修复：锁定按钮内部的特定路径，强制文字显现 */
-            /* 利用按钮的 kind 属性做唯一标识 */
+            /* 强制找回按钮文字 */
             button[kind="primaryFormSubmit"] div[data-testid="stMarkdownContainer"] p {
                 display: block !important;
                 visibility: visible !important;
                 color: white !important;
-                font-size: 16px !important;
+                font-size: 15px !important;
                 font-weight: bold !important;
-                opacity: 1 !important;
             }
 
-            /* 【文本框精致美化】按照你的要求：背景减淡、提示文字缩小减淡 */
+            /* 文本框精致美化：浅色调、小字号提示 */
             [data-testid="stTextInput"] input {
-                background-color: #F8FAFC !important; /* 极淡底色 */
+                background-color: #F9FAFB !important;
                 color: #334155 !important;
                 border: 1px solid #F1F5F9 !important;
-                font-size: 14px !important;
-                border-radius: 8px !important;
+                font-size: 13px !important;
+                height: 40px !important;
             }
             [data-testid="stTextInput"] input::placeholder {
-                color: #CBD5E1 !important; /* 提示文字减淡 */
-                font-size: 12px !important; /* 提示文字缩小 */
+                color: #CBD5E1 !important;
+                font-size: 11px !important;
             }
 
-            /* 【视觉净化】隐藏 header */
+            /* 净化顶部与边距 */
             header, [data-testid="stHeader"] { visibility: hidden; }
-            button[data-baseweb="tab"] { color: #94A3B8 !important; }
-            button[aria-selected="true"] { color: #1E3A8A !important; border-bottom: 2px solid #1E3A8A !important; }
+            [data-testid="stVerticalBlock"] { gap: 0.5rem !important; }
         </style>
     """, unsafe_allow_html=True)
 
     st.write("\n" * 2)
 
-    # --- 2. 居中弹性卡片排版 ---
-    _, card_container, _ = st.columns([1, 3.2, 1])
+    # --- 2. 宽度锁定：[1.3, 2.4, 1.3] 比例让卡片更窄、更精致 ---
+    _, card_container, _ = st.columns([1.3, 2.4, 1.3])
 
     with card_container:
         with st.container(border=True):
-            col_brand, col_auth = st.columns([1, 1.4], gap="large")
+            # 内部左右分栏：左侧文案 (40%)，右侧表单 (60%)
+            col_brand, col_auth = st.columns([1, 1.5], gap="large")
 
             with col_brand:
-                # --- 左侧：图标+精简有力文案 ---
+                # --- 左侧：图标+精简文案 ---
                 st.write("\n")
-                st.markdown("<h2 style='color:#1E3A8A; margin-bottom:5px;'>💠 爆款工场</h2>", unsafe_allow_html=True)
-                st.markdown("<p style='color:#94A3B8; font-size: 14px; margin-bottom: 25px;'>创作者的 AI 军师</p>", unsafe_allow_html=True)
+                st.markdown("<h3 style='color:#1E3A8A; margin-bottom:0;'>💠 爆款工场</h3>", unsafe_allow_html=True)
+                st.markdown("<p style='color:#94A3B8; font-size: 12px; margin-bottom: 20px;'>AI 驱动创作中枢</p>", unsafe_allow_html=True)
                 
                 features = [
-                    ("🎯", "精准选题", "算法锁定流量蓝海"),
-                    ("✍️", "爆款文案", "AI 一键重构脚本"),
-                    ("⚡", "效率革命", "创作提速 10 倍")
+                    ("🎯", "精准选题"),
+                    ("✍️", "爆款文案"),
+                    ("⚡", "效率革命")
                 ]
-                for icon, title, desc in features:
-                    st.markdown(f"""
-                        <div style='margin-bottom: 18px;'>
-                            <b style='font-size: 15px; color:#334155;'>{icon} {title}</b><br>
-                            <span style='font-size: 12px; color:#64748B; margin-left: 28px;'>{desc}</span>
-                        </div>
-                    """, unsafe_allow_html=True)
-                st.success("已助力 10k+ 出圈")
+                for icon, title in features:
+                    st.markdown(f"<div style='font-size:13px; color:#475569; margin-bottom:12px;'>{icon} <b>{title}</b></div>", unsafe_allow_html=True)
+                
+                st.write("\n")
+                st.success("10k+ 创作者首选")
 
             with col_auth:
                 # --- 右侧：登录/注册交互 ---
                 tab_l, tab_r = st.tabs(["安全登录", "快速注册"])
                 
                 with tab_l:
-                    with st.form("login_form_final", border=False):
+                    with st.form("login_compact", border=False):
                         st.write("\n")
                         acc = st.text_input("账号", placeholder="手机号 / 邮箱", label_visibility="collapsed")
                         pwd = st.text_input("密码", type="password", placeholder="请输入密码", label_visibility="collapsed")
-                        # 核心：手动指定按钮显示的文字
-                        if st.form_submit_button("立 即 登 录", use_container_width=True):
+                        
+                        if st.form_submit_button("登 录", use_container_width=True):
                             if acc and pwd:
                                 success, msg = login_user(acc, pwd)
                                 if success:
@@ -96,15 +85,21 @@ def view_auth():
                             else: st.warning("请完善信息")
 
                 with tab_r:
-                    with st.form("reg_form_final", border=False):
+                    with st.form("reg_compact", border=False):
                         st.write("\n")
                         ru = st.text_input("账号", placeholder="手机号/邮箱", label_visibility="collapsed")
-                        rp = st.text_input("密码", type="password", placeholder="设置 6-16 位密码", label_visibility="collapsed")
-                        rp2 = st.text_input("确认", type="password", placeholder="再次输入密码", label_visibility="collapsed")
+                        
+                        # --- 核心改进：密码框水平并排 ---
+                        pwd_col1, pwd_col2 = st.columns(2)
+                        with pwd_col1:
+                            rp = st.text_input("密码", type="password", placeholder="设置密码", label_visibility="collapsed")
+                        with pwd_col2:
+                            rp2 = st.text_input("确认", type="password", placeholder="确认密码", label_visibility="collapsed")
+                        
                         ri = st.text_input("邀请码", value="888888", label_visibility="collapsed")
-                        # 核心：手动指定按钮显示的文字
-                        if st.form_submit_button("注 册 账 号", use_container_width=True):
-                            if rp != rp2: st.error("两次密码输入不一致")
+                        
+                        if st.form_submit_button("注 册", use_container_width=True):
+                            if rp != rp2: st.error("两次密码不一致")
                             elif not ru or not rp: st.warning("请填写完整")
                             else:
                                 success, msg = register_user(ru, rp, ri)
@@ -113,4 +108,4 @@ def view_auth():
 
     # --- 3. 底部剧中声明 ---
     st.write("\n" * 4)
-    st.markdown("<p style='text-align: center; color: #CBD5E1; font-size: 11px;'>© 2026 DOUYIN MASTER PRO. ALL RIGHTS RESERVED.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #CBD5E1; font-size: 10px;'>© 2026 DOUYIN MASTER PRO. ALL RIGHTS RESERVED.</p>", unsafe_allow_html=True)

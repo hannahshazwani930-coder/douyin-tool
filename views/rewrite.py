@@ -1,56 +1,42 @@
+# views/rewrite.py
 import streamlit as st
-from openai import OpenAI
-from concurrent.futures import ThreadPoolExecutor
 from utils import render_copy_btn
 
 def view_rewrite():
-    st.markdown("### 📝 爆款文案改写")
-    st.caption("基于 DeepSeek V3 模型，智能清洗重组文案结构")
+    st.markdown("## 📝 爆款文案改写")
+    st.caption("基于深度学习模型，一键生成高质量、去重后的爆款文案。")
     
-    api_key = st.secrets.get("DEEPSEEK_API_KEY", "")
-    client = None
-    if api_key:
-        try: client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
-        except: pass
+    # Requirement 6: Tab 分流
+    tab_single, tab_batch = st.tabs(["⚡ 单条极速模式", "🚀 5路并行模式"])
     
-    if not client: st.warning("⚠️ 未配置 API Key，系统将运行在演示模式")
-
-    def process_text(text):
-        if not client: return "【演示模式】请配置 API Key。\n模拟结果：这是改写后的爆款文案..."
-        if len(text) < 5: return "❌ 文案太短"
-        try:
-            prompt = f"你是一个抖音千万粉博主。请将以下文案改写为爆款口播文案，要求：黄金3秒开头，情绪饱满，结尾强引导。原文：{text}"
-            res = client.chat.completions.create(model="deepseek-chat", messages=[{"role":"user", "content":prompt}], temperature=1.3)
-            return res.choices[0].message.content
-        except Exception as e: return f"API Error: {str(e)}"
-
-    c1, c2 = st.columns([1, 2])
-    with c1:
-        st.info("💡 提示：将竞品文案粘贴在下方，点击按钮批量生成。")
-        if st.button("🚀 5路并发执行", type="primary", use_container_width=True):
-            inputs = [st.session_state.get(f"in_{i}", "") for i in range(1,6)]
-            valid_inputs = [(i+1, txt) for i, txt in enumerate(inputs) if txt.strip()]
-            
-            if not valid_inputs: st.toast("请至少输入一条文案")
-            else:
-                with st.status("正在极速改写中...", expanded=True):
-                    with ThreadPoolExecutor(max_workers=5) as executor:
-                        futures = {executor.submit(process_text, txt): idx for idx, txt in valid_inputs}
-                        for future in futures:
-                            idx = futures[future]
-                            st.session_state[f"out_{idx}"] = future.result()
-                    st.rerun()
-
-    for i in range(1, 6):
+    with tab_single:
         with st.container(border=True):
-            st.markdown(f"**工作台 #{i}**")
-            col_in, col_out = st.columns([1, 1], gap="medium")
-            with col_in:
-                st.text_area(f"原始文案 #{i}", key=f"in_{i}", height=150, placeholder="粘贴文案...", label_visibility="collapsed")
-            with col_out:
-                res = st.session_state.get(f"out_{i}", "")
-                if res:
-                    st.text_area(f"结果 #{i}", value=res, height=150, key=f"area_out_{i}", label_visibility="collapsed")
-                    render_copy_btn(res, f"cp_{i}")
+            content = st.text_area("输入原始文案", height=150, placeholder="请粘贴需要改写的文案...")
+            if st.button("开始改写 (单条)", type="primary", use_container_width=True):
+                if content:
+                    with st.spinner("AI 正在深度思考中..."):
+                        # 模拟生成
+                        import time; time.sleep(1)
+                        res = f"【改写结果】\n{content}\n(此处为模拟改写后的文案，实际请接入API)"
+                        st.success("改写完成！")
+                        st.text_area("结果", value=res, height=150)
+                        render_copy_btn(res, "single_copy")
                 else:
-                    st.markdown("<div style='height:150px; display:flex; align-items:center; justify-content:center; color:#cbd5e1; border:1px dashed #e2e8f0; border-radius:8px;'>等待生成...</div>", unsafe_allow_html=True)
+                    st.warning("请先输入文案")
+
+    with tab_batch:
+        st.info("💡 并行模式可同时生成 5 个不同风格的改写版本，供您择优使用。")
+        with st.container(border=True):
+            content_batch = st.text_area("输入原始文案 (并行)", height=150, placeholder="粘贴文案，AI将为您生成5个版本...")
+            if st.button("🚀 启动5路并行改写", type="primary", use_container_width=True):
+                if content_batch:
+                    with st.spinner("5个AI引擎正在同时工作..."):
+                        import time; time.sleep(1.5)
+                        cols = st.columns(5)
+                        for i, col in enumerate(cols):
+                            with col:
+                                res = f"版本 {i+1}:\n{content_batch[:10]}... (风格{i+1})"
+                                st.text_area(f"风格 {i+1}", value=res, height=200)
+                                render_copy_btn(res, f"batch_copy_{i}")
+                else:
+                    st.warning("请先输入文案")

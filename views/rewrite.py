@@ -3,15 +3,15 @@ import streamlit as st
 from utils import render_copy_btn
 
 def view_rewrite():
-    # 1. 顶部悬浮头图 (与首页风格一致)
+    # 1. 顶部悬浮头图 (复刻首页风格)
     st.markdown("""
-    <div class="rewrite-header">
+    <div class="rewrite-header-card">
         <div class="rw-title">智能文案改写</div>
         <div class="rw-sub">深度去重 · 情感润色 · 爆款逻辑重构</div>
     </div>
     """, unsafe_allow_html=True)
 
-    # 2. 主要工作台 (白底容器)
+    # 2. 主要工作台 (整齐的白底容器)
     st.markdown('<div class="rewrite-workstation">', unsafe_allow_html=True)
     
     # 左右分栏布局：左侧输入设置，右侧结果

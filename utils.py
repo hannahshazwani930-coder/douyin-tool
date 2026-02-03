@@ -30,7 +30,7 @@ def inject_css(mode="app"):
         #MainMenu { visibility: hidden; }
         [data-testid="stSidebarCollapsedControl"] { display: none; }
         
-        /* 隐藏输入框按回车提交的小字提示 (Issue 4) */
+        /* 隐藏输入框按回车提交的小字提示 */
         [data-testid="InputInstructions"] { display: none !important; }
 
         /* 全局按钮美化 */
@@ -44,7 +44,7 @@ def inject_css(mode="app"):
     </style>
     """
     
-# 2. 登录页专用样式 (修复 Tab 双横线问题)
+    # 2. 登录页专用样式 (修复留白和横线问题)
     auth_css = """
     <style>
         /* 背景：时尚的深色渐变 */
@@ -74,7 +74,9 @@ def inject_css(mode="app"):
             }
         }
 
-        /* 输入框样式 */
+        /* --- 修复输入框留白问题 (Fix Gap) --- */
+        
+        /* 1. 设置外层容器背景色 */
         .stTextInput div[data-baseweb="input"] {
             background-color: #f8fafc !important;
             border: 1px solid #cbd5e1 !important;
@@ -82,14 +84,23 @@ def inject_css(mode="app"):
             color: #1e293b !important;
             height: 44px !important;
             box-shadow: none !important;
+            overflow: hidden; /* 确保圆角内没有溢出 */
         }
-        .stTextInput > div { border: none !important; box-shadow: none !important; }
         
+        /* 2. 核心修复：强制让内部所有子容器（包括眼睛图标的容器）背景透明 */
+        /* 这样它们就会显示出父级设置的 #f8fafc 灰色，而不是默认的白色 */
+        .stTextInput div[data-baseweb="input"] > div {
+            background-color: transparent !important;
+        }
+        
+        /* 3. 聚焦状态 */
         .stTextInput div[data-baseweb="input"]:focus-within {
             border-color: #3b82f6 !important;
-            background-color: #ffffff !important;
+            background-color: #ffffff !important; /* 聚焦时整体变白 */
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
         }
+
+        .stTextInput > div { border: none !important; box-shadow: none !important; }
 
         /* Form 样式重置 */
         [data-testid="stForm"] {
@@ -99,35 +110,37 @@ def inject_css(mode="app"):
             box-shadow: none !important;
         }
 
-        /* --- 👇 重点修改区域：Tab 样式修复 --- */
+        /* --- 修复 Tab 横线问题 --- */
         
-        /* 1. 清除 Tab 容器的所有默认底部边框和阴影 */
+        /* 1. 清除 Tab 列表容器的所有底部边框 */
         .stTabs [data-baseweb="tab-list"] { 
-            gap: 20px; 
-            border-bottom: 0px solid transparent !important; /* 强制去除底线 */
-            box-shadow: none !important; /* 强制去除阴影 */
+            gap: 24px; 
+            border-bottom: none !important; /* 彻底去除灰色横线 */
+            box-shadow: none !important;
             padding-bottom: 0px !important;
-            margin-bottom: 20px; 
+            margin-bottom: 25px; 
         }
 
-        /* 2. 定义单个 Tab 的基础样式 */
+        /* 2. 单个 Tab 样式 */
         .stTabs [data-baseweb="tab"] {
             height: 40px; 
             color: #64748b; 
             font-weight: 500;
             font-size: 15px;
             background-color: transparent !important;
-            border: none !important; /* 确保未选中的 Tab 没有任何边框 */
+            border: none !important;
             outline: none !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            margin-right: 10px !important;
         }
 
-        /* 3. 定义选中状态：只保留这一条下划线 */
+        /* 3. 选中状态：只保留底部红/蓝线 */
         .stTabs [aria-selected="true"] {
             color: #2563eb !important; 
             font-weight: 700 !important;
-            border-bottom: 3px solid #2563eb !important; /* 只有这里有边框 */
+            border-bottom: 3px solid #2563eb !important; /* 这里控制选中时的下划线 */
         }
-        /* --- 👆 修改结束 --- */
 
         /* 左侧装饰 */
         .hero-decoration {
@@ -143,6 +156,21 @@ def inject_css(mode="app"):
         }
         .auth-footer a { color: #64748b; text-decoration: none; margin: 0 10px; transition: 0.2s; }
         .auth-footer a:hover { color: #3b82f6; }
+    </style>
+    """
+    
+    app_css = """
+    <style>
+        .stApp { background-color: #f8fafc; }
+        [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; }
+        div.block-container { padding-top: 2rem; max-width: 1200px; }
+        
+        .announcement-box {
+            background: linear-gradient(90deg, #eff6ff, #ffffff);
+            border: 1px solid #bfdbfe; color: #1e40af;
+            padding: 10px 15px; border-radius: 8px; margin-bottom: 25px;
+            display: flex; align-items: center; font-size: 14px;
+        }
     </style>
     """
     
@@ -176,4 +204,3 @@ def render_wechat_pill(label, wx_id):
         <span style="color:#059669;font-family:monospace;background:#ecfdf5;padding:2px 6px;border-radius:4px;">📋 {wx_id}</span>
     </div>
     """, height=45)
-

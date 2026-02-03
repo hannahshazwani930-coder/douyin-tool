@@ -1,0 +1,39 @@
+/* * 🔐 [LOCKED: REWRITE PAGE] 
+ * 权限：已锁定。严禁修改文案改写页的专用布局。
+ */
+
+/* 1. 顶部流动渐变页眉 */
+.flowing-header {
+    background: linear-gradient(-45deg, #1e3a8a, #2563eb, #3b82f6, #0ea5e9);
+    background-size: 400% 400%;
+    animation: gradientBG 10s ease infinite;
+    border-radius: 20px;
+    padding: 40px;
+    color: white;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+@keyframes gradientBG {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
+}
+
+/* 2. 控制台容器 */
+.creation-console {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+/* 3. 自定义标签样式 */
+.custom-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 8px;
+    display: block;
+}

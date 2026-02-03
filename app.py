@@ -420,12 +420,21 @@ def view_home():
 def view_rewrite():
     st.markdown("## 📝 爆款文案改写"); st.markdown("---")
     if 'results' not in st.session_state: st.session_state['results'] = {}
-    client = OpenAI(api_key=st.secrets.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com")
+    
+    # 修复 API key 初始化问题
+    api_key = st.secrets.get("DEEPSEEK_API_KEY", "no-key")
+    try:
+        client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+    except:
+        client = None
+
     def rewrite_logic(content):
+        if not client: return "⚠️ 请在 secrets.toml 配置 DEEPSEEK_API_KEY"
         if not content or len(content.strip()) < 5: return "⚠️ 内容过短"
         prompt = f"你是一个抖音千万粉的口播博主。原始素材：{content}。任务：清洗数据，改写为原创爆款文案。公式：黄金3秒开头+中间情绪饱满+结尾强引导。输出：直接输出文案，不要任何markdown格式。"
         try: return client.chat.completions.create(model="deepseek-chat", messages=[{"role":"user","content":prompt}], temperature=1.3).choices[0].message.content
-        except: return "请配置 API Key"
+        except Exception as e: return f"调用失败: {str(e)}"
+
     def clear_text(k): st.session_state[k] = ""
     c1, c2 = st.columns([1, 2], gap="medium")
     with c1:
@@ -480,17 +489,22 @@ def view_poster():
 # --- 选题 ---
 def view_brainstorm():
     st.markdown("## 💡 爆款选题灵感库"); st.markdown("---")
-    client = OpenAI(api_key=st.secrets.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com")
+    try:
+        client = OpenAI(api_key=st.secrets.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com")
+    except: client = None
+
     c1, c2 = st.columns([3, 1])
     with c1: topic = st.text_input("🔍 输入你的赛道/关键词", placeholder="例如：职场、美妆、减肥、副业...")
     with c2: st.write(""); st.write(""); generate_btn = st.button("🧠 帮我想选题", type="primary", use_container_width=True)
     if generate_btn and topic:
-        prompt = f"我是做【{topic}】领域的。现在文案枯竭，请帮我生成 10 个绝对会火的爆款选题。要求：1. 必须反直觉，打破认知。2. 必须直击痛点，引发焦虑或强烈好奇。3. 格式：1. 标题：xxxx | 钩子：xxxx"
-        try:
-            with st.spinner("AI 正在疯狂头脑风暴..."):
-                res = client.chat.completions.create(model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.5)
-                st.session_state['brainstorm_result'] = res.choices[0].message.content
-        except Exception as e: st.error(str(e))
+        if not client: st.error("请配置 API Key")
+        else:
+            prompt = f"我是做【{topic}】领域的。现在文案枯竭，请帮我生成 10 个绝对会火的爆款选题。要求：1. 必须反直觉，打破认知。2. 必须直击痛点，引发焦虑或强烈好奇。3. 格式：1. 标题：xxxx | 钩子：xxxx"
+            try:
+                with st.spinner("AI 正在疯狂头脑风暴..."):
+                    res = client.chat.completions.create(model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.5)
+                    st.session_state['brainstorm_result'] = res.choices[0].message.content
+            except Exception as e: st.error(str(e))
     if 'brainstorm_result' in st.session_state:
         res = st.session_state['brainstorm_result']
         st.text_area("灵感列表", value=res, height=400, label_visibility="collapsed")
@@ -499,25 +513,37 @@ def view_brainstorm():
 # --- 起名 ---
 def view_naming():
     st.markdown("## 🏷️ 账号/IP 起名大师"); st.markdown("---")
-    client = OpenAI(api_key=st.secrets.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com")
+    try:
+        client = OpenAI(api_key=st.secrets.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com")
+    except: client = None
     c1, c2 = st.columns(2)
     with c1: niche = st.selectbox("🎯 赛道", ["短剧", "小说", "口播", "情感", "带货"])
     with c2: style = st.selectbox("🎨 风格", ["高冷", "搞笑", "文艺", "粗暴", "反差"])
     keywords = st.text_input("🔑 关键词 (选填)")
     if st.button("🎲 生成名字", type="primary", use_container_width=True):
-        prompt = f"为【{niche}】赛道生成10个{style}风格账号名，含关键词：{keywords}。格式：1. 名字+解释。"
-        try:
-            with st.spinner("生成中..."):
-                res = client.chat.completions.create(model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.5)
-                st.session_state['naming_result'] = res.choices[0].message.content
-        except Exception as e: st.error(str(e))
+        if not client: st.error("请配置 API Key")
+        else:
+            prompt = f"为【{niche}】赛道生成10个{style}风格账号名，含关键词：{keywords}。格式：1. 名字+解释。"
+            try:
+                with st.spinner("生成中..."):
+                    res = client.chat.completions.create(model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.5)
+                    st.session_state['naming_result'] = res.choices[0].message.content
+            except Exception as e: st.error(str(e))
     if 'naming_result' in st.session_state:
         res = st.session_state['naming_result']
         st.text_area("结果", value=res, height=400, label_visibility="collapsed")
         render_copy_button_html(res, "name_copy_btn")
 
-# --- 个人中心 ---
+# --- 个人中心 (严重错误修复：添加变量定义) ---
 def view_account():
+    # 修复：获取当前用户
+    CURRENT_USER = st.session_state.get('user_phone')
+    if not CURRENT_USER:
+        st.error("请重新登录")
+        return
+        
+    IS_VIP, VIP_MSG = get_user_vip_status(CURRENT_USER)
+
     st.markdown("## 👤 个人中心"); st.markdown("---")
     t1, t2, t3 = st.tabs(["🎁 邀请有礼", "💳 账户信息", "💬 提交反馈"])
     with t1:
@@ -655,9 +681,10 @@ def main():
             st.markdown("""<div class="sidebar-project-card"><div class="sp-title">📹 KOC 孵化</div><div class="sp-desc">真人出镜 · 0基础陪跑</div></div><div class="sidebar-project-card" style="border-left-color:#8b5cf6"><div class="sp-title">🎨 御灵 AI 动漫</div><div class="sp-desc">小说转动漫 · 端原生流量</div></div>""", unsafe_allow_html=True)
             
             st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-            render_wechat_box("🎁 领取资料", "W7774X")
+            # 修复：调用正确的函数 render_wechat_pill
+            render_wechat_pill("🎁 领取资料", "W7774X")
             st.markdown("<div style='height:5px'></div>", unsafe_allow_html=True)
-            render_wechat_box("🛠️ 技术合作", "TG777188")
+            render_wechat_pill("🛠️ 技术合作", "TG777188")
             
             st.markdown("---")
             if st.button("🚪 退出", type="secondary"):

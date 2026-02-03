@@ -37,7 +37,6 @@ DB_FILE = 'saas_data_v2.db'
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    # 用户表 (含裂变字段)
     c.execute('''CREATE TABLE IF NOT EXISTS users (
                     phone TEXT PRIMARY KEY, 
                     password_hash TEXT, 
@@ -62,7 +61,7 @@ def init_db():
 
 init_db()
 
-# --- CSS 样式 (完全还原 v6.6 + 新增 v8.0 裂变样式) ---
+# --- CSS 样式 ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -90,8 +89,7 @@ st.markdown("""
     div.stButton > button[kind="secondary"] { background-color: #f1f5f9; color: #475569; border: 1px solid transparent; }
     div.stButton > button[kind="secondary"]:hover { background-color: #e2e8f0; color: #1e293b; border-color: #cbd5e1; }
 
-    /* --- 🔥 首页功能卡片样式 (完美还原) 🔥 --- */
-    /* 针对 Streamlit 垂直容器的样式覆盖 */
+    /* --- 🔥 首页功能卡片样式 🔥 --- */
     [data-testid="stVerticalBlockBorderWrapper"] {
         border-radius: 16px !important;
         border: 1px solid #e2e8f0 !important;
@@ -116,7 +114,7 @@ st.markdown("""
     .card-title { font-size: 18px; font-weight: 800; color: #1e293b; text-align: center; margin-bottom: 6px; }
     .card-desc { font-size: 13px; color: #64748b; text-align: center; margin-bottom: 20px; min-height: 40px; line-height: 1.5; }
 
-    /* --- 🔥 侧边栏美化 (v6.6 紧凑版) 🔥 --- */
+    /* --- 🔥 侧边栏美化 🔥 --- */
     [data-testid="stSidebar"] { background-color: #f8fafc; border-right: 1px solid #e2e8f0; }
     [data-testid="stSidebar"] .block-container { padding-top: 2rem !important; padding-bottom: 1rem !important; }
     .sidebar-user-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; box-shadow: 0 2px 4px -1px rgba(0,0,0,0.02); }
@@ -571,7 +569,7 @@ def page_naming():
 
 def page_account():
     st.markdown("## 👤 个人中心"); st.markdown("---")
-    t1, t2 = st.tabs(["🎁 邀请有礼", "💳 账户", "💬 反馈"])
+    t1, t2, t3 = st.tabs(["🎁 邀请有礼", "💳 账户", "💬 反馈"])
     with t1:
         my_code, invite_count = get_user_invite_info(CURRENT_USER)
         st.markdown(f"""
@@ -648,7 +646,7 @@ def page_admin():
                         c.execute("UPDATE feedbacks SET reply=?, status='replied' WHERE id=?", (reply, r['id']))
                         conn.commit(); conn.close(); st.rerun()
 
-# --- 路由 ---
+# --- 路由逻辑 ---
 if not IS_VIP and menu not in ["🏠 首页", "👤 个人中心", "🕵️‍♂️ 管理后台"]:
     st.warning("⚠️ 会员功能，请先激活"); st.stop()
 

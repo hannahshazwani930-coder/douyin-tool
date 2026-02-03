@@ -17,16 +17,23 @@ def generate_invite_code():
 # ==============================================================================
 
 def inject_css(page_id="auth"):
-    # 1. 全局基础
+    # 1. 全局基础 - 彻底隐藏原生元素
     base_css = """
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        html, body, [class*="css"] { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
         
-        header[data-testid="stHeader"] { display: none !important; height: 0 !important; visibility: hidden !important; }
+        /* 全局字体强制 */
+        html, body, [class*="css"] { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+        }
+        
+        /* 🔴 核弹级隐藏：彻底移除 Streamlit 顶部的所有原生占位符 */
+        header[data-testid="stHeader"] { display: none !important; visibility: hidden !important; height: 0 !important; }
+        [data-testid="stToolbar"] { display: none !important; }
+        [data-testid="stDecoration"] { display: none !important; } /* 隐藏顶部的彩虹条 */
         #MainMenu { display: none !important; }
-        [data-testid="stSidebarCollapsedControl"] { display: none !important; }
         
+        /* 侧边栏 */
         [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
         div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; }
         div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; }
@@ -64,24 +71,29 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ============================================================
-    # 🏠 [LOCKED + NEW BOTTOM] 首页 (上半部锁定，下半部焕新)
+    # 🏠 [NEW] 首页 - 终极无白框 + V6卡片
     # ============================================================
     elif page_id == "home":
         st.markdown("""
         <style>
+            /* 1. 强制统一背景色，消除色差 */
             .stApp { background-color: #f8fafc; }
             
-            /* --- 顶部区域：严格保持您满意的无白框版本 --- */
-            div.block-container { 
+            /* 2. 容器物理清零 */
+            div[data-testid="block-container"] { 
                 max-width: 1200px !important; 
-                padding: 1rem 40px 50px 40px !important; 
+                padding-top: 1rem !important; /* 仅留极小顶部间距 */
+                padding-left: 40px !important;
+                padding-right: 40px !important;
+                margin-top: -50px !important; /* 向上提拉，覆盖所有潜在白边 */
             }
 
-            /* 头图 */
+            /* 悬浮岛头图 */
             .home-header-card {
                 background: linear-gradient(120deg, #2563eb, #1d4ed8);
                 border-radius: 20px; padding: 50px 40px; text-align: center; color: white;
                 box-shadow: 0 15px 40px -10px rgba(37, 99, 235, 0.4); 
+                margin-top: 30px; /* 视觉修正 */
                 margin-bottom: 30px; position: relative; overflow: hidden;
             }
             .home-header-card::before {
@@ -114,15 +126,14 @@ def inject_css(page_id="auth"):
             .news-tag-v3 { background: #fff7ed; color: #ea580c; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 4px; border: 1px solid #ffedd5; flex-shrink: 0; }
             .news-text-v3 { font-size: 14px; color: #334155; font-weight: 500; }
 
-            /* 标题与控制台 */
+            /* 标题与中控 */
             .section-title-v3 { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
             .section-title-v3::before { content: ""; display: block; width: 4px; height: 18px; background: #3b82f6; border-radius: 2px; }
+            .creation-console { background: white; border-radius: 24px; padding: 10px 40px 40px 40px; margin-top: 0px; }
             div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 10; }
             div.stButton button:hover { background: transparent; }
-            .creation-console { background: white; border-radius: 24px; padding: 10px 40px 40px 40px; margin-top: 0px; }
 
-            /* --- 🆕 自由发挥区：全新变现项目卡片 (Pro Design) --- */
-            /* 1. 卡片主体 */
+            /* --- 变现项目 V6 (纯CSS实现，无白框，无乱码) --- */
             .proj-card-v6 {
                 background: white;
                 border-radius: 16px;
@@ -133,49 +144,27 @@ def inject_css(page_id="auth"):
                 position: relative; overflow: hidden;
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             }
-            
-            /* 2. 顶部装饰条 (Accent Bar) */
             .proj-card-v6::before {
                 content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-                background: linear-gradient(90deg, #3b82f6, #06b6d4);
-                opacity: 0.8;
+                background: linear-gradient(90deg, #3b82f6, #06b6d4); opacity: 0.8;
             }
-
-            /* 3. 悬浮效果 */
-            .proj-card-v6:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 15px 30px -5px rgba(0,0,0,0.08);
-                border-color: #3b82f6;
-            }
-
-            /* 4. 内部元素 */
+            .proj-card-v6:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(0,0,0,0.08); border-color: #3b82f6; }
             .proj-head-v6 { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
-            .proj-icon-v6 { font-size: 24px; filter: grayscale(20%); }
-            .proj-card-v6:hover .proj-icon-v6 { filter: grayscale(0%); transform: scale(1.1); transition: transform 0.3s; }
+            .proj-icon-v6 { font-size: 24px; }
             .proj-title-v6 { font-size: 16px; font-weight: 700; color: #0f172a; }
             .proj-desc-v6 { font-size: 13px; color: #64748b; line-height: 1.6; flex-grow: 1; margin-bottom: 20px; }
-
-            /* 5. 底部装饰区 (Footer) */
             .proj-footer-v6 {
-                background-color: #f8fafc;
-                border-top: 1px dashed #cbd5e1;
-                margin: 0 -24px -24px -24px; /* 抵消 padding */
-                padding: 12px 24px;
+                background-color: #f8fafc; border-top: 1px dashed #cbd5e1;
+                margin: 0 -24px -24px -24px; padding: 12px 24px;
                 display: flex; justify-content: space-between; align-items: center;
             }
-            .proj-tag-v6 {
-                background: #e0f2fe; color: #0284c7; padding: 4px 10px; 
-                border-radius: 6px; font-size: 11px; font-weight: 600;
-            }
-            .proj-wx-v6 {
-                font-family: monospace; font-size: 12px; color: #64748b; font-weight: 500;
-                display: flex; align-items: center; gap: 5px;
-            }
+            .proj-tag-v6 { background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+            .proj-wx-v6 { font-family: monospace; font-size: 12px; color: #64748b; font-weight: 600; }
         </style>
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 文案页
+    # 🔒 [LOCKED] 文案改写页
     # ----------------------------------------------------------------
     elif page_id == "rewrite":
         st.markdown("""
@@ -247,7 +236,7 @@ def inject_css(page_id="auth"):
         </style>
         """, unsafe_allow_html=True)
 
-# --- 组件函数 (保持原样) ---
+# --- 组件函数 ---
 def render_sidebar_user_card(username, vip_info):
     status_bg = "#eff6ff" if "VIP" in vip_info or "管理员" in vip_info else "#f1f5f9"
     st.sidebar.markdown(f"""<div style="background: {status_bg}; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 20px;"><div style="display:flex; align-items:center; margin-bottom: 8px;"><div style="width: 32px; height: 32px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 10px; border: 1px solid #e2e8f0;">👤</div><div style="font-weight: 700; color: #0f172a; font-size: 14px; overflow: hidden; text-overflow: ellipsis;">{username}</div></div><div style="background: white; padding: 6px 10px; border-radius: 6px; font-size: 12px; color: #2563eb; font-weight: 600; border: 1px solid #e2e8f0; text-align: center;">{vip_info}</div></div>""", unsafe_allow_html=True)
@@ -267,7 +256,6 @@ def render_cta_wechat(wx_id):
     html = f"""<div style="padding:10px;"><div style="background:linear-gradient(90deg,#059669,#10b981);color:white;border-radius:12px;padding:15px 25px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 5px 15px rgba(16,185,129,0.4);font-family:'Inter',sans-serif;" onclick="navigator.clipboard.writeText('{wx_id}');alert('微信号 {wx_id} 已复制！')"><div style="display:flex;align-items:center;"><div style="font-size:24px;margin-right:15px;">🎁</div><div><span style="font-size:16px;font-weight:700;display:block;">领取内部资料 & 项目白皮书</span><span style="font-size:13px;opacity:0.9;">添加微信，备注【资料】</span></div></div><div style="background:rgba(255,255,255,0.2);padding:5px 12px;border-radius:20px;font-size:13px;font-weight:600;font-family:monospace;">📋 {wx_id}</div></div></div>"""
     components.html(html, height=100)
 
-# 删除多余函数
 def render_home_project_card(icon, title, desc, tag): return ""
 def render_page_banner(title, desc): st.markdown(f"""<div class="page-banner"><div class="banner-title">{title}</div><div class="banner-desc">{desc}</div></div>""", unsafe_allow_html=True)
 def render_conversion_tip(): st.markdown("""<div class="conversion-tip"><span>💰</span><span><b>商业化建议：</b> 已自动植入私域钩子，预计提升 30% 导流效率。</span></div>""", unsafe_allow_html=True)

@@ -6,253 +6,246 @@ from concurrent.futures import ThreadPoolExecutor
 from utils import render_copy_btn
 from config import DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL
 
-# --- 局部 CSS：解锁宽幅 & 编辑器样式 ---
-def load_editor_css():
+# --- 🎨 注入灵魂 CSS (SaaS 3.0 风格) ---
+def load_immersive_css():
     st.markdown("""
     <style>
-        /* 1. 强制解锁页面最大宽度，打造沉浸式工作台 */
+        /* 1. 布局重置：打破容器，释放空间 */
         div.block-container {
-            max-width: 98% !important;
-            padding-top: 2rem !important;
-            padding-left: 2rem !important;
-            padding-right: 2rem !important;
+            max-width: 100% !important;
+            padding-top: 0 !important; /* 顶满 */
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        
+        /* 2. 通栏极光顶栏 (Hero Header) */
+        .immersive-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #3b82f6 100%);
+            padding: 60px 40px 80px 40px; /* 底部留出空间给 Tab */
+            color: white;
+            text-align: center;
+            margin-bottom: -40px; /* 让下面的卡片往上叠 */
+            clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%); /* 底部斜切造型 */
+        }
+        .header-title { 
+            font-size: 36px; font-weight: 800; letter-spacing: -1px; margin-bottom: 10px; 
+            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .header-sub { 
+            font-size: 16px; opacity: 0.9; font-weight: 400; max-width: 600px; margin: 0 auto; line-height: 1.6;
+            background: rgba(255,255,255,0.1); padding: 8px 20px; border-radius: 30px; backdrop-filter: blur(5px);
         }
 
-        /* 2. 编辑器风格的文本域 */
+        /* 3. 核心工作区容器 */
+        .workspace-container {
+            max-width: 1200px; margin: 0 auto; padding: 0 20px;
+        }
+
+        /* 4. 魔改 Streamlit Tabs -> 悬浮胶囊 */
+        .stTabs { margin-top: -20px; } /* 往上提，叠在 Header 上 */
+        
+        div[data-baseweb="tab-list"] {
+            justify-content: center; gap: 15px; border: none !important; margin-bottom: 30px;
+        }
+        div[data-baseweb="tab"] {
+            background-color: rgba(255,255,255,0.9) !important;
+            backdrop-filter: blur(10px);
+            border-radius: 12px !important;
+            padding: 12px 30px !important;
+            border: 1px solid rgba(255,255,255,0.5) !important;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+            color: #64748b !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+        }
+        /* 选中状态 */
+        div[data-baseweb="tab"][aria-selected="true"] {
+            background: #2563eb !important;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(37, 99, 235, 0.4) !important;
+        }
+
+        /* 5. 悬浮白卡 (替代原本的 border=True) */
+        .glass-card {
+            background: white; border-radius: 20px; padding: 30px;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.05);
+            border: 1px solid #f1f5f9;
+        }
+        
+        /* 6. 输入框极简风 */
         .stTextArea textarea {
-            font-size: 16px;
-            line-height: 1.6;
-            background-color: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-            transition: all 0.3s ease;
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 15px; font-size: 15px; line-height: 1.6; transition: 0.3s;
         }
         .stTextArea textarea:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            background: white; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
         }
-        /* 右侧结果区背景微调，以此区分输入和输出 */
-        div[data-testid="column"]:nth-child(2) .stTextArea textarea {
-            background-color: #f8fafc; /* 极淡的灰蓝色 */
-            border-color: #cbd5e1;
-        }
-
-        /* 3. 顶部 Header 美化 */
-        .rewrite-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 20px; padding-bottom: 20px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-        .rewrite-title { font-size: 24px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; }
-        .rewrite-tag { background: #eff6ff; color: #2563eb; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-
-        /* 4. 风格选择器美化 */
-        div[role="radiogroup"] { background: white; padding: 5px; border-radius: 10px; border: 1px solid #e2e8f0; display: inline-flex; }
         
-        /* 5. 按钮增强 */
-        .big-action-btn button {
-            width: 100%; height: 50px; font-size: 16px !important;
-            background: linear-gradient(90deg, #2563eb, #3b82f6) !important;
-            color: white !important; border: none !important;
-            box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4) !important;
+        /* 7. 按钮特效 */
+        .action-btn button {
+            background: linear-gradient(90deg, #2563eb, #3b82f6); color: white; border: none;
+            height: 45px; border-radius: 8px; font-weight: 600; font-size: 15px;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); transition: 0.3s;
         }
-        .big-action-btn button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.5) !important;
+        .action-btn button:hover {
+            transform: translateY(-2px); box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5);
         }
+        
+        /* 去除 Streamlit 默认顶部空白 */
+        .stApp { background-color: #f8fafc; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- DeepSeek 核心调用 ---
+# --- DeepSeek 调用逻辑 (保持不变，稳健核心) ---
 def call_deepseek_rewrite(content, style_prompt):
-    """真实调用 DeepSeek API"""
     if not DEEPSEEK_API_KEY or "sk-" not in DEEPSEEK_API_KEY:
         return "❌ 配置错误：请在 config.py 中填入正确的 DEEPSEEK_API_KEY"
 
-    headers = {
-        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    
-    # 构建专业 Prompt
+    headers = {"Authorization": f"Bearer {DEEPSEEK_API_KEY}", "Content-Type": "application/json"}
     system_prompt = f"""
     你是由抖音爆款工场开发的顶级文案专家。请对用户输入的文案进行【{style_prompt}】方向的改写。
-    核心要求：
-    1. 深度去重：改变句式结构，但保留核心逻辑。
-    2. 情绪价值：语言要更具网感、穿透力，引发用户共鸣。
-    3. 格式优化：适当分段，使用emoji增加视觉跳跃感。
-    4. 直接输出：不要包含“好的”、“改写如下”等前缀。
+    核心要求：1.深度去重；2.语言更有网感和穿透力；3.适当使用emoji；4.直接输出结果，不要废话。
     """
-    
     data = {
         "model": "deepseek-chat",
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": content}
-        ],
-        "temperature": 1.3, # 高创造性
-        "stream": False
+        "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": content}],
+        "temperature": 1.3, "stream": False
     }
-
     try:
         response = requests.post(f"{DEEPSEEK_BASE_URL}/chat/completions", headers=headers, json=data, timeout=60)
-        if response.status_code == 200:
-            return response.json()['choices'][0]['message']['content']
-        else:
-            return f"❌ API 报错: {response.status_code} - {response.text}"
-    except Exception as e:
-        return f"❌ 网络请求超时或错误: {str(e)}"
+        if response.status_code == 200: return response.json()['choices'][0]['message']['content']
+        else: return f"❌ API 报错: {response.status_code} - {response.text}"
+    except Exception as e: return f"❌ 网络错误: {str(e)}"
 
 # --- 主视图 ---
 def view_rewrite():
-    # 1. 注入宽幅 CSS
-    load_editor_css()
+    load_immersive_css()
     
-    # 2. 顶部导航栏
+    # 1. 极光通栏 Header (SaaS 级视觉)
     st.markdown("""
-    <div class="rewrite-header">
-        <div class="rewrite-title">
-            <span>📝 文案改写 Pro</span>
-            <span class="rewrite-tag">DeepSeek V3 驱动</span>
-        </div>
-        <div style="color: #64748b; font-size: 14px;">
-            🚀 你的全能 AI 创作助手
-        </div>
+    <div class="immersive-header">
+        <div class="header-title">✨ 文案改写 Pro</div>
+        <div class="header-sub">DeepSeek V3 深度驱动 · 全网去重 · 爆款逻辑重构</div>
     </div>
     """, unsafe_allow_html=True)
     
-    # 3. 初始化状态
-    if 'rw_single_input' not in st.session_state: st.session_state.rw_single_input = ""
+    # 2. 状态管理
     if 'rw_single_res' not in st.session_state: st.session_state.rw_single_res = ""
     if 'rw_batch_res' not in st.session_state: st.session_state.rw_batch_res = [""] * 5
 
-    # 4. 模式切换 Tab
-    mode = st.radio("工作模式", ["⚡ 单条精修 (双屏对照)", "🚀 5路并行 (矩阵生成)"], horizontal=True, label_visibility="collapsed")
+    # 3. 工作区容器 (限制宽度，防止在大屏太散)
+    st.markdown('<div class="workspace-container">', unsafe_allow_html=True)
     
-    st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
-
-    # ==========================================
-    # 模式 A: 单条精修 (左右分栏，超级编辑器体验)
-    # ==========================================
-    if "单条" in mode:
-        # 布局：左侧输入(45%) - 中间操作(10%) - 右侧输出(45%)
-        c_input, c_btn, c_output = st.columns([4, 1, 4], gap="medium")
+    # 4. 胶囊式 Tab 切换 (悬浮在 Header 之上)
+    tab_single, tab_batch = st.tabs(["⚡ 单条精修模式", "🚀 5路矩阵模式"])
+    
+    # === 单条模式 (沉浸式双屏) ===
+    with tab_single:
+        # 使用自定义 class 代替 st.container(border=True)
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         
-        with c_input:
-            st.markdown("#### 📄 原始内容")
-            input_text = st.text_area("Source", height=500, placeholder="在此粘贴文案，支持长文本...", key="single_in_area", label_visibility="collapsed")
+        c_in, c_mid, c_out = st.columns([10, 1, 10])
         
-        with c_btn:
-            # 垂直居中的操作区
-            st.markdown("<div style='height: 150px;'></div>", unsafe_allow_html=True)
+        with c_in:
+            st.markdown("##### 📝 原始内容")
+            content = st.text_area("in", height=400, placeholder="在此粘贴文案...", label_visibility="collapsed")
             
-            st.markdown("##### 🎨 风格")
-            style = st.selectbox("Style", ["标准去重", "爆款悬疑", "情感共鸣", "硬核干货", "幽默反转"], label_visibility="collapsed")
-            
-            st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-            
-            # 大按钮
-            st.markdown('<div class="big-action-btn">', unsafe_allow_html=True)
-            if st.button("开始\n改写", use_container_width=True):
-                if input_text:
-                    st.session_state.rw_single_res = "" # 清空旧结果
-                    with c_output:
-                        with st.status("DeepSeek 深度思考中...", expanded=True) as status:
-                            st.write("🧠 语义解构...")
-                            time.sleep(0.5)
-                            st.write("🌪️ 风格重塑...")
-                            res = call_deepseek_rewrite(input_text, style)
-                            status.update(label="✅ 完成", state="complete", expanded=False)
-                        st.session_state.rw_single_res = res
-                else:
-                    st.toast("⚠️ 请先输入文案内容")
-            st.markdown('</div>', unsafe_allow_html=True)
+            # 底部操作栏
+            st.markdown("<div style='height:15px'></div>", unsafe_allow_html=True)
+            cc1, cc2 = st.columns([2, 1])
+            with cc1:
+                style = st.selectbox("风格偏好", ["标准去重", "爆款悬疑", "情感共鸣", "硬核干货", "幽默反转"], label_visibility="collapsed")
+            with cc2:
+                st.markdown('<div class="action-btn">', unsafe_allow_html=True)
+                if st.button("✨ 立即改写", use_container_width=True):
+                    if content:
+                        with st.spinner("DeepSeek 正在重构..."):
+                            st.session_state.rw_single_res = call_deepseek_rewrite(content, style)
+                    else:
+                        st.toast("⚠️ 内容不能为空")
+                st.markdown('</div>', unsafe_allow_html=True)
 
-        with c_output:
-            st.markdown("#### ✨ 改写结果")
+        # 中间分割线 (视觉引导)
+        with c_mid:
+            st.markdown("""
+            <div style="height:400px; display:flex; align-items:center; justify-content:center; color:#cbd5e1;">
+                <span style="font-size:24px;">➔</span>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with c_out:
+            st.markdown("##### 🎯 改写结果")
             if st.session_state.rw_single_res:
-                st.text_area("Result", value=st.session_state.rw_single_res, height=500, key="single_out_area", label_visibility="collapsed")
-                # 底部工具栏
-                col_copy, col_space = st.columns([1, 3])
-                with col_copy:
-                    render_copy_btn(st.session_state.rw_single_res, "copy_single_final")
+                st.text_area("out", value=st.session_state.rw_single_res, height=400, label_visibility="collapsed")
+                st.markdown("<div style='height:15px'></div>", unsafe_allow_html=True)
+                render_copy_btn(st.session_state.rw_single_res, "copy_single_new")
             else:
+                # 空状态占位符
                 st.markdown("""
-                <div style="height:500px; background:#f8fafc; border:2px dashed #e2e8f0; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#94a3b8; flex-direction:column;">
-                    <div style="font-size:40px; margin-bottom:10px;">🤖</div>
-                    <div>AI 改写结果将显示在这里</div>
+                <div style="height:400px; background:#f8fafc; border-radius:12px; border:2px dashed #e2e8f0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#94a3b8;">
+                    <div style="font-size:40px; margin-bottom:10px; opacity:0.5;">🤖</div>
+                    <div style="font-size:14px;">AI 智能改写结果将展示在此处</div>
                 </div>
                 """, unsafe_allow_html=True)
-
-    # ==========================================
-    # 模式 B: 5路并行 (矩阵生成，宽幅平铺)
-    # ==========================================
-    else:
-        st.info("💡 矩阵模式：5 个 AI 线程将同时工作，适合批量生产短视频脚本、小红书文案。")
         
-        # 顶部操作栏
-        c_opt_1, c_opt_2 = st.columns([4, 1])
-        with c_opt_1:
-            pass 
-        with c_opt_2:
-            st.markdown('<div class="big-action-btn">', unsafe_allow_html=True)
-            start_batch = st.button("🚀 并行启动", use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True) # close glass-card
 
+    # === 5路矩阵模式 (宽幅平铺) ===
+    with tab_batch:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        
+        # 顶部控制栏
+        top_c1, top_c2 = st.columns([4, 1])
+        with top_c1:
+            st.info("💡 **矩阵效率提升 500%**：系统将开启 5 个并发线程，独立处理 5 条不同的文案。")
+        with top_c2:
+            st.markdown('<div class="action-btn">', unsafe_allow_html=True)
+            run_batch = st.button("🚀 并行启动", use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+        st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
+        
         # 5列布局
         cols = st.columns(5, gap="small")
         inputs = []
         
-        # 渲染输入区
+        # 渲染输入
         for i, col in enumerate(cols):
             with col:
-                st.markdown(f"**任务通道 {i+1}**")
-                val = st.text_area(f"文案 {i+1}", height=200, key=f"b_in_{i}", placeholder="输入文案...", label_visibility="collapsed")
+                st.markdown(f"<div style='text-align:center; font-weight:700; color:#64748b; margin-bottom:10px;'>通道 {i+1}</div>", unsafe_allow_html=True)
+                val = st.text_area(f"in_{i}", height=150, key=f"bi_{i}", placeholder="输入文案...", label_visibility="collapsed")
                 inputs.append(val)
         
-        # 执行逻辑
-        if start_batch:
-            valid_tasks = [(i, text) for i, text in enumerate(inputs) if text.strip()]
-            if valid_tasks:
-                status_bar = st.status(f"正在并行处理 {len(valid_tasks)} 个任务...", expanded=True)
-                
-                with ThreadPoolExecutor(max_workers=5) as executor:
-                    future_to_idx = {
-                        executor.submit(call_deepseek_rewrite, text, "标准去重"): i 
-                        for i, text in valid_tasks
-                    }
-                    
-                    completed = 0
-                    for future in future_to_idx:
-                        idx = future_to_idx[future]
-                        try:
-                            res = future.result()
-                            st.session_state.rw_batch_res[idx] = res
-                            completed += 1
-                        except Exception as e:
-                            st.session_state.rw_batch_res[idx] = f"❌ Error: {str(e)}"
-                
-                status_bar.update(label="✅ 所有通道处理完毕", state="complete", expanded=False)
-            else:
-                st.warning("请至少在任意一个通道输入文案")
-
         st.markdown("---")
         
-        # 渲染结果区 (对应上面的5列)
+        # 渲染输出
         res_cols = st.columns(5, gap="small")
+        
+        # 逻辑处理
+        if run_batch:
+            valid = [(i, t) for i, t in enumerate(inputs) if t.strip()]
+            if valid:
+                status = st.status(f"正在并行处理 {len(valid)} 个任务...", expanded=True)
+                with ThreadPoolExecutor(max_workers=5) as ex:
+                    f_map = {ex.submit(call_deepseek_rewrite, t, "标准去重"): i for i, t in valid}
+                    for f in f_map:
+                        try:
+                            st.session_state.rw_batch_res[f_map[f]] = f.result()
+                        except:
+                            st.session_state.rw_batch_res[f_map[f]] = "Error"
+                status.update(label="✅ 完成", state="complete", expanded=False)
+        
+        # 显示结果
         for i, col in enumerate(res_cols):
             with col:
-                if st.session_state.rw_batch_res[i]:
-                    if "❌" in st.session_state.rw_batch_res[i]:
-                        st.error("生成失败")
-                    else:
-                        st.success("✅ 完成")
-                    
-                    st.text_area(f"结果 {i+1}", value=st.session_state.rw_batch_res[i], height=300, label_visibility="collapsed")
-                    render_copy_btn(st.session_state.rw_batch_res[i], f"copy_b_{i}")
+                res = st.session_state.rw_batch_res[i]
+                if res:
+                    st.text_area(f"out_{i}", value=res, height=200, label_visibility="collapsed")
+                    render_copy_btn(res, f"cp_b_{i}")
                 else:
-                    st.markdown("""
-                    <div style="height:300px; background:#f1f5f9; border-radius:8px; border:1px dashed #cbd5e1;"></div>
-                    """, unsafe_allow_html=True)
+                    st.markdown("<div style='height:200px; background:#f8fafc; border-radius:12px; border:1px dashed #e2e8f0;'></div>", unsafe_allow_html=True)
+
+        st.markdown('</div>', unsafe_allow_html=True) # close glass-card
+
+    st.markdown('</div>', unsafe_allow_html=True) # close workspace-container

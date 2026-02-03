@@ -1,6 +1,6 @@
 # views/account.py
 import streamlit as st
-from utils import render_copy_btn, render_page_banner
+from utils import load_isolated_css
 from database import get_user_invite_info, get_user_vip_status, add_feedback, get_user_feedbacks, redeem_card, get_setting
 
 def view_account():
@@ -67,3 +67,4 @@ def view_account():
             with st.expander(f"{str(t)[:10]} - {s}", expanded=True):
                 st.write(f"问: {c}")
                 if r: st.success(f"答: {r}")
+

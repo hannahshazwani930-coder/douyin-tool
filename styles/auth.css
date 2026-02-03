@@ -1,58 +1,88 @@
-/* * 🔐 [ULTRA-PRO PRODUCTION - STABLE VERSION] 
- * 放弃 position:absolute，拥抱 Flex 布局
+/* * 🔐 [ULTRA-PRO PRODUCTION - THE FINAL POLISH] 
+ * 方案：视口坐标锁死（Viewport Coordinate Lock）
  */
 
-/* 1. 隐藏所有原生工具条，营造沉浸感 */
-header, [data-testid="stHeader"], [data-testid="stToolbar"] { visibility: hidden !important; }
+/* 1. 屏蔽一切原生干扰，让页面成为一张纯净画布 */
+header, [data-testid="stHeader"], [data-testid="stSidebar"], [data-testid="stToolbar"] { 
+    display: none !important; 
+}
 
-/* 2. 背景：深邃暗蓝 */
+/* 2. 全屏背景：深邃蓝黑 */
 .stApp {
     background: #050a18 !important;
+    overflow: hidden !important;
 }
 
-/* 3. 登录卡片美化：给原生 form 加上白色底色和阴影 */
-[data-testid="stForm"] {
+/* 3. 核心：强制一个 850x520 的物理白砖死死钉在屏幕中央 */
+div.block-container {
+    max-width: 850px !important;
+    height: 520px !important;
+    padding: 0 !important;
+    margin: auto !important;
+    position: fixed !important;
+    top: 50% !important; left: 50% !important;
+    transform: translate(-50%, -50%) !important;
     background: white !important;
-    padding: 40px !important;
-    border-radius: 28px !important;
-    box-shadow: 0 40px 100px rgba(0,0,0,0.6) !important;
-    border: none !important;
+    border-radius: 32px !important;
+    box-shadow: 0 50px 100px rgba(0,0,0,0.8) !important;
+    z-index: 100 !important;
+    overflow: visible !important;
 }
 
-/* 4. 品牌区盒子样式 */
-.brand-box-pro {
-    background: linear-gradient(135deg, #2563eb, #1e3a8a);
-    padding: 50px 40px;
-    border-radius: 28px;
-    color: white;
+/* 4. 左侧蓝色面板：绝对定位，锁死宽度 340px */
+.brand-panel-fixed {
+    position: absolute;
+    left: 0; top: 0;
+    width: 340px;
     height: 100%;
-    min-height: 480px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    background: linear-gradient(135deg, #2563eb, #1e3a8a);
+    padding: 60px 45px;
+    color: white;
+    z-index: 101;
+    border-top-left-radius: 32px;
+    border-bottom-left-radius: 32px;
+    pointer-events: none;
 }
 
-/* 5. 原生 Tabs 美化 */
-button[data-baseweb="tab"] {
-    color: rgba(255,255,255,0.6) !important;
-    font-size: 16px !important;
-}
-button[aria-selected="true"] {
-    color: white !important;
-    font-weight: bold !important;
+/* 5. 核心：强制右侧所有 Streamlit 原生组件向右偏移 340px */
+/* 这是解决 image_ef71a5 中“组件跑偏”的唯一物理级方案 */
+[data-testid="stVerticalBlock"] > div {
+    margin-left: 340px !important; /* 物理推移 */
+    padding: 0 50px !important;
+    max-width: 510px !important;
 }
 
-/* 6. 输入框大气化 */
+/* 6. 输入框美化：大气、简单 */
 .stTextInput input {
-    height: 50px !important;
+    height: 48px !important;
     border-radius: 12px !important;
+    border: 1px solid #e2e8f0 !important;
     background: #f8fafc !important;
+    transition: 0.3s;
+}
+.stTextInput input:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 2px rgba(37,99,235,0.1) !important;
 }
 
-/* 7. 登录按钮大气化 */
-button[kind="primaryFormSubmit"] {
+/* 7. 登录按钮：高级商务蓝 */
+div.stButton > button {
+    width: 100% !important;
+    height: 50px !important;
     background: #1e3a8a !important;
-    height: 52px !important;
+    color: white !important;
     border-radius: 12px !important;
     font-weight: 700 !important;
+    border: none !important;
+    margin-top: 15px !important;
+}
+
+/* 8. 外部免责声明 */
+.footer-lock-pro {
+    position: fixed;
+    bottom: 30px; width: 100%;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 11px;
+    z-index: 999;
 }

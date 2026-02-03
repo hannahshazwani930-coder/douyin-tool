@@ -3,69 +3,45 @@ import streamlit as st
 import time
 import requests
 from concurrent.futures import ThreadPoolExecutor
-# 注意：这里我们不再导入 inject_css，因为它由 main.py 统一管理
 from utils import render_copy_btn, render_conversion_tip
 from config import DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL
 
-# --- DeepSeek 调用逻辑 ---
 def call_deepseek_rewrite(content, style_prompt):
-    if not DEEPSEEK_API_KEY or "sk-" not in DEEPSEEK_API_KEY:
-        return "❌ 配置错误：请在 config.py 中填入正确的 DEEPSEEK_API_KEY"
+    if not DEEPSEEK_API_KEY or "sk-" not in DEEPSEEK_API_KEY: return "❌ 配置错误"
     headers = {"Authorization": f"Bearer {DEEPSEEK_API_KEY}", "Content-Type": "application/json"}
     system_prompt = f"""你是由抖音爆款工场开发的顶级文案专家。请对用户输入的文案进行【{style_prompt}】方向的改写。核心要求：1.深度去重；2.语言更有网感；3.适当使用emoji；4.直接输出结果。"""
     data = {"model": "deepseek-chat", "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": content}], "temperature": 1.3, "stream": False}
     try:
         response = requests.post(f"{DEEPSEEK_BASE_URL}/chat/completions", headers=headers, json=data, timeout=60)
         if response.status_code == 200: return response.json()['choices'][0]['message']['content']
-        else: return f"❌ API 报错: {response.status_code} - {response.text}"
+        else: return f"❌ API 报错: {response.status_code}"
     except Exception as e: return f"❌ 网络错误: {str(e)}"
 
-# --- 主视图 ---
 def view_rewrite():
-    # 🔴 关键修改：删除了 inject_css()
-    # 样式已由 main.py 中的 inject_css("rewrite") 提前加载，这里无需重复操作
+    # 样式已由 main.py 加载，此处无需 inject_css
     
-    # 1. 悬浮流光 Header
-    st.markdown("""
-    <div class="flowing-header">
-        <div class="header-title">✨ 文案改写 Pro</div>
-        <div class="header-sub">DeepSeek V3 深度驱动 · 智能矩阵 · 爆款逻辑重构</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("""<div class="flowing-header"><div class="header-title">✨ 文案改写 Pro</div><div class="header-sub">DeepSeek V3 深度驱动 · 智能矩阵 · 爆款逻辑重构</div></div>""", unsafe_allow_html=True)
     
-    # State
     if 'rewrite_mode' not in st.session_state: st.session_state.rewrite_mode = "single"
     if 'rw_single_res' not in st.session_state: st.session_state.rw_single_res = ""
     if 'rw_batch_res' not in st.session_state: st.session_state.rw_batch_res = [""] * 5
 
-    # 2. 悬浮切换按钮
     c_l, c_m1, c_m2, c_r = st.columns([2, 1.2, 1.2, 2])
-    
     with c_m1:
         type_s = "primary" if st.session_state.rewrite_mode == "single" else "secondary"
-        if st.button("⚡ 单条精修", key="sw_single", type=type_s, use_container_width=True):
-            st.session_state.rewrite_mode = "single"
-            st.rerun()
-            
+        if st.button("⚡ 单条精修", key="sw_single", type=type_s, use_container_width=True): st.session_state.rewrite_mode = "single"; st.rerun()
     with c_m2:
         type_m = "primary" if st.session_state.rewrite_mode == "matrix" else "secondary"
-        if st.button("🚀 5路矩阵", key="sw_matrix", type=type_m, use_container_width=True):
-            st.session_state.rewrite_mode = "matrix"
-            st.rerun()
+        if st.button("🚀 5路矩阵", key="sw_matrix", type=type_m, use_container_width=True): st.session_state.rewrite_mode = "matrix"; st.rerun()
 
-    # 3. 一体化创作控制台
     st.markdown('<div class="creation-console">', unsafe_allow_html=True)
 
-    # === 模式 A: 单条精修 ===
     if st.session_state.rewrite_mode == "single":
         c_left, c_right = st.columns(2, gap="large")
-        
         with c_left:
             st.markdown('<div class="custom-label" style="text-align:left">📝 原始内容</div>', unsafe_allow_html=True)
             content = st.text_area("in", height=400, placeholder="在此粘贴文案...", label_visibility="collapsed")
-            
             st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
-            
             cc1, cc2 = st.columns([1, 1])
             with cc1:
                 st.markdown('<div class="custom-label" style="text-align:left; margin-bottom:5px;">风格偏好</div>', unsafe_allow_html=True)
@@ -73,14 +49,10 @@ def view_rewrite():
             with cc2:
                 st.markdown('<div class="custom-label" style="opacity:0">&nbsp;</div>', unsafe_allow_html=True)
                 run_single = st.button("✨ 立即改写", type="primary", use_container_width=True)
-                
             if run_single:
                 if content:
-                    with st.spinner("AI 正在重构..."):
-                        st.session_state.rw_single_res = call_deepseek_rewrite(content, style)
-                else:
-                    st.toast("⚠️ 内容不能为空")
-
+                    with st.spinner("AI 正在重构..."): st.session_state.rw_single_res = call_deepseek_rewrite(content, style)
+                else: st.toast("⚠️ 内容不能为空")
         with c_right:
             st.markdown('<div class="custom-label" style="text-align:left">🎯 改写结果</div>', unsafe_allow_html=True)
             if st.session_state.rw_single_res:
@@ -89,28 +61,17 @@ def view_rewrite():
                 render_copy_btn(st.session_state.rw_single_res, "copy_s_v6")
                 render_conversion_tip()
             else:
-                st.markdown("""
-                <div style="height:485px; background:#f8fafc; border-radius:12px; border:2px dashed #e2e8f0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#94a3b8;">
-                    <div style="font-size:48px; opacity:0.3; margin-bottom:10px;">🪄</div>
-                    <div>等待 AI 施展魔法...</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown("""<div style="height:485px; background:#f8fafc; border-radius:12px; border:2px dashed #e2e8f0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#94a3b8;"><div style="font-size:48px; opacity:0.3; margin-bottom:10px;">🪄</div><div>等待 AI 施展魔法...</div></div>""", unsafe_allow_html=True)
 
-    # === 模式 B: 5路矩阵 ===
     else:
-        top_c1, top_c2 = st.columns([3, 1])
+        # 🔴 关键修复：vertical_alignment="bottom" 实现底部对齐
+        top_c1, top_c2 = st.columns([3, 1], vertical_alignment="bottom")
         with top_c1:
-             st.markdown("""
-             <div class="info-box">
-                <span style="font-size:20px;">💡</span>
-                <span style="font-weight:600;">矩阵效率模式：开启 5 个并发线程，独立处理，互不干扰。</span>
-             </div>
-             """, unsafe_allow_html=True)
+             st.markdown("""<div class="info-box"><span style="font-size:20px;">💡</span><span style="font-weight:600;">矩阵效率模式：开启 5 个并发线程，独立处理，互不干扰。</span></div>""", unsafe_allow_html=True)
         with top_c2:
             run_batch = st.button("🚀 并行启动", type="primary", use_container_width=True)
             
         st.markdown("<div style='height:30px'></div>", unsafe_allow_html=True)
-        
         cols = st.columns(5, gap="small")
         inputs = []
         for i, col in enumerate(cols):
@@ -131,7 +92,6 @@ def view_rewrite():
                 status.update(label="✅ 完成", state="complete", expanded=False)
         
         st.markdown("<div style='height:20px; border-bottom:1px solid #f1f5f9; margin-bottom:20px;'></div>", unsafe_allow_html=True)
-        
         res_cols = st.columns(5, gap="small")
         for i, col in enumerate(res_cols):
             with col:

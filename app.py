@@ -23,6 +23,8 @@ st.set_page_config(
 # 🔑 管理员配置
 ADMIN_PHONE = "13065080569"
 ADMIN_INIT_PASSWORD = "ltren777188" 
+# 🔥 通用注册邀请码 (可以在这里随时改，控制注册门槛)
+GLOBAL_INVITE_CODE = "VIP888" 
 
 # 数据库文件
 DB_FILE = 'saas_data_v2.db'
@@ -41,7 +43,7 @@ def init_db():
 
 init_db()
 
-# --- CSS 样式 (全站美化 + 登录页特效) ---
+# --- CSS 样式 ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -57,20 +59,37 @@ st.markdown("""
     
     /* 按钮全局优化 */
     div.stButton > button { border-radius: 10px; font-weight: 600; height: 48px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); width: 100%; font-size: 15px; }
-    div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border: none; color: white !important; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2); }
-    div.stButton > button[kind="primary"]:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4); background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); }
+    
+    /* 主按钮 */
+    div.stButton > button[kind="primary"] { 
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
+        border: none; color: white !important; 
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+    }
+    div.stButton > button[kind="primary"]:hover { 
+        transform: translateY(-2px); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    }
+    
+    /* 次级按钮 */
     div.stButton > button[kind="secondary"] { background-color: #f1f5f9; color: #475569; border: 1px solid transparent; }
     div.stButton > button[kind="secondary"]:hover { background-color: #e2e8f0; color: #1e293b; border-color: #cbd5e1; }
 
-    /* 🔥 登录页专属样式 (Glassmorphism) 🔥 */
-    .login-bg {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: radial-gradient(circle at 10% 20%, rgb(239, 246, 255) 0%, rgb(219, 228, 255) 90%);
-        z-index: -1;
-    }
+    /* 登录页特效 */
+    .login-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 10% 20%, rgb(239, 246, 255) 0%, rgb(219, 228, 255) 90%); z-index: -1; }
+    .auth-title { text-align: center; font-weight: 800; font-size: 28px; color: #1e293b; margin-bottom: 10px; letter-spacing: -1px; }
+    .auth-sub { text-align: center; color: #64748b; font-size: 14px; margin-bottom: 30px; }
+    .login-spacer { height: 10vh; }
     .feature-list { margin-top: 20px; }
     .feature-item { display: flex; align-items: center; margin-bottom: 15px; color: #475569; font-size: 14px; font-weight: 500; }
     .feature-icon { width: 24px; height: 24px; background: #dbeafe; color: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 12px; font-weight: bold; }
+
+    /* 微信引流卡片 */
+    .wx-invite-box {
+        background: #f0fdf4; border: 1px dashed #4ade80; border-radius: 8px; padding: 12px;
+        text-align: center; margin-bottom: 15px; font-size: 13px; color: #166534;
+    }
+    .wx-id-highlight { font-weight: 800; font-family: monospace; font-size: 15px; color: #15803d; margin: 0 4px; }
 
     /* 侧边栏美化 */
     [data-testid="stSidebar"] { background-color: #f8fafc; border-right: 1px solid #e2e8f0; }
@@ -117,9 +136,6 @@ st.markdown("""
     .step-content p { margin: 0; font-size: 13px; color: #64748b; }
     .footer-legal { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 12px; }
     .footer-links a { color: #64748b; text-decoration: none; margin: 0 10px; transition: color 0.2s; }
-    .auth-title { text-align: center; font-weight: 800; font-size: 28px; color: #1e293b; margin-bottom: 10px; letter-spacing: -1px; }
-    .auth-sub { text-align: center; color: #64748b; font-size: 14px; margin-bottom: 30px; }
-    .login-spacer { height: 10vh; }
     .info-box-aligned { height: 45px !important; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1e40af; display: flex; align-items: center; padding: 0 16px; font-size: 14px; font-weight: 500; width: 100%; box-sizing: border-box; }
     .empty-state-box { height: 200px; background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc); background-size: 20px 20px; border: 2px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 500; flex-direction: column; gap: 10px; }
 </style>
@@ -146,11 +162,6 @@ def get_remote_ip():
         return headers.get("X-Forwarded-For", headers.get("Remote-Addr", "unknown_ip"))
     except: return "unknown_ip"
 
-def send_mock_sms(phone): 
-    # 💡 商业化提示：这里可以接入阿里云/腾讯云短信 API
-    # 示例：AliyunSMS.send(phone, code)
-    return str(random.randint(1000, 9999))
-
 def render_footer():
     st.markdown("""<div class="footer-legal"><div class="footer-links"><a href="#">用户协议</a> | <a href="#">隐私政策</a> | <a href="#">免责声明</a> | <a href="#">关于我们</a></div><div style="margin-top: 10px;">© 2026 爆款工场 Pro | 鄂ICP备2024XXXXXX号-1 | 违法和不良信息举报：TG777188</div><div style="font-size: 11px; color: #cbd5e1; margin-top: 5px;">本站仅提供技术工具，请勿用于任何非法用途，用户生成内容文责自负。</div></div>""", unsafe_allow_html=True)
 
@@ -162,6 +173,11 @@ def render_copy_button_html(text, k):
     safe = text.replace("`", "\`").replace("'", "\\'")
     html = f"""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap');body{{margin:0;padding:0;background:transparent;overflow:hidden;}}.btn{{width:100%;height:42px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:8px;font-family:'Inter';font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}}.btn:hover{{transform:translateY(-1px);box-shadow:0 6px 16px rgba(37,99,235,0.4);}}.btn:active{{transform:translateY(0);}}.btn.ok{{background:linear-gradient(135deg,#10b981,#059669);}}</style></head><body><button class="btn" onclick="cp(this)">📋 一键复制</button><script>function cp(e){{navigator.clipboard.writeText(`{safe}`).then(()=>{{e.classList.add("ok");e.innerText="✅ 成功";setTimeout(()=>{{e.classList.remove("ok");e.innerText="📋 一键复制"}},2000)}})}}</script></body></html>"""
     components.html(html, height=50)
+
+def render_hover_copy_box(text, label="点击复制"):
+    safe = text.replace("`", "\`").replace("'", "\\'")
+    html = f"""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');body{{margin:0;padding:0;background:transparent;overflow:hidden;font-family:'Inter';}}.code-box{{display:flex;align-items:center;justify-content:space-between;background-color:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;padding:0 10px;height:36px;cursor:pointer;transition:all 0.2s;color:#1e293b;font-weight:600;font-size:13px;box-sizing:border-box;}}.code-box:hover{{border-color:#3b82f6;background:#fff;box-shadow:0 0 0 2px rgba(59,130,246,0.1);}}.hint{{font-size:12px;color:#94a3b8;}}.code-box:hover .hint{{color:#3b82f6;}}.code-box.success{{background:#ecfdf5;border-color:#10b981;color:#065f46;}}.code-box.success .hint{{color:#059669;}}</style></head><body><div class="code-box" onclick="copyText(this)"><span id="content">{safe}</span><span class="hint" id="status">{label}</span></div><script>function copyText(e){{const t=`{safe}`,s=e.querySelector("#status");navigator.clipboard.writeText(t).then(()=>{{e.classList.add("success");const o=s.innerText;s.innerText="✅";setTimeout(()=>{{e.classList.remove("success");s.innerText=o}},1500)}}).catch(()=>{{s.innerText="❌"}})}}</script></body></html>"""
+    components.html(html, height=40)
 
 # --- 业务逻辑 ---
 def register_user(phone, password):
@@ -196,7 +212,6 @@ def check_ip_auto_login():
     ip = get_remote_ip(); 
     if ip == "unknown_ip": return None
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
-    # 自动登录逻辑：7天内同一IP登录过
     seven_days_ago = datetime.datetime.now() - datetime.timedelta(days=7)
     c.execute("SELECT phone FROM users WHERE last_login_ip=? AND last_login_time > ?", (ip, seven_days_ago))
     row = c.fetchone(); conn.close()
@@ -233,18 +248,17 @@ def submit_feedback(phone, content):
     conn.commit(); conn.close()
 
 # ==========================================
-# 1. 认证模块 (美化版)
+# 1. 认证模块 (邀请码策略)
 # ==========================================
 if 'user_phone' not in st.session_state:
     auto = check_ip_auto_login()
     if auto: st.session_state['user_phone'] = auto; st.toast(f"欢迎回来 {auto}", icon="👋"); time.sleep(0.5); st.rerun()
 
 def auth_page():
-    st.markdown("<div class='login-bg'></div>", unsafe_allow_html=True) # 极光背景
+    st.markdown("<div class='login-bg'></div>", unsafe_allow_html=True) 
     st.markdown("<div class='login-spacer'></div>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns([1, 2, 1])
     with c2:
-        # 登录卡片
         with st.container(border=True):
             st.markdown("<div class='auth-title'>💠 抖音爆款工场 Pro</div>", unsafe_allow_html=True)
             st.markdown("<div class='auth-sub'>让流量不再是玄学 · AI 赋能 KOC 变现</div>", unsafe_allow_html=True)
@@ -258,27 +272,33 @@ def auth_page():
                         if s: st.session_state['user_phone'] = ph; st.rerun()
                         else: st.error(m)
             with t2:
+                # 🔥 邀请码注册逻辑 🔥
                 st.info("🎁 **新人福利**：注册即送 **3天** 尊贵VIP会员！")
                 ph = st.text_input("手机号", key="r_ph")
-                c_c1, c_c2 = st.columns([2,1])
-                # 模拟验证码发送逻辑
-                if c_c2.button("获取验证码", key="r_btn"): 
-                    st.session_state['mk'] = send_mock_sms(ph)
-                    st.toast(f"验证码: {st.session_state['mk']} (测试模式)", icon="📩")
-                
-                cd = c_c1.text_input("验证码", key="r_cd")
                 pw1 = st.text_input("设置密码", type="password", key="r_p1")
                 pw2 = st.text_input("确认密码", type="password", key="r_p2")
+                
+                # 邀请码获取引导
+                with st.expander("❓ 如何获取邀请码？"):
+                    st.markdown("""
+                    <div class="wx-invite-box">
+                        请添加客服微信 <span class="wx-id-highlight">W7774X</span><br>
+                        回复 <b>“注册”</b> 免费获取邀请码
+                    </div>
+                    """, unsafe_allow_html=True)
+                    render_hover_copy_box("W7774X", "点击复制微信号")
+                
+                invite_code = st.text_input("请输入邀请码", key="r_invite", placeholder="联系客服获取...")
+                
                 if st.button("立即注册", type="primary", use_container_width=True):
                     if pw1 != pw2: st.error("两次密码不一致")
-                    elif st.session_state.get('mk') == cd:
+                    elif invite_code == GLOBAL_INVITE_CODE: # 验证邀请码
                         s, m = register_user(ph, pw1)
                         if s: st.success(m); st.balloons(); time.sleep(2); st.session_state['user_phone'] = ph; st.rerun()
                         else: st.error(m)
-                    else: st.error("验证码错误")
-            with t3: st.info("请联系客服微信：TG777188 重置密码")
+                    else: st.error("❌ 邀请码错误，请联系客服获取")
+            with t3: st.info("请联系客服微信：W7774X 重置密码")
             
-            # 底部价值点展示
             st.markdown("""
             <div class="feature-list">
                 <div class="feature-item"><div class="feature-icon">🚀</div><span>5路并发文案改写，效率提升 500%</span></div>
@@ -369,25 +389,29 @@ with st.sidebar:
 
 menu = st.session_state['nav_menu']
 
-# --- 首页 ---
+# --- 首页 (Embedded Button Design) ---
 def page_home():
     st.markdown("## 💠 抖音爆款工场 Pro")
     st.caption("专为素人 KOC 打造的 AI 提效神器 | 文案 · 选题 · 海报 · 变现")
     st.markdown("---")
     
     c1, c2, c3, c4 = st.columns(4)
+    
     with c1:
         with st.container(border=True):
             st.markdown("""<div class="card-icon-box">📝</div><div class="card-title">文案改写</div><div class="card-desc">5路并发 · 爆款重组<br>解决文案枯竭</div>""", unsafe_allow_html=True)
             st.button("立即使用 ➜", key="h_btn1", on_click=go_to, args=("📝 文案改写",), type="primary", use_container_width=True)
+            
     with c2:
         with st.container(border=True):
             st.markdown("""<div class="card-icon-box">💡</div><div class="card-title">爆款选题</div><div class="card-desc">流量焦虑 · 一键解决<br>精准击中痛点</div>""", unsafe_allow_html=True)
             st.button("立即使用 ➜", key="h_btn2", on_click=go_to, args=("💡 爆款选题库",), type="primary", use_container_width=True)
+            
     with c3:
         with st.container(border=True):
             st.markdown("""<div class="card-icon-box">🎨</div><div class="card-title">海报生成</div><div class="card-desc">小提大作 · 影视质感<br>好莱坞级光影</div>""", unsafe_allow_html=True)
             st.button("立即使用 ➜", key="h_btn3", on_click=go_to, args=("🎨 海报生成",), type="primary", use_container_width=True)
+            
     with c4:
         with st.container(border=True):
             st.markdown("""<div class="card-icon-box">🏷️</div><div class="card-title">账号起名</div><div class="card-desc">AI 算命 · 爆款玄学<br>赛道垂直定制</div>""", unsafe_allow_html=True)

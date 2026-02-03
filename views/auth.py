@@ -29,19 +29,22 @@ def view_auth():
                 else:
                     st.warning("请完善登录信息")
 
-    with tab2:
-        with st.form("register_form"):
-            # 1. 邮箱或手机注册
-            reg_account = st.text_input("注册账号", placeholder="请输入手机号或邮箱")
-            
-            # 2. 密码输入两次
+# views/auth.py (注册部分代码片段)
+with tab2:
+    with st.form("register_form"):
+        reg_account = st.text_input("注册账号", placeholder="手机号或邮箱")
+        
+        # 将两次密码输入放在同一行，利用 800px 的空间
+        col_p1, col_p2 = st.columns(2)
+        with col_p1:
             reg_pwd1 = st.text_input("设置密码", type="password")
+        with col_p2:
             reg_pwd2 = st.text_input("确认密码", type="password")
             
-            # 3. 邀请码默认 888888
-            invite_code = st.text_input("邀请码", value="888888")
-            
-            reg_submit = st.form_submit_button("确认注册")
+        invite_code = st.text_input("邀请码", value="888888")
+        
+        reg_submit = st.form_submit_button("确认注册")
+        # ... 后续逻辑保持不变 ...
             
             if reg_submit:
                 if reg_pwd1 != reg_pwd2:
@@ -64,3 +67,4 @@ def view_auth():
             本系统仅供短视频创作参考，请遵守各平台运营规范。
         </div>
     """, unsafe_allow_html=True)
+

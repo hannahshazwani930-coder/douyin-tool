@@ -1,0 +1,30 @@
+/* * 🔐 [LOCKED: POSTER PAGE] 
+ * 权限：已锁定。严禁修改海报生成页的布局逻辑。
+ */
+
+.poster-container {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.preview-box {
+    background: #f1f5f9;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+}
+
+.poster-header {
+    background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+    padding: 30px;
+    border-radius: 16px;
+    color: white;
+    margin-bottom: 25px;
+}

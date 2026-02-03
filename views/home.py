@@ -1,10 +1,10 @@
 # views/home.py
 import streamlit as st
-from utils import render_cta_wechat
+from utils import render_cta_wechat, render_project_card
 from database import get_active_announcements
 
 def view_home():
-    # 1. 悬浮岛头图 (Card Style Header)
+    # 1. 悬浮岛头图 (Card Style Header) - [LOCKED]
     st.markdown("""
     <div class="home-header-card">
         <div class="header-title">抖音爆款工场 Pro</div>
@@ -12,7 +12,7 @@ def view_home():
     </div>
     """, unsafe_allow_html=True)
     
-    # === A. 核心功能区 (悬浮微交互卡片) ===
+    # === A. 核心功能区 (悬浮微交互卡片) - [LOCKED] ===
     st.markdown('<div class="section-label">🚀 核心创作引擎</div>', unsafe_allow_html=True)
     
     c1, c2, c3, c4 = st.columns(4, gap="medium")
@@ -39,7 +39,7 @@ def view_home():
                 st.session_state['nav_menu_selection'] = target
                 st.rerun()
 
-    # === B. 系统公告 (静态居中) ===
+    # === B. 系统公告 (静态居中) - [LOCKED] ===
     st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
     anns = get_active_announcements()
     latest_ann = anns[0][0] if anns else "暂无最新系统公告，请留意后续更新。"
@@ -51,7 +51,7 @@ def view_home():
     </div>
     """, unsafe_allow_html=True)
 
-    # === C. 热门变现任务 (交互徽章) ===
+    # === C. 热门变现项目 (独立封装组件，防乱码，带复制) ===
     st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
     st.markdown('<div class="section-label">🔥 热门变现项目</div>', unsafe_allow_html=True)
     
@@ -65,20 +65,7 @@ def view_home():
     
     for i, (icon, title, desc) in enumerate(projects):
         with [p1, p2, p3][i]:
-            st.markdown(f"""
-            <div class="monetize-card">
-                <div class="mon-head">
-                    <span class="mon-icon">{icon}</span>
-                    <span class="mon-title">{title}</span>
-                </div>
-                <div class="mon-desc">{desc}</div>
-                
-                <div class="wechat-badge" onclick="navigator.clipboard.writeText('W7774X'); alert('✅ 微信 W7774X 已复制！\\n请添加微信并备注【资料】领取内部白皮书。')">
-                    <span style="font-size:14px; color:#10b981;">💬</span>
-                    <span>W7774X</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            # 调用封装好的组件，确保样式隔离且无乱码
+            render_project_card(icon, title, desc, "W7774X")
 
     st.markdown("<div style='height:40px'></div>", unsafe_allow_html=True)
-

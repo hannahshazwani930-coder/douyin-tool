@@ -1,6 +1,6 @@
 # views/naming.py
 import streamlit as st
-from utils import render_copy_btn
+from utils import load_isolated_css
 
 def view_naming():
     st.markdown("## 🏷️ 账号起名神器")

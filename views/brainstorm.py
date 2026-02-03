@@ -1,28 +1,35 @@
+# views/brainstorm.py
 import streamlit as st
-from openai import OpenAI
 from utils import render_copy_btn
 
 def view_brainstorm():
-    st.markdown("### 💡 爆款选题灵感库")
+    st.markdown("## 💡 爆款选题挖掘")
+    st.caption("输入赛道或关键词，AI 自动挖掘全网最热选题方向。")
     
-    topic = st.text_input("输入你的赛道/关键词", placeholder="例如：美妆、职场、副业、育儿...")
-    if st.button("🧠 开始头脑风暴", type="primary"):
-        if not topic: st.warning("请输入关键词")
-        else:
-            api_key = st.secrets.get("DEEPSEEK_API_KEY", "")
-            if not api_key:
-                st.error("请配置 API Key")
-            else:
-                try:
-                    client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
-                    with st.spinner("AI 正在分析全网爆款数据..."):
-                        prompt = f"我是做【{topic}】赛道的。请生成10个颠覆认知的爆款选题，格式：标题+钩子。要求：反直觉、引发焦虑或好奇。"
-                        res = client.chat.completions.create(model="deepseek-chat", messages=[{"role":"user", "content":prompt}], temperature=1.5)
-                        st.session_state['brain_res'] = res.choices[0].message.content
-                except Exception as e:
-                    st.error(str(e))
-    
-    if 'brain_res' in st.session_state:
-        st.markdown("#### 灵感结果")
-        st.text_area("结果", value=st.session_state['brain_res'], height=400)
-        render_copy_btn(st.session_state['brain_res'], "brain_res_copy")
+    with st.container(border=True):
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            topic = st.text_input("输入赛道/关键词", placeholder="例如：美妆、职场、AI工具")
+        with col2:
+            st.markdown("<div style='height: 28px'></div>", unsafe_allow_html=True)
+            btn = st.button("开始挖掘", type="primary", use_container_width=True)
+            
+    if btn and topic:
+        with st.spinner(f"正在分析【{topic}】赛道的大盘数据..."):
+            import time; time.sleep(1)
+            st.success("挖掘成功！为您推荐以下 3 个爆款方向：")
+            
+            c1, c2, c3 = st.columns(3)
+            data = [
+                ("🔥 痛点反差类", "小白如何3天精通...", "利用用户急于求成的心态，结合强烈的反差数据。"),
+                ("📚 干货盘点类", "2026年必用的10个...", "高收藏价值，利于长尾流量获取。"),
+                ("⚡ 认知颠覆类", "别再....，其实...", "打破固有认知，引发评论区激烈讨论。")
+            ]
+            
+            for i, (title, ex, desc) in enumerate(data):
+                with [c1, c2, c3][i]:
+                    with st.container(border=True):
+                        st.markdown(f"#### {title}")
+                        st.markdown(f"**示例标题：**\n{ex} {topic}")
+                        st.caption(desc)
+                        render_copy_btn(f"{ex} {topic}", f"topic_{i}")

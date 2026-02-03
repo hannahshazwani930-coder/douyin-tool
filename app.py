@@ -56,7 +56,7 @@ st.markdown("""
     div.block-container { max-width: 90% !important; background-color: #ffffff; padding: 3rem !important; border-radius: 24px; box-shadow: 0 20px 60px -20px rgba(0,0,0,0.1); margin-bottom: 50px; }
     
     /* 按钮全局优化 */
-    div.stButton > button { border-radius: 10px; font-weight: 600; height: 48px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); width: 100%; font-size: 15px; }
+    div.stButton > button { border-radius: 10px; font-weight: 600; height: 45px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); width: 100%; font-size: 15px; }
     
     /* 主按钮 */
     div.stButton > button[kind="primary"] { 
@@ -73,11 +73,39 @@ st.markdown("""
     div.stButton > button[kind="secondary"] { background-color: #f1f5f9; color: #475569; border: 1px solid transparent; }
     div.stButton > button[kind="secondary"]:hover { background-color: #e2e8f0; color: #1e293b; border-color: #cbd5e1; }
 
-    /* 首页卡片 */
-    .home-card-box { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center; background: #fff; height: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 15px; transition: all 0.3s ease; }
-    .home-card-box:hover { border-color: #bfdbfe; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-    .home-card-title { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
-    .home-card-sub { font-size: 12px; color: #94a3b8; font-weight: 400; }
+    /* 🔥 首页功能卡片终极美化 (Targeting Streamlit Containers) 🔥 */
+    /* 这是首页卡片的容器 */
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        border-radius: 16px !important;
+        border: 1px solid #e2e8f0 !important;
+        background-color: #ffffff;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 20px !important;
+    }
+    
+    /* 鼠标悬浮时的效果 */
+    [data-testid="stVerticalBlockBorderWrapper"]:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px -5px rgba(59, 130, 246, 0.15); /* 蓝色系投影 */
+        border-color: #bfdbfe !important; /* 边框变蓝 */
+    }
+
+    /* 卡片内部元素样式 */
+    .card-icon-box {
+        width: 56px; height: 56px;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 28px; margin: 0 auto 15px auto;
+        color: #2563eb;
+    }
+    .card-title {
+        font-size: 18px; font-weight: 800; color: #1e293b; text-align: center; margin-bottom: 6px;
+    }
+    .card-desc {
+        font-size: 13px; color: #64748b; text-align: center; margin-bottom: 20px; min-height: 40px; line-height: 1.5;
+    }
     
     /* 海报顶部 Banner */
     .poster-hero-container { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.05); border: 1px solid #edf2f7; display: flex; align-items: center; margin-bottom: 25px; position: relative; overflow: hidden; }
@@ -287,25 +315,33 @@ with st.sidebar:
 
 menu = st.session_state['nav_menu']
 
-# --- 首页 ---
+# --- 首页 (Embedded Button Design) ---
 def page_home():
     st.markdown("## 💠 抖音爆款工场 Pro")
     st.caption("专为素人 KOC 打造的 AI 提效神器 | 文案 · 选题 · 海报 · 变现")
     st.markdown("---")
     
     c1, c2, c3, c4 = st.columns(4)
+    
     with c1:
-        st.markdown("""<div class="home-card-box"><div class="home-card-title">📝 文案改写</div><div class="home-card-sub">5路并发 · 爆款重组</div></div>""", unsafe_allow_html=True)
-        st.button("立即使用 ➜", key="h_btn1", on_click=go_to, args=("📝 文案改写",), type="primary")
+        with st.container(border=True): # 使用原生容器实现卡片
+            st.markdown("""<div class="card-icon-box">📝</div><div class="card-title">文案改写</div><div class="card-desc">5路并发 · 爆款重组<br>解决文案枯竭</div>""", unsafe_allow_html=True)
+            st.button("立即使用 ➜", key="h_btn1", on_click=go_to, args=("📝 文案改写",), type="primary", use_container_width=True)
+            
     with c2:
-        st.markdown("""<div class="home-card-box"><div class="home-card-title">💡 爆款选题</div><div class="home-card-sub">流量焦虑 · 一键解决</div></div>""", unsafe_allow_html=True)
-        st.button("立即使用 ➜", key="h_btn2", on_click=go_to, args=("💡 爆款选题库",), type="primary")
+        with st.container(border=True):
+            st.markdown("""<div class="card-icon-box">💡</div><div class="card-title">爆款选题</div><div class="card-desc">流量焦虑 · 一键解决<br>精准击中痛点</div>""", unsafe_allow_html=True)
+            st.button("立即使用 ➜", key="h_btn2", on_click=go_to, args=("💡 爆款选题库",), type="primary", use_container_width=True)
+            
     with c3:
-        st.markdown("""<div class="home-card-box"><div class="home-card-title">🎨 海报生成</div><div class="home-card-sub">小提大作 · 影视质感</div></div>""", unsafe_allow_html=True)
-        st.button("立即使用 ➜", key="h_btn3", on_click=go_to, args=("🎨 海报生成",), type="primary")
+        with st.container(border=True):
+            st.markdown("""<div class="card-icon-box">🎨</div><div class="card-title">海报生成</div><div class="card-desc">小提大作 · 影视质感<br>好莱坞级光影</div>""", unsafe_allow_html=True)
+            st.button("立即使用 ➜", key="h_btn3", on_click=go_to, args=("🎨 海报生成",), type="primary", use_container_width=True)
+            
     with c4:
-        st.markdown("""<div class="home-card-box"><div class="home-card-title">🏷️ 账号起名</div><div class="home-card-sub">AI 算命 · 爆款玄学</div></div>""", unsafe_allow_html=True)
-        st.button("立即使用 ➜", key="h_btn4", on_click=go_to, args=("🏷️ 账号起名",), type="primary")
+        with st.container(border=True):
+            st.markdown("""<div class="card-icon-box">🏷️</div><div class="card-title">账号起名</div><div class="card-desc">AI 算命 · 爆款玄学<br>赛道垂直定制</div>""", unsafe_allow_html=True)
+            st.button("立即使用 ➜", key="h_btn4", on_click=go_to, args=("🏷️ 账号起名",), type="primary", use_container_width=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     with st.container(border=True):
@@ -371,7 +407,7 @@ def page_poster():
     # 🔥 终极美化 Banner 🔥
     st.markdown("""<div class="poster-hero-container"><div class="hero-icon-wrapper">🚀</div><div class="hero-text-content"><h2 class="hero-title">算力全面升级！好莱坞级光影引擎</h2><p class="hero-desc">为了提供极致的渲染效果，海报功能已迁移至性能更强的独立工作站。</p></div></div>""", unsafe_allow_html=True)
     
-    # 🔥 极致微调阴影 🔥
+    # 🔥 双卡片：强制增加 iframe 高度和 padding 以防止边框被切 🔥
     components.html("""
     <!DOCTYPE html><html><head><style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;800&display=swap');
@@ -380,7 +416,7 @@ def page_poster():
     .card{flex:1;border-radius:16px;height:120px;display:flex;flex-direction:column;justify-content:center;align-items:center;cursor:pointer;transition:all 0.3s;box-sizing:border-box;}
     
     .invite{background:#fff;border:2px dashed #cbd5e1;position:relative;}
-    .invite:hover{border-color:#6366f1;background:#f5f3ff;transform:translateY(-5px);box-shadow:0 10px 20px rgba(0,0,0,0.03);} /* 极淡阴影 */
+    .invite:hover{border-color:#6366f1;background:#f5f3ff;transform:translateY(-5px);box-shadow:0 10px 20px rgba(0,0,0,0.03);}
     .invite-label{font-size:13px;color:#64748b;margin-bottom:5px;}
     .invite-code{font-size:28px;font-weight:800;color:#4f46e5;letter-spacing:1px;}
     .invite-hint{font-size:12px;color:#94a3b8;margin-top:5px;opacity:0;transition:0.2s;}

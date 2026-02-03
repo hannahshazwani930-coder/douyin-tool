@@ -4,7 +4,7 @@ from utils import render_cta_wechat
 from database import get_active_announcements
 
 def view_home():
-    # 1. 悬浮岛头图 (Card Style Header)
+    # 1. 悬浮岛头图
     st.markdown("""
     <div class="home-header-card">
         <div class="header-title">抖音爆款工场 Pro</div>
@@ -12,7 +12,7 @@ def view_home():
     </div>
     """, unsafe_allow_html=True)
     
-    # === A. 核心功能区 (悬浮微交互卡片) ===
+    # === A. 核心功能区 ===
     st.markdown('<div class="section-label">🚀 核心创作引擎</div>', unsafe_allow_html=True)
     
     c1, c2, c3, c4 = st.columns(4, gap="medium")
@@ -33,13 +33,11 @@ def view_home():
                 <div class="feat-desc">{desc}</div>
             </div>
             """, unsafe_allow_html=True)
-            
-            # 隐形点击层
             if st.button(f"nav_home_{i}", key=f"feat_btn_{i}", use_container_width=True):
                 st.session_state['nav_menu_selection'] = target
                 st.rerun()
 
-    # === B. 系统公告 (静态居中) ===
+    # === B. 系统公告 ===
     st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
     anns = get_active_announcements()
     latest_ann = anns[0][0] if anns else "暂无最新系统公告，请留意后续更新。"
@@ -51,7 +49,7 @@ def view_home():
     </div>
     """, unsafe_allow_html=True)
 
-    # === C. 热门变现任务 (交互徽章) ===
+    # === C. 热门变现任务 ===
     st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
     st.markdown('<div class="section-label">🔥 热门变现项目</div>', unsafe_allow_html=True)
     

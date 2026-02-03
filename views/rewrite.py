@@ -6,111 +6,126 @@ from concurrent.futures import ThreadPoolExecutor
 from utils import render_copy_btn
 from config import DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL
 
-# --- 🎨 注入灵魂 CSS (悬浮极光 + 高对比度版) ---
-def load_immersive_css():
+# --- 🎨 注入灵魂 CSS (流光 + 像素级修复版) ---
+def load_flow_css():
     st.markdown("""
     <style>
-        /* 1. 全局容器调整 */
+        /* 1. 布局优化 */
         div.block-container {
             max-width: 1400px !important;
-            padding-top: 20px !important; /* 顶部留一点空隙 */
-            padding-left: 40px !important;
-            padding-right: 40px !important;
-            padding-bottom: 50px !important;
+            padding: 0 40px 50px 40px !important;
         }
         
-        /* 2. 悬浮极光 Banner (更轻盈、两边留白) */
-        .immersive-header {
-            background: linear-gradient(120deg, #3b82f6 0%, #2563eb 100%); /* 亮蓝色系 */
-            border-radius: 24px; /* 整体圆角 */
-            padding: 40px 20px;
+        /* 2. 流光极光 Banner (动效版) */
+        .flowing-header {
+            background: linear-gradient(-45deg, #1e3a8a, #2563eb, #3b82f6, #0ea5e9);
+            background-size: 400% 400%;
+            animation: gradientBG 10s ease infinite; /* 流动动画 */
+            border-bottom-left-radius: 40px;
+            border-bottom-right-radius: 40px;
+            padding: 60px 40px 110px 40px; /* 底部留白给 Tab */
             color: white; text-align: center;
-            margin-bottom: 30px; /* 与下方 Tab 分离 */
-            box-shadow: 0 10px 30px -10px rgba(37, 99, 235, 0.4);
-            position: relative;
+            margin-bottom: -60px; /* 让 Tab 深度重叠 */
+            margin-left: -40px; margin-right: -40px;
+            box-shadow: 0 20px 50px rgba(37, 99, 235, 0.3);
+            position: relative; z-index: 0;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         .header-title { 
-            font-size: 32px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; 
-            text-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-size: 40px; font-weight: 900; letter-spacing: -1px; margin-bottom: 10px; 
+            text-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
         .header-sub { 
-            font-size: 15px; opacity: 0.9; font-weight: 500; 
-            background: rgba(255,255,255,0.15); padding: 5px 15px; border-radius: 20px; 
-            display: inline-block; border: 1px solid rgba(255,255,255,0.2);
+            font-size: 16px; opacity: 0.95; font-weight: 500; 
+            background: rgba(255,255,255,0.1); padding: 6px 20px; border-radius: 30px; 
+            backdrop-filter: blur(10px); display: inline-block; border: 1px solid rgba(255,255,255,0.2);
         }
 
-        /* 3. Tab 切换栏 (下移、独立) */
-        .stTabs { margin-top: 0px; } /* 恢复正常位置 */
+        /* 3. 大气 Tabs (全宽分段式) */
+        .stTabs { margin-top: 0px; position: relative; z-index: 10; }
         div[data-baseweb="tab-list"] { 
-            justify-content: center; gap: 20px; border: none !important; 
-            background: white; padding: 8px; border-radius: 100px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05); width: fit-content; 
-            margin: 0 auto 30px auto; border: 1px solid #f1f5f9;
+            justify-content: center; gap: 0px; border: none !important; 
+            background: white; padding: 6px; border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+            width: 600px; /* 锁定宽度更显大气 */
+            margin: 0 auto 40px auto; 
         }
         div[data-baseweb="tab"] {
+            flex: 1; /* 平分宽度 */
             background-color: transparent !important;
-            border-radius: 50px !important; padding: 10px 35px !important;
+            border-radius: 12px !important; padding: 12px 0 !important;
             border: none !important; color: #64748b !important; 
-            font-weight: 600 !important; font-size: 15px !important;
+            font-weight: 700 !important; font-size: 16px !important; text-align: center;
+            transition: all 0.2s ease !important;
         }
         div[data-baseweb="tab"][aria-selected="true"] {
             background: #eff6ff !important; color: #2563eb !important;
-            box-shadow: none !important; /* 扁平化高亮 */
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15) !important;
         }
 
-        /* 4. 工作区白卡 */
-        .glass-card {
+        /* 4. 一体化创作台 (White Box 修复) */
+        .creation-console {
             background: white; border-radius: 24px; padding: 40px;
-            box-shadow: 0 10px 30px -5px rgba(0,0,0,0.03); border: 1px solid #e2e8f0;
+            box-shadow: 0 20px 60px -10px rgba(0,0,0,0.05); 
+            border: 1px solid #e2e8f0;
+            position: relative;
         }
 
-        /* 5. 输入框高对比度优化 */
-        .input-header { 
-            font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 12px; 
-            display: flex; align-items: center; gap: 8px; 
-        }
+        /* 5. 修复文本框叠影 (Fix Ghosting) */
+        /* 移除外层容器的所有边框和阴影 */
+        .stTextArea > div { border: none !important; box-shadow: none !important; }
+        .stTextArea > label { display: none !important; } /* 彻底隐藏自带 Label */
         
-        /* 核心修改：输入框背景加深，与白底区分 */
+        /* 只给内部 textarea 加样式 */
         .stTextArea textarea {
-            background-color: #f8fafc !important; /* 明显的灰底 */
-            border: 1px solid #cbd5e1 !important; /* 加深边框 */
+            background-color: #f8fafc !important; 
+            border: 2px solid #e2e8f0 !important; /* 加粗边框 */
             border-radius: 12px;
-            padding: 15px; font-size: 15px; line-height: 1.6;
-            color: #334155;
+            padding: 15px; font-size: 15px; line-height: 1.6; color: #334155;
+            box-shadow: none !important; /* 去除内部阴影 */
         }
         .stTextArea textarea:focus { 
-            background-color: #ffffff !important; /* 聚焦变白 */
+            background-color: #ffffff !important; 
             border-color: #3b82f6 !important; 
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important; 
         }
-        /* 去除 Streamlit label 的空隙 */
-        div[data-testid="stMarkdownContainer"] p { margin-bottom: 0px; }
 
-        /* 6. 按钮样式 */
+        /* 6. 像素级对齐修复 */
+        /* 自定义 Label 样式 */
+        .custom-label {
+            font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: block;
+        }
+        /* 强制 Selectbox 高度 */
+        div[data-baseweb="select"] > div {
+            height: 48px !important; border-radius: 10px !important; border-color: #e2e8f0 !important;
+            display: flex; align-items: center;
+        }
+        /* 强制 Button 高度与 Selectbox 一致 */
         div.stButton button[kind="primary"] {
-            width: 100%; height: 45px; 
+            height: 48px !important; 
+            margin-top: 0px !important; /* 移除顶部 Margin */
             background: linear-gradient(90deg, #2563eb, #3b82f6) !important;
-            border-radius: 10px !important; font-size: 15px !important;
-            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.2) !important;
+            border-radius: 10px !important; font-size: 16px !important;
+            box-shadow: 0 8px 16px -4px rgba(37, 99, 235, 0.3) !important;
         }
-        div.stButton button[kind="primary"]:hover { 
-            transform: translateY(-2px); box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3) !important; 
-        }
+        div.stButton button[kind="primary"]:hover { transform: translateY(-2px); box-shadow: 0 12px 20px -5px rgba(37, 99, 235, 0.5) !important; }
 
         /* 7. 转化提示条 */
         .conversion-tip {
-            margin-top: 15px; background: #ecfdf5; border: 1px solid #a7f3d0;
-            color: #065f46; padding: 10px 15px; border-radius: 8px; font-size: 13px;
-            display: flex; align-items: center; gap: 10px;
+            margin-top: 15px; background: #f0fdf4; border: 1px solid #bbf7d0;
+            color: #166534; padding: 12px 15px; border-radius: 12px; font-size: 14px;
+            display: flex; align-items: center; gap: 10px; font-weight: 500;
         }
 
-        /* 隐藏 Header 留白 */
-        header { display: none !important; }
         .stApp { background-color: #f8fafc; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- DeepSeek 调用 (保持不变) ---
+# --- DeepSeek 调用 ---
 def call_deepseek_rewrite(content, style_prompt):
     if not DEEPSEEK_API_KEY or "sk-" not in DEEPSEEK_API_KEY:
         return "❌ 配置错误：请在 config.py 中填入正确的 DEEPSEEK_API_KEY"
@@ -123,97 +138,103 @@ def call_deepseek_rewrite(content, style_prompt):
         else: return f"❌ API 报错: {response.status_code} - {response.text}"
     except Exception as e: return f"❌ 网络错误: {str(e)}"
 
-# --- 组件 ---
 def render_conversion_tip():
-    st.markdown("""<div class="conversion-tip"><span>💡</span><span><b>私域钩子建议：</b> 文案末尾添加“点击主页”或“领取资料”，转化率提升 30%！</span></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="conversion-tip"><span>💰</span><span><b>商业化建议：</b> 已自动植入私域钩子，预计提升 30% 导流效率。</span></div>""", unsafe_allow_html=True)
 
 # --- 主视图 ---
 def view_rewrite():
-    load_immersive_css()
+    load_flow_css()
     
-    # 1. 悬浮极光 Banner (两侧留白，更清爽)
+    # 1. 动态流光 Banner
     st.markdown("""
-    <div class="immersive-header">
+    <div class="flowing-header">
         <div class="header-title">✨ 文案改写 Pro</div>
-        <div class="header-sub">DeepSeek 驱动 · 智能去重 · 爆款逻辑重构</div>
+        <div class="header-sub">DeepSeek V3 深度驱动 · 智能矩阵 · 爆款逻辑重构</div>
     </div>
     """, unsafe_allow_html=True)
     
-    # State
     if 'rw_single_res' not in st.session_state: st.session_state.rw_single_res = ""
     if 'rw_batch_res' not in st.session_state: st.session_state.rw_batch_res = [""] * 5
 
-    # 2. Tab 下移，作为独立控件
-    tab_single, tab_batch = st.tabs(["⚡ 单条精修", "🚀 5路矩阵"])
+    # 2. 霸气 Tabs
+    tab_single, tab_batch = st.tabs(["⚡ 单条精修模式", "🚀 5路矩阵模式"])
     
-    # === 单条模式 ===
+    # === 模式 A: 单条精修 ===
     with tab_single:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        # 一体化创作台容器
+        st.markdown('<div class="creation-console">', unsafe_allow_html=True)
         
         c_left, c_right = st.columns(2, gap="large")
         
         with c_left:
-            st.markdown('<div class="input-header">📝 原始内容</div>', unsafe_allow_html=True)
-            # 使用灰色背景输入框，与白色卡片形成对比
+            # 自定义 Label，解决 Streamlit Label 无法对齐的问题
+            st.markdown('<div class="custom-label">📝 原始内容</div>', unsafe_allow_html=True)
             content = st.text_area("in", height=400, placeholder="在此粘贴文案...", label_visibility="collapsed")
             
-            st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height:25px'></div>", unsafe_allow_html=True)
             
-            cc1, cc2 = st.columns([1, 1.2])
+            # 核心对齐修复：使用两列，通过自定义 Label 占位，保证 Input 和 Button 完美对齐
+            cc1, cc2 = st.columns([1.5, 1])
             with cc1:
-                style = st.selectbox("风格偏好", ["标准去重", "爆款悬疑", "情感共鸣", "硬核干货", "幽默反转"], label_visibility="collapsed")
+                st.markdown('<div class="custom-label">风格偏好</div>', unsafe_allow_html=True)
+                style = st.selectbox("style_hidden", ["标准去重", "爆款悬疑", "情感共鸣", "硬核干货", "幽默反转"], label_visibility="collapsed")
             with cc2:
+                # 为了对齐，我们在 Button 上方加一个空白的 Label 占位符
+                st.markdown('<div class="custom-label">&nbsp;</div>', unsafe_allow_html=True) 
                 run_single = st.button("✨ 立即改写", type="primary", use_container_width=True)
                 
             if run_single:
                 if content:
-                    with st.spinner("AI 正在思考..."):
+                    with st.spinner("DeepSeek 正在重构..."):
                         st.session_state.rw_single_res = call_deepseek_rewrite(content, style)
                 else:
-                    st.toast("⚠️ 请输入内容")
+                    st.toast("⚠️ 内容不能为空")
 
         with c_right:
-            st.markdown('<div class="input-header">🎯 改写结果</div>', unsafe_allow_html=True)
+            st.markdown('<div class="custom-label">🎯 改写结果</div>', unsafe_allow_html=True)
             
             if st.session_state.rw_single_res:
                 st.text_area("out", value=st.session_state.rw_single_res, height=400, label_visibility="collapsed")
-                render_copy_btn(st.session_state.rw_single_res, "copy_single_v3")
+                st.markdown("<div style='height:15px'></div>", unsafe_allow_html=True)
+                render_copy_btn(st.session_state.rw_single_res, "copy_single_v4")
                 render_conversion_tip()
             else:
-                # 占位图
                 st.markdown("""
                 <div style="height:480px; background:#f8fafc; border-radius:12px; border:2px dashed #e2e8f0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#94a3b8;">
-                    <div style="font-size:48px; opacity:0.3; margin-bottom:10px;">🪄</div>
+                    <div style="font-size:56px; opacity:0.3; margin-bottom:10px;">🪄</div>
                     <div>等待生成...</div>
                 </div>
                 """, unsafe_allow_html=True)
         
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # === 矩阵模式 ===
+    # === 模式 B: 5路矩阵 ===
     with tab_batch:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown('<div class="creation-console">', unsafe_allow_html=True)
         
-        top_c1, top_c2 = st.columns([3, 1])
+        # 顶部对齐修复
+        # 左侧文字垂直居中
+        top_c1, top_c2 = st.columns([3, 1], vertical_alignment="bottom") 
         with top_c1:
              st.markdown("""
-             <div style="display:flex; align-items:center; gap:10px; height:100%;">
-                <span style="font-size:20px;">💡</span>
-                <span style="color:#64748b; font-size:14px;"><b>矩阵效率模式</b>：5 个线程并发处理，独立生成，互不干扰。</span>
+             <div style="margin-bottom: 5px;">
+                <span style="font-size:18px;">💡</span>
+                <span style="color:#64748b; font-size:15px; font-weight:500;">矩阵模式：5 个线程并发处理，独立生成，互不干扰。</span>
              </div>
              """, unsafe_allow_html=True)
         with top_c2:
+            # 按钮与文字视觉对齐
             run_batch = st.button("🚀 并行启动", type="primary", use_container_width=True)
             
         st.markdown("<div style='height:25px'></div>", unsafe_allow_html=True)
         
-        # 输入区
+        # 5列输入
         cols = st.columns(5, gap="small")
         inputs = []
         for i, col in enumerate(cols):
             with col:
-                st.markdown(f"<div class='input-header' style='justify-content:center;'>通道 {i+1}</div>", unsafe_allow_html=True)
-                val = st.text_area(f"in_{i}", height=150, key=f"bi_{i}_v3", placeholder="输入...", label_visibility="collapsed")
+                st.markdown(f"<div class='custom-label' style='text-align:center'>通道 {i+1}</div>", unsafe_allow_html=True)
+                val = st.text_area(f"in_{i}", height=150, key=f"bi_{i}_v4", placeholder="输入...", label_visibility="collapsed")
                 inputs.append(val)
         
         # 逻辑
@@ -237,7 +258,7 @@ def view_rewrite():
                 res = st.session_state.rw_batch_res[i]
                 if res:
                     st.text_area(f"out_{i}", value=res, height=200, label_visibility="collapsed")
-                    render_copy_btn(res, f"cp_b_{i}_v3")
+                    render_copy_btn(res, f"cp_b_{i}_v4")
                 else:
                     st.markdown("<div style='height:245px; background:#f8fafc; border-radius:12px; border:1px dashed #e2e8f0; display:flex; align-items:center; justify-content:center; color:#cbd5e1;'>空闲</div>", unsafe_allow_html=True)
 

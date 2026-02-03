@@ -1,82 +1,87 @@
-/* * 🔐 [ULTRA-PRO PRODUCTION VERSION] 
- * 核心原理：物理屏蔽 + 强制组件偏移
+/* * 🔐 [ULTRA-PRO PRODUCTION - FINAL ALIGNMENT] 
+ * 核心原理：组件层级强制锁定 + 背景模拟
  */
 
-/* 1. 彻底清除原生白边和页眉 */
-header, [data-testid="stHeader"], [data-testid="stSidebar"] { display: none !important; }
+/* 1. 彻底屏蔽原生顶部、侧边和页眉干扰 */
+header, [data-testid="stHeader"], [data-testid="stSidebar"], [data-testid="stToolbar"] { 
+    display: none !important; 
+}
 
-/* 2. 背景锁定 */
+/* 2. 背景层：极暗科技蓝背景 */
 .stApp {
     background: #050a18 !important;
 }
 
-/* 3. 根容器改造成 850x520 的白卡片 */
+/* 3. 核心修正：锁定主容器大小并居中 */
 div.block-container {
     max-width: 850px !important;
-    height: 520px !important;
+    min-height: 520px !important;
     padding: 0 !important;
     margin: auto !important;
     position: absolute !important;
-    top: 50% !important; left: 50% !important;
+    top: 50% !important; 
+    left: 50% !important;
     transform: translate(-50%, -50%) !important;
-    background: white !important;
+    background: white !important; /* 强制背景为白 */
     border-radius: 32px !important;
     box-shadow: 0 50px 100px rgba(0,0,0,0.8) !important;
     overflow: hidden !important;
 }
 
-/* 4. 在白卡片左侧强行盖上一层蓝色面板 */
+/* 4. 模拟左侧蓝色品牌区 (使用伪元素确保不偏移) */
 div.block-container::before {
     content: "";
     position: absolute;
     left: 0; top: 0;
-    width: 360px; /* 品牌区宽度 */
+    width: 360px; /* 锁死左侧宽度 */
     height: 100%;
     background: linear-gradient(135deg, #2563eb, #1e3a8a);
     z-index: 1;
 }
 
-/* 5. 强制把右侧表单内容向右推 360px，解决“组件跑偏” */
+/* 5. 强制把右侧 Streamlit 组件推到正确位置 (360px 之后) */
 [data-testid="stVerticalBlock"] > div {
-    margin-left: 360px !important; /* 关键：强制右移 */
-    padding: 0 50px !important;
-    max-width: 490px !important;
+    margin-left: 360px !important; /* 核心：这是解决组件跑偏的唯一办法 */
+    padding: 10px 45px !important;
 }
 
-/* 6. 品牌文字定位（由于是伪元素背景，文字需用 absolute 挂载） */
-.brand-overlay {
+/* 6. 品牌文字定位：必须使用 absolute 并配合 z-index 浮在伪元素上 */
+.brand-overlay-content {
     position: absolute;
     left: 0; top: 0;
     width: 360px;
-    height: 520px;
+    height: 100%;
     padding: 60px 45px;
     color: white;
     z-index: 2;
-    pointer-events: none; /* 防止遮挡鼠标点击 */
+    pointer-events: none;
 }
 
-/* 7. 输入框与按钮大气化 */
+/* 7. 输入框与按钮：专业化大气设计 */
 .stTextInput input {
-    height: 48px !important;
-    border-radius: 12px !important;
+    height: 45px !important;
+    border-radius: 10px !important;
     border: 1px solid #e2e8f0 !important;
+    background: #f8fafc !important;
 }
 
 div.stButton > button {
     width: 100% !important;
-    height: 50px !important;
+    height: 48px !important;
     background: #1e3a8a !important;
     color: white !important;
-    border-radius: 12px !important;
+    border-radius: 10px !important;
     font-weight: 700 !important;
     border: none !important;
 }
 
-/* 8. 外部声明（跳出 block-container 渲染） */
-.footer-fix {
+/* 8. 外部免责声明 */
+.fixed-footer {
     position: fixed;
-    bottom: 30px; width: 100%;
+    bottom: 30px; 
+    width: 100%;
     text-align: center;
-    color: rgba(255,255,255,0.4);
+    color: rgba(255, 255, 255, 0.4);
     font-size: 11px;
+    z-index: 999;
 }

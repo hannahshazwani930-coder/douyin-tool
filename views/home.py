@@ -65,21 +65,14 @@ def view_home():
     
     for i, (icon, title, desc) in enumerate(projects):
         with [p1, p2, p3][i]:
-            st.markdown(f"""
-            <div class="monetize-card">
-                <div class="mon-head">
-                    <span class="mon-icon">{icon}</span>
-                    <span class="mon-title">{title}</span>
-                </div>
-                <div class="mon-desc">{desc}</div>
-                
-                <div class="wechat-badge" onclick="navigator.clipboard.writeText('W7774X'); alert('✅ 微信 W7774X 已复制！&#10;请添加微信并备注【资料】领取内部白皮书。')">
+st.markdown(f"""
+<div class="wechat-badge" onclick="navigator.clipboard.writeText('W7774X'); alert('✅ 微信 W7774X 已复制！&#10;请添加微信并备注【资料】领取内部白皮书。')">
     <span style="font-size:14px; color:#10b981;">💬</span>
     <span>W7774X</span>
 </div>
-            </div>
-            """, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:40px'></div>", unsafe_allow_html=True)
+
 
 

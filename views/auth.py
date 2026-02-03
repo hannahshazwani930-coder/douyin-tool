@@ -3,10 +3,9 @@ import streamlit as st
 from database import login_user, register_user
 
 def view_auth():
-    # --- 1. [已锁定] 物理穿透 CSS：强制去除底色，消除断层与双层边框 ---
+    # --- 1. 【核心锁定】背景纯白、单边框、悬浮动效 ---
     st.markdown("""
 <style>
-    /* 彻底屏蔽默认提示 */
     [data-testid="stFormInstructions"] { display: none !important; }
     
     /* 1. 样式对齐：Tab 与 Placeholder 统一 14px */
@@ -15,17 +14,18 @@ def view_auth():
         color: #475569 !important;
     }
 
-    /* 2. 核心：去除背景色，锁定单层边框 */
+    /* 2. 【归位锁定】背景强制纯白，消除断层与重影 */
     [data-testid="stTextInput"] div[data-baseweb="input"],
-    [data-testid="stPasswordInput"] div[data-baseweb="input"] {
-        background-color: white !important;
-        border: 1px solid #E2E8F0 !important;
+    [data-testid="stPasswordInput"] div[data-baseweb="input"],
+    [data-baseweb="input"] > div {
+        background-color: #FFFFFF !important; /* 绝对纯白，不准再变 */
+        border: 1px solid #E2E8F0 !important; /* 单层边框 */
         border-radius: 8px !important;
         box-shadow: none !important;
         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
     }
 
-    /* 3. 悬浮效果 */
+    /* 3. 悬浮效果保留 */
     [data-testid="stTextInput"] div[data-baseweb="input"]:hover,
     [data-testid="stPasswordInput"] div[data-baseweb="input"]:hover {
         border-color: #1E3A8A !important;
@@ -45,7 +45,7 @@ def view_auth():
         box-shadow: none !important;
     }
 
-    /* 5. Placeholder 样式 */
+    /* 5. Placeholder 样式对齐 */
     [data-testid="stTextInput"] input::placeholder,
     [data-testid="stPasswordInput"] input::placeholder {
         font-size: 14px !important;
@@ -74,9 +74,8 @@ def view_auth():
         with st.container(border=True):
             col_l, col_r = st.columns([1.1, 1.4], gap="large")
 
-            # --- 左侧：品牌展示 (大师级排版，向右位移) ---
+            # --- 左侧：爆款工厂PRO 大师级排版（保留位移） ---
             with col_l:
-                # 模块化 HTML，防止解析错误
                 brand_html = """
                 <div style="padding-left: 35px; padding-top: 15px;">
                     <div style="margin-bottom: 25px;">
@@ -104,12 +103,12 @@ def view_auth():
                 """
                 st.markdown(brand_html, unsafe_allow_html=True)
 
-            # --- 右侧：[绝对锁定] 登录/注册交互 ---
+            # --- 右侧：【锁定】登录/注册交互 ---
             with col_r:
                 t1, t2 = st.tabs(["安全登录", "快速注册"])
                 
                 with t1:
-                    with st.form("f_login_fixed_v14", border=False):
+                    with st.form("f_login_final_locked", border=False):
                         u = st.text_input("A", placeholder="手机号 / 邮箱", label_visibility="collapsed", key="v_log_u")
                         p = st.text_input("P", type="password", placeholder="请输入密码", label_visibility="collapsed", key="v_log_p")
                         if st.form_submit_button("立 即 登 录", use_container_width=True):
@@ -121,7 +120,7 @@ def view_auth():
                                 else: st.error(msg)
 
                 with t2:
-                    with st.form("f_reg_fixed_v14", border=False):
+                    with st.form("f_reg_final_locked", border=False):
                         ru = st.text_input("RA", placeholder="手机号 / 邮箱", label_visibility="collapsed", key="v_reg_ru")
                         rp = st.text_input("RP1", type="password", placeholder="设置登录密码", label_visibility="collapsed", key="v_reg_rp1")
                         rp2 = st.text_input("RP2", type="password", placeholder="再次确认密码", label_visibility="collapsed", key="v_reg_rp2")
@@ -132,6 +131,6 @@ def view_auth():
                                 res, msg = register_user(ru, rp, ri)
                                 if res: st.success("成功！请登录")
 
-    # --- 3. 底部剧中声明 ---
+    # --- 3. 底部声明 ---
     st.write("\n" * 4)
     st.markdown("<center style='color:#CBD5E1; font-size:11px; letter-spacing: 2px;'>© 2026 VIRAL FACTORY PRO. ALL RIGHTS RESERVED.</center>", unsafe_allow_html=True)

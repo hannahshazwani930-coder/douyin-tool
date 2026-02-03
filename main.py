@@ -3,7 +3,7 @@ import streamlit as st
 import time
 from config import ADMIN_ACCOUNT
 from database import init_db, get_user_vip_status, login_user, register_user
-from utils import inject_css, render_wechat_pill, render_sidebar_user_card
+from utils import inject_css, render_wechat_pill, render_sidebar_user_card, render_tech_support_btn
 
 # --- 导入视图 ---
 from views.home import view_home
@@ -14,17 +14,11 @@ from views.naming import view_naming
 from views.account import view_account
 from views.admin import view_admin
 
-st.set_page_config(
-    page_title="抖音爆款工场 Pro", 
-    layout="wide",
-    page_icon="💠",
-    initial_sidebar_state="expanded"
-)
-
+st.set_page_config(page_title="抖音爆款工场 Pro", layout="wide", page_icon="💠", initial_sidebar_state="expanded")
 init_db()
 
 # ==========================================
-# 登录 / 注册 页面
+# 登录 / 注册
 # ==========================================
 def login_page():
     inject_css(mode="auth")
@@ -33,14 +27,8 @@ def login_page():
         st.markdown("<div style='padding-right: 20px; padding-top: 20px;'>", unsafe_allow_html=True)
         st.markdown('<div class="hero-decoration"></div>', unsafe_allow_html=True)
         st.markdown("""
-        <div class="hero-title">
-            打造爆款<br>
-            <span style="color: #3b82f6;">从未如此简单</span>
-        </div>
-        <div class="hero-subtitle">
-            抖音爆款工场 Pro 是一站式 AI 创作工作台。<br>
-            集成了文案改写、海报设计、选题挖掘等核心功能。
-        </div>
+        <div class="hero-title">打造爆款<br><span style="color: #3b82f6;">从未如此简单</span></div>
+        <div class="hero-subtitle">抖音爆款工场 Pro 是一站式 AI 创作工作台。<br>集成了文案改写、海报设计、选题挖掘等核心功能。</div>
         """, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -88,13 +76,7 @@ def login_page():
                         success, msg = register_user(new_user, new_pass, final_invite_code)
                         if success: st.balloons(); st.success("✅ 注册成功！请切换登录");
                         else: st.error(f"⛔ {msg}")
-    
-    st.markdown("""
-    <div class="auth-footer">
-        © 2026 抖音爆款工场 Pro System.<br>
-        <span style="font-size:11px;color:#cbd5e1;">本系统仅供辅助创作使用，请遵守相关法律法规。</span>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("""<div class="auth-footer">© 2026 抖音爆款工场 Pro System.<br><span style="font-size:11px;color:#cbd5e1;">本系统仅供辅助创作使用，请遵守相关法律法规。</span></div>""", unsafe_allow_html=True)
 
 # --- 主程序逻辑 ---
 def main():
@@ -106,22 +88,14 @@ def main():
         is_vip, msg = get_user_vip_status(current_user)
         
         with st.sidebar:
-            # 1. 紧凑的 Logo
-            st.markdown("""
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom: 15px;">
-                <div style="background:#2563eb; width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:16px;">P</div>
-                <div style="font-weight:700; font-size:16px; color:#0f172a;">爆款工场 Pro</div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown("""<div style="display:flex; align-items:center; gap:8px; margin-bottom: 15px;"><div style="background:#2563eb; width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:16px;">P</div><div style="font-weight:700; font-size:16px; color:#0f172a;">爆款工场 Pro</div></div>""", unsafe_allow_html=True)
             
-            # 2. 用户卡片 (显示VIP天数)
-            # msg 变量里已经包含了 "VIP (剩X天)" 或 "未开通" 这样的信息，直接传进去
-            render_sidebar_user_card(current_user, msg)
+            render_sidebar_user_card(current_user, msg) # 修复的卡片
             
-            # 3. 紧凑导航
             menu_opts = ["🏠 首页", "📝 文案改写", "💡 爆款选题", "🎨 海报生成", "🏷️ 账号起名", "👤 个人中心"]
             if current_user == ADMIN_ACCOUNT: menu_opts.append("🕵️‍♂️ 管理后台")
             
+            # 处理跳转逻辑
             default_idx = 0
             if 'nav_menu_selection' in st.session_state:
                 if st.session_state['nav_menu_selection'] in menu_opts:
@@ -130,17 +104,11 @@ def main():
 
             nav = st.radio("导航", menu_opts, index=default_idx, label_visibility="collapsed")
             
-            # 4. 底部区域 (挤到底部)
             st.markdown("<div style='flex-grow:1; min-height: 20px;'></div>", unsafe_allow_html=True)
+            st.markdown("---")
+            render_tech_support_btn("TG777188") # Requirement 2: 大按钮
             
-            # 5. 技术支持 (Requirement 4)
-            st.markdown("""
-            <div style="border-top:1px solid #f1f5f9; padding-top:15px; text-align:center;">
-                <div style="font-size:11px; color:#94a3b8; margin-bottom:5px;">技术合作微信: TG777188</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            if st.button("🚪 退出", use_container_width=True):
+            if st.button("🚪 退出登录", use_container_width=True):
                 del st.session_state['user_phone']
                 st.rerun()
 

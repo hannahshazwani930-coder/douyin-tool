@@ -9,6 +9,7 @@ import uuid
 import hashlib
 import random
 import pandas as pd
+import string
 
 # ==========================================
 # 0. 核心配置
@@ -23,8 +24,11 @@ st.set_page_config(
 # 🔑 管理员配置
 ADMIN_PHONE = "13065080569"
 ADMIN_INIT_PASSWORD = "ltren777188" 
-# 🔥 通用注册邀请码 (可以在这里随时改，控制注册门槛)
+# 🔥 官方通用邀请码 (无邀请人时使用)
 GLOBAL_INVITE_CODE = "VIP888" 
+# 💰 裂变奖励配置
+REWARD_DAYS_NEW_USER = 3  # 新人注册送几天
+REWARD_DAYS_REFERRER = 3  # 邀请一人送几天
 
 # 数据库文件
 DB_FILE = 'saas_data_v2.db'
@@ -33,12 +37,37 @@ DB_FILE = 'saas_data_v2.db'
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS users (phone TEXT PRIMARY KEY, password_hash TEXT, register_time TIMESTAMP, last_login_ip TEXT, last_login_time TIMESTAMP)''')
+    
+    # 1. 用户表 (新增: own_invite_code, invited_by, invite_count)
+    # 注意：如果旧库报错，请删除 .db 文件重启，或者手动 alter table
+    c.execute('''CREATE TABLE IF NOT EXISTS users (
+                    phone TEXT PRIMARY KEY, 
+                    password_hash TEXT, 
+                    register_time TIMESTAMP, 
+                    last_login_ip TEXT, 
+                    last_login_time TIMESTAMP,
+                    own_invite_code TEXT UNIQUE,
+                    invited_by TEXT,
+                    invite_count INTEGER DEFAULT 0
+                )''')
+                
+    # 2. 卡密表
     c.execute('''CREATE TABLE IF NOT EXISTS access_codes (code TEXT PRIMARY KEY, duration_days INTEGER, activated_at TIMESTAMP, expire_at TIMESTAMP, status TEXT, create_time TIMESTAMP, bind_user TEXT)''')
+    
+    # 3. 反馈表
     c.execute('''CREATE TABLE IF NOT EXISTS feedbacks (id INTEGER PRIMARY KEY AUTOINCREMENT, user_phone TEXT, content TEXT, reply TEXT, create_time TIMESTAMP, status TEXT)''')
+    
+    # 4. 设置表
     c.execute('''CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)''')
-    admin_pwd_hash = hashlib.sha256(ADMIN_INIT_PASSWORD.encode()).hexdigest()
-    c.execute("REPLACE INTO users (phone, password_hash, register_time) VALUES (?, ?, ?)", (ADMIN_PHONE, admin_pwd_hash, datetime.datetime.now()))
+    
+    # 预设管理员 (如果不存在)
+    c.execute("SELECT phone FROM users WHERE phone=?", (ADMIN_PHONE,))
+    if not c.fetchone():
+        admin_pwd_hash = hashlib.sha256(ADMIN_INIT_PASSWORD.encode()).hexdigest()
+        # 管理员也有个默认邀请码 ADMIN888
+        c.execute("INSERT INTO users (phone, password_hash, register_time, own_invite_code) VALUES (?, ?, ?, ?)", 
+                  (ADMIN_PHONE, admin_pwd_hash, datetime.datetime.now(), "ADMIN888"))
+        
     conn.commit(); conn.close()
 
 init_db()
@@ -75,23 +104,29 @@ st.markdown("""
     div.stButton > button[kind="secondary"] { background-color: #f1f5f9; color: #475569; border: 1px solid transparent; }
     div.stButton > button[kind="secondary"]:hover { background-color: #e2e8f0; color: #1e293b; border-color: #cbd5e1; }
 
-    /* 登录页特效 */
-    .login-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 10% 20%, rgb(239, 246, 255) 0%, rgb(219, 228, 255) 90%); z-index: -1; }
-    .auth-title { text-align: center; font-weight: 800; font-size: 28px; color: #1e293b; margin-bottom: 10px; letter-spacing: -1px; }
-    .auth-sub { text-align: center; color: #64748b; font-size: 14px; margin-bottom: 30px; }
-    .login-spacer { height: 10vh; }
-    .feature-list { margin-top: 20px; }
-    .feature-item { display: flex; align-items: center; margin-bottom: 15px; color: #475569; font-size: 14px; font-weight: 500; }
-    .feature-icon { width: 24px; height: 24px; background: #dbeafe; color: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 12px; font-weight: bold; }
-
-    /* 微信引流卡片 */
-    .wx-invite-box {
-        background: #f0fdf4; border: 1px dashed #4ade80; border-radius: 8px; padding: 12px;
-        text-align: center; margin-bottom: 15px; font-size: 13px; color: #166534;
+    /* 邀请有礼卡片 (个人中心) */
+    .referral-box {
+        background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+        border: 1px solid #fed7aa; border-radius: 16px; padding: 24px;
+        text-align: center; margin-bottom: 20px;
+        position: relative; overflow: hidden;
     }
-    .wx-id-highlight { font-weight: 800; font-family: monospace; font-size: 15px; color: #15803d; margin: 0 4px; }
+    .referral-box::after {
+        content: '🎁'; font-size: 80px; position: absolute; right: -10px; bottom: -20px; opacity: 0.1; transform: rotate(-20deg);
+    }
+    .referral-title { font-size: 18px; font-weight: 800; color: #9a3412; margin-bottom: 8px; }
+    .referral-desc { font-size: 14px; color: #c2410c; margin-bottom: 20px; }
+    .referral-code-display {
+        font-family: monospace; font-size: 32px; font-weight: 800; color: #ea580c;
+        background: rgba(255,255,255,0.6); padding: 10px 30px; border-radius: 12px;
+        border: 2px dashed #f97316; display: inline-block; margin-bottom: 10px; cursor: pointer;
+    }
+    .stat-row { display: flex; justify-content: center; gap: 30px; margin-top: 15px; }
+    .stat-item { text-align: center; }
+    .stat-num { font-size: 20px; font-weight: 800; color: #c2410c; }
+    .stat-lbl { font-size: 12px; color: #9a3412; }
 
-    /* 侧边栏美化 */
+    /* --- 🔥 侧边栏美化 🔥 --- */
     [data-testid="stSidebar"] { background-color: #f8fafc; border-right: 1px solid #e2e8f0; }
     [data-testid="stSidebar"] .block-container { padding-top: 2rem !important; padding-bottom: 1rem !important; }
     .sidebar-user-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; box-shadow: 0 2px 4px -1px rgba(0,0,0,0.02); }
@@ -103,41 +138,19 @@ st.markdown("""
     .buy-btn-sidebar { text-decoration: none; background: #10b981; color: white !important; font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 6px; transition: all 0.2s; white-space: nowrap; }
     .buy-btn-sidebar:hover { background: #059669; transform: translateY(-1px); box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2); }
     
-    /* 导航条 */
-    .stRadio > div { gap: 0px; }
-    .stRadio > div > label { background: transparent; padding: 8px 10px; border-radius: 6px; margin-bottom: 1px; color: #475569; font-weight: 500; transition: all 0.2s; cursor: pointer; border: 1px solid transparent; font-size: 14px !important; }
-    .stRadio > div > label:hover { background: #f1f5f9; color: #1e293b; }
-    .stRadio > div > label[data-checked="true"] { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; font-weight: 600; }
-    .stRadio div[role="radiogroup"] > label > div:first-child { display: none; }
-    
     /* 侧边栏项目卡片 */
     .sidebar-project-card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 8px; border-left: 3px solid #3b82f6; transition: all 0.2s; cursor: default; }
     .sidebar-project-card:hover { transform: translateX(2px); box-shadow: 0 2px 8px rgba(0,0,0,0.03); border-color: #cbd5e1; }
     .sp-title { font-weight: 700; font-size: 12px; color: #334155; margin-bottom: 2px; }
     .sp-desc { font-size: 10px; color: #94a3b8; line-height: 1.3; }
 
-    /* 首页卡片 */
-    [data-testid="stVerticalBlockBorderWrapper"] { border-radius: 16px !important; border: 1px solid #e2e8f0 !important; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 24px !important; }
-    [data-testid="stVerticalBlockBorderWrapper"]:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -5px rgba(59, 130, 246, 0.15); border-color: #bfdbfe !important; }
-    .card-icon-box { width: 56px; height: 56px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 15px auto; color: #2563eb; }
-    .card-title { font-size: 18px; font-weight: 800; color: #1e293b; text-align: center; margin-bottom: 6px; }
-    .card-desc { font-size: 13px; color: #64748b; text-align: center; margin-bottom: 20px; min-height: 40px; line-height: 1.5; }
-    
     /* 通用组件 */
     .poster-hero-container { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.05); border: 1px solid #edf2f7; display: flex; align-items: center; margin-bottom: 25px; position: relative; overflow: hidden; }
     .poster-hero-container::before { content: ''; position: absolute; top: -50%; right: -10%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(167, 139, 250, 0.15) 0%, rgba(255,255,255,0) 70%); border-radius: 50%; z-index: 0; pointer-events: none; }
     .hero-icon-wrapper { width: 68px; height: 68px; background: linear-gradient(135deg, #c4b5fd, #818cf8); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 34px; margin-right: 24px; box-shadow: 0 10px 20px -5px rgba(129, 140, 248, 0.5); z-index: 1; color: white; }
     .hero-title { font-size: 22px; font-weight: 800; color: #1e293b; margin: 0 0 8px 0; letter-spacing: -0.5px; z-index: 1; position: relative; }
     .hero-desc { font-size: 15px; color: #64748b; margin: 0; font-weight: 500; z-index: 1; position: relative; }
-    .step-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 12px; display: flex; align-items: flex-start; transition: transform 0.2s; }
-    .step-card:hover { border-color: #bfdbfe; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.05); transform: translateX(5px); }
-    .step-icon { background: #eff6ff; color: #2563eb; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px; flex-shrink: 0; }
-    .step-content h4 { margin: 0 0 4px; font-size: 15px; color: #1e293b; font-weight: 700; }
-    .step-content p { margin: 0; font-size: 13px; color: #64748b; }
-    .footer-legal { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 12px; }
-    .footer-links a { color: #64748b; text-decoration: none; margin: 0 10px; transition: color 0.2s; }
     .info-box-aligned { height: 45px !important; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1e40af; display: flex; align-items: center; padding: 0 16px; font-size: 14px; font-weight: 500; width: 100%; box-sizing: border-box; }
-    .empty-state-box { height: 200px; background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc); background-size: 20px 20px; border: 2px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 500; flex-direction: column; gap: 10px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -162,6 +175,12 @@ def get_remote_ip():
         return headers.get("X-Forwarded-For", headers.get("Remote-Addr", "unknown_ip"))
     except: return "unknown_ip"
 
+def send_mock_sms(phone): return str(random.randint(1000, 9999))
+
+# 生成6位随机邀请码
+def generate_invite_code():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
 def render_footer():
     st.markdown("""<div class="footer-legal"><div class="footer-links"><a href="#">用户协议</a> | <a href="#">隐私政策</a> | <a href="#">免责声明</a> | <a href="#">关于我们</a></div><div style="margin-top: 10px;">© 2026 爆款工场 Pro | 鄂ICP备2024XXXXXX号-1 | 违法和不良信息举报：TG777188</div><div style="font-size: 11px; color: #cbd5e1; margin-top: 5px;">本站仅提供技术工具，请勿用于任何非法用途，用户生成内容文责自负。</div></div>""", unsafe_allow_html=True)
 
@@ -180,22 +199,76 @@ def render_hover_copy_box(text, label="点击复制"):
     components.html(html, height=40)
 
 # --- 业务逻辑 ---
-def register_user(phone, password):
+def add_vip_days(phone, days, source="system"):
+    """通用的增加VIP时长函数"""
+    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+    
+    # 查找当前最晚的过期时间
+    c.execute("SELECT expire_at FROM access_codes WHERE bind_user=? AND status='active'", (phone,))
+    rows = c.fetchall()
+    
+    now = datetime.datetime.now()
+    if rows:
+        # 如果有有效会员，找出最大的过期时间
+        max_expire_str = max([r[0] for r in rows])
+        max_expire = datetime.datetime.strptime(max_expire_str.split('.')[0], '%Y-%m-%d %H:%M:%S')
+        # 如果过期时间在未来，从未来开始加；如果在过去（已过期），从现在开始加
+        start_time = max_expire if max_expire > now else now
+    else:
+        # 没有记录或已过期
+        start_time = now
+        
+    expire_at = start_time + datetime.timedelta(days=days)
+    
+    # 插入新的权益记录
+    new_code = f"GIFT-{source}-{str(uuid.uuid4())[:6].upper()}"
+    c.execute("INSERT INTO access_codes (code, duration_days, activated_at, expire_at, status, create_time, bind_user) VALUES (?, ?, ?, ?, ?, ?, ?)",
+              (new_code, days, now, expire_at, 'active', now, phone))
+    conn.commit(); conn.close()
+
+def register_user(phone, password, invite_code_used):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     try:
-        # 🔥 提高转化：注册即送3天VIP 🔥
-        c.execute("INSERT INTO users (phone, password_hash, register_time) VALUES (?, ?, ?)", (phone, hash_password(password), datetime.datetime.now()))
+        # 1. 生成用户自己的邀请码 (防重)
+        new_own_code = generate_invite_code()
+        while True:
+            c.execute("SELECT phone FROM users WHERE own_invite_code=?", (new_own_code,))
+            if not c.fetchone(): break
+            new_own_code = generate_invite_code()
+            
+        # 2. 查找邀请人
+        referrer_phone = None
+        if invite_code_used != GLOBAL_INVITE_CODE:
+            c.execute("SELECT phone FROM users WHERE own_invite_code=?", (invite_code_used,))
+            row = c.fetchone()
+            if row:
+                referrer_phone = row[0]
+                
+        # 3. 注册入库
+        c.execute("INSERT INTO users (phone, password_hash, register_time, own_invite_code, invited_by) VALUES (?, ?, ?, ?, ?)", 
+                  (phone, hash_password(password), datetime.datetime.now(), new_own_code, referrer_phone))
+        conn.commit(); conn.close() # 先提交用户，防止add_vip_days锁表
         
-        # 自动生成并绑定一个3天体验卡
-        trial_code = "TRIAL-" + str(uuid.uuid4())[:8].upper()
-        now = datetime.datetime.now()
-        expire = now + datetime.timedelta(days=3)
-        c.execute("INSERT INTO access_codes (code, duration_days, activated_at, expire_at, status, create_time, bind_user) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-                  (trial_code, 3, now, expire, 'active', now, phone))
+        # 4. 发放新人奖励 (3天)
+        add_vip_days(phone, REWARD_DAYS_NEW_USER, "NEW_USER")
         
-        conn.commit(); return True, "注册成功！已赠送 3 天 VIP 体验 🎉"
+        # 5. 发放邀请奖励 (3天)
+        msg = f"注册成功！新人福利 +{REWARD_DAYS_NEW_USER} 天 🎉"
+        if referrer_phone:
+            add_vip_days(referrer_phone, REWARD_DAYS_REFERRER, "REFERRAL")
+            # 更新邀请计数
+            conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+            c.execute("UPDATE users SET invite_count = invite_count + 1 WHERE phone=?", (referrer_phone,))
+            conn.commit(); conn.close()
+            msg += f" (已通过邀请码 {invite_code_used} 加入)"
+            
+        return True, msg
+        
     except sqlite3.IntegrityError: return False, "该手机号已注册"
-    finally: conn.close()
+    except Exception as e: return False, str(e)
+    finally: 
+        try: conn.close()
+        except: pass
 
 def login_user(phone, password):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
@@ -221,13 +294,20 @@ def activate_code(user_phone, code):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     c.execute("SELECT * FROM access_codes WHERE code=?", (code,))
     row = c.fetchone()
-    if not row: conn.close(); return False, "❌ 卡密不存在"
+    conn.close() # Close quickly
+    
+    if not row: return False, "❌ 卡密不存在"
     if row[4] == 'unused':
-        duration = row[1]; now = datetime.datetime.now(); expire_date = now + datetime.timedelta(days=duration)
-        c.execute("UPDATE access_codes SET status='active', activated_at=?, expire_at=?, bind_user=? WHERE code=?", (now, expire_date, user_phone, code))
+        # 调用通用加天数逻辑
+        add_vip_days(user_phone, row[1], "CDKEY")
+        
+        # 更新卡密状态
+        conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+        now = datetime.datetime.now()
+        c.execute("UPDATE access_codes SET status='active', activated_at=?, bind_user=? WHERE code=?", (now, user_phone, code))
         conn.commit(); conn.close()
-        return True, f"✅ 激活成功！增加 {duration} 天"
-    else: conn.close(); return False, "⛔ 卡密已失效"
+        return True, f"✅ 激活成功！增加 {row[1]} 天"
+    else: return False, "⛔ 卡密已失效"
 
 def get_user_vip_status(phone):
     if phone == ADMIN_PHONE: return True, "👑 超级管理员 (永久有效)"
@@ -241,6 +321,13 @@ def get_user_vip_status(phone):
         days_left = (max_expire - now).days
         return True, f"VIP (剩{days_left}天)" 
     return False, "会员已过期"
+
+def get_user_invite_info(phone):
+    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+    c.execute("SELECT own_invite_code, invite_count FROM users WHERE phone=?", (phone,))
+    row = c.fetchone(); conn.close()
+    if row: return row[0], row[1]
+    return "ERROR", 0
 
 def submit_feedback(phone, content):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
@@ -272,40 +359,41 @@ def auth_page():
                         if s: st.session_state['user_phone'] = ph; st.rerun()
                         else: st.error(m)
             with t2:
-                # 🔥 邀请码注册逻辑 🔥
-                st.info("🎁 **新人福利**：注册即送 **3天** 尊贵VIP会员！")
+                st.info(f"🎁 **裂变福利**：注册送 {REWARD_DAYS_NEW_USER} 天，每邀请 1 人再送 {REWARD_DAYS_REFERRER} 天！")
                 ph = st.text_input("手机号", key="r_ph")
                 pw1 = st.text_input("设置密码", type="password", key="r_p1")
                 pw2 = st.text_input("确认密码", type="password", key="r_p2")
                 
-                # 邀请码获取引导
-                with st.expander("❓ 如何获取邀请码？"):
-                    st.markdown("""
-                    <div class="wx-invite-box">
-                        请添加客服微信 <span class="wx-id-highlight">W7774X</span><br>
-                        回复 <b>“注册”</b> 免费获取邀请码
-                    </div>
-                    """, unsafe_allow_html=True)
+                with st.expander("❓ 没有邀请码？"):
+                    st.markdown("""<div class="wx-invite-box">添加客服微信 <span class="wx-id-highlight">W7774X</span><br>回复 <b>“注册”</b> 获取，或填写朋友的邀请码</div>""", unsafe_allow_html=True)
                     render_hover_copy_box("W7774X", "点击复制微信号")
                 
-                invite_code = st.text_input("请输入邀请码", key="r_invite", placeholder="联系客服获取...")
+                # 兼容通用码和用户码
+                invite_code = st.text_input("邀请码 (必填)", key="r_invite", placeholder="VIP888 或 好友邀请码")
                 
                 if st.button("立即注册", type="primary", use_container_width=True):
                     if pw1 != pw2: st.error("两次密码不一致")
-                    elif invite_code == GLOBAL_INVITE_CODE: # 验证邀请码
-                        s, m = register_user(ph, pw1)
-                        if s: st.success(m); st.balloons(); time.sleep(2); st.session_state['user_phone'] = ph; st.rerun()
-                        else: st.error(m)
-                    else: st.error("❌ 邀请码错误，请联系客服获取")
+                    elif not invite_code: st.error("请输入邀请码")
+                    else:
+                        # 验证邀请码是否存在 (通用码 OR 用户码)
+                        is_valid = False
+                        if invite_code == GLOBAL_INVITE_CODE: is_valid = True
+                        else:
+                            conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+                            c.execute("SELECT phone FROM users WHERE own_invite_code=?", (invite_code,))
+                            if c.fetchone(): is_valid = True
+                            conn.close()
+                        
+                        if is_valid:
+                            s, m = register_user(ph, pw1, invite_code)
+                            if s: st.success(m); st.balloons(); time.sleep(2); st.session_state['user_phone'] = ph; st.rerun()
+                            else: st.error(m)
+                        else:
+                            st.error("❌ 邀请码无效，请检查或联系客服")
+
             with t3: st.info("请联系客服微信：W7774X 重置密码")
             
-            st.markdown("""
-            <div class="feature-list">
-                <div class="feature-item"><div class="feature-icon">🚀</div><span>5路并发文案改写，效率提升 500%</span></div>
-                <div class="feature-item"><div class="feature-icon">🎨</div><span>接入小提大作，好莱坞级海报渲染</span></div>
-                <div class="feature-item"><div class="feature-icon">👥</div><span>已有 2000+ KOC 加入变现</span></div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown("""<div class="feature-list"><div class="feature-item"><div class="feature-icon">🚀</div><span>5路并发文案改写，效率提升 500%</span></div><div class="feature-item"><div class="feature-icon">🎨</div><span>接入小提大作，好莱坞级海报渲染</span></div><div class="feature-item"><div class="feature-icon">👥</div><span>已有 2000+ KOC 加入变现</span></div></div>""", unsafe_allow_html=True)
 
     render_footer()
 
@@ -328,18 +416,7 @@ with st.sidebar:
     shop_url = get_setting("shop_url")
     buy_btn_html = f"""<a href="{shop_url}" target="_blank" class="buy-btn-sidebar">💎 充值</a>""" if shop_url else ""
     role_display = VIP_MSG if IS_VIP else "🌑 普通用户"
-    st.markdown(f"""
-    <div class="sidebar-user-card">
-        <div class="user-left">
-            <div class="user-avatar">👤</div>
-            <div class="user-info">
-                <div class="user-name">{CURRENT_USER[:3]}****{CURRENT_USER[-4:]}</div>
-                <div class="user-role">{role_display}</div>
-            </div>
-        </div>
-        {buy_btn_html}
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f"""<div class="sidebar-user-card"><div class="user-left"><div class="user-avatar">👤</div><div class="user-info"><div class="user-name">{CURRENT_USER[:3]}****{CURRENT_USER[-4:]}</div><div class="user-role">{role_display}</div></div></div>{buy_btn_html}</div>""", unsafe_allow_html=True)
     
     if not IS_VIP:
         with st.expander("🔑 激活卡密", expanded=True):
@@ -350,73 +427,47 @@ with st.sidebar:
                 else: st.error(m)
     
     st.markdown("---")
-    
     ops = ["🏠 首页", "📝 文案改写", "💡 爆款选题库", "🎨 海报生成", "🏷️ 账号起名", "👤 个人中心"]
     if IS_ADMIN: ops.append("🕵️‍♂️ 管理后台")
-    
     try: curr_idx = ops.index(st.session_state['nav_menu'])
     except: curr_idx = 0; st.session_state['nav_menu'] = ops[0]
-
     selected = st.radio("功能导航", ops, index=curr_idx, label_visibility="collapsed", key="sb_radio")
     if selected != st.session_state['nav_menu']: st.session_state['nav_menu'] = selected; st.rerun()
 
     st.markdown("---")
-    
     st.markdown("<div style='font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:8px;'>🔥 热门变现项目</div>", unsafe_allow_html=True)
-    st.markdown("""
-    <div class="sidebar-project-card">
-        <div class="sp-title">📹 素人 KOC 孵化</div>
-        <div class="sp-desc">真人出镜口播 · 红果/番茄拉新 · 0基础陪跑</div>
-    </div>
-    <div class="sidebar-project-card" style="border-left-color: #8b5cf6;">
-        <div class="sp-title">🎨 御灵 AI 动漫</div>
-        <div class="sp-desc">小说转动漫 · 端原生流量 · 版权分销</div>
-    </div>
-    <div class="sidebar-project-card" style="border-left-color: #10b981;">
-        <div class="sp-title">🌍 文娱出海</div>
-        <div class="sp-desc">短剧出海 · 工具拉新 · 资源变现</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
+    st.markdown("""<div class="sidebar-project-card"><div class="sp-title">📹 素人 KOC 孵化</div><div class="sp-desc">真人出镜口播 · 红果/番茄拉新 · 0基础陪跑</div></div><div class="sidebar-project-card" style="border-left-color: #8b5cf6;"><div class="sp-title">🎨 御灵 AI 动漫</div><div class="sp-desc">小说转动漫 · 端原生流量 · 版权分销</div></div><div class="sidebar-project-card" style="border-left-color: #10b981;"><div class="sp-title">🌍 文娱出海</div><div class="sp-desc">短剧出海 · 工具拉新 · 资源变现</div></div>""", unsafe_allow_html=True)
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
-    
     render_wechat_box("💰 变现咨询", "W7774X")
     st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
     render_wechat_box("🛠️ 技术合作", "TG777188")
-    
     st.markdown("---")
     if st.button("🚪 退出登录", use_container_width=True, type="secondary"): del st.session_state['user_phone']; st.rerun()
 
 menu = st.session_state['nav_menu']
 
-# --- 首页 (Embedded Button Design) ---
+# --- 首页 ---
 def page_home():
     st.markdown("## 💠 抖音爆款工场 Pro")
     st.caption("专为素人 KOC 打造的 AI 提效神器 | 文案 · 选题 · 海报 · 变现")
     st.markdown("---")
-    
     c1, c2, c3, c4 = st.columns(4)
-    
     with c1:
         with st.container(border=True):
             st.markdown("""<div class="card-icon-box">📝</div><div class="card-title">文案改写</div><div class="card-desc">5路并发 · 爆款重组<br>解决文案枯竭</div>""", unsafe_allow_html=True)
             st.button("立即使用 ➜", key="h_btn1", on_click=go_to, args=("📝 文案改写",), type="primary", use_container_width=True)
-            
     with c2:
         with st.container(border=True):
             st.markdown("""<div class="card-icon-box">💡</div><div class="card-title">爆款选题</div><div class="card-desc">流量焦虑 · 一键解决<br>精准击中痛点</div>""", unsafe_allow_html=True)
             st.button("立即使用 ➜", key="h_btn2", on_click=go_to, args=("💡 爆款选题库",), type="primary", use_container_width=True)
-            
     with c3:
         with st.container(border=True):
             st.markdown("""<div class="card-icon-box">🎨</div><div class="card-title">海报生成</div><div class="card-desc">小提大作 · 影视质感<br>好莱坞级光影</div>""", unsafe_allow_html=True)
             st.button("立即使用 ➜", key="h_btn3", on_click=go_to, args=("🎨 海报生成",), type="primary", use_container_width=True)
-            
     with c4:
         with st.container(border=True):
             st.markdown("""<div class="card-icon-box">🏷️</div><div class="card-title">账号起名</div><div class="card-desc">AI 算命 · 爆款玄学<br>赛道垂直定制</div>""", unsafe_allow_html=True)
             st.button("立即使用 ➜", key="h_btn4", on_click=go_to, args=("🏷️ 账号起名",), type="primary", use_container_width=True)
-    
     st.markdown("<br>", unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("#### 📢 系统公告")
@@ -427,15 +478,12 @@ def page_rewrite():
     st.markdown("## 📝 爆款文案改写"); st.markdown("---")
     if 'results' not in st.session_state: st.session_state['results'] = {}
     client = OpenAI(api_key=st.secrets.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com")
-    
     def rewrite_logic(content):
         if not content or len(content.strip()) < 5: return "⚠️ 内容过短"
         prompt = f"你是一个抖音千万粉的口播博主。原始素材：{content}。任务：清洗数据，改写为原创爆款文案。公式：黄金3秒开头+中间情绪饱满+结尾强引导。输出：直接输出文案，不要任何markdown格式。"
         try: return client.chat.completions.create(model="deepseek-chat", messages=[{"role":"user","content":prompt}], temperature=1.3).choices[0].message.content
         except: return "请配置 API Key"
-
     def clear_text(k): st.session_state[k] = ""
-
     c1, c2 = st.columns([1, 2], gap="medium")
     with c1:
         if st.button("🚀 5路并发执行", type="primary", use_container_width=True):
@@ -450,7 +498,6 @@ def page_rewrite():
                     for idx, r in zip(indices, res): st.session_state['results'][idx] = r
                     st.rerun()
     with c2: st.markdown("""<div class="info-box-aligned">💡 提示：将文案粘贴到下方窗口，点击左侧蓝色按钮可批量处理。</div>""", unsafe_allow_html=True)
-    
     st.write("")
     for i in range(1, 6):
         with st.container(border=True):
@@ -464,9 +511,7 @@ def page_rewrite():
                 if b2.button(f"⚡ 仅生成 #{i}", key=f"gen_{i}", type="primary", use_container_width=True):
                     val = st.session_state.get(input_key, "")
                     if val:
-                        with st.spinner("生成中..."):
-                            st.session_state['results'][i] = rewrite_logic(val)
-                            st.rerun()
+                        with st.spinner("生成中..."): st.session_state['results'][i] = rewrite_logic(val); st.rerun()
             with col_out:
                 res = st.session_state['results'].get(i, "")
                 if res:
@@ -479,92 +524,14 @@ def page_rewrite():
 def page_poster():
     st.markdown("## 🎨 海报生成 (专业版)")
     st.markdown("""<div class="poster-hero-container"><div class="hero-icon-wrapper">🚀</div><div class="hero-text-content"><h2 class="hero-title">算力全面升级！好莱坞级光影引擎</h2><p class="hero-desc">为了提供极致的渲染效果，海报功能已迁移至性能更强的独立工作站。</p></div></div>""", unsafe_allow_html=True)
-    
-    components.html("""
-    <!DOCTYPE html><html><head><style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;800&display=swap');
-    body{margin:0;padding:20px;font-family:'Inter',sans-serif;overflow:hidden;background:transparent;} 
-    .container{display:flex;gap:20px;width:100%;}
-    .card{flex:1;border-radius:16px;height:120px;display:flex;flex-direction:column;justify-content:center;align-items:center;cursor:pointer;transition:all 0.3s;box-sizing:border-box;}
-    .invite{background:#fff;border:2px dashed #cbd5e1;position:relative;}
-    .invite:hover{border-color:#6366f1;background:#f5f3ff;transform:translateY(-5px);box-shadow:0 10px 20px rgba(0,0,0,0.03);}
-    .invite-label{font-size:13px;color:#64748b;margin-bottom:5px;}
-    .invite-code{font-size:28px;font-weight:800;color:#4f46e5;letter-spacing:1px;}
-    .invite-hint{font-size:12px;color:#94a3b8;margin-top:5px;opacity:0;transition:0.2s;}
-    .invite:hover .invite-hint{opacity:1;color:#6366f1;}
-    .jump{flex:1.5;background:linear-gradient(135deg,#4f46e5,#7c3aed);text-decoration:none;box-shadow:0 4px 15px rgba(124,58,237,0.1);border:1px solid rgba(255,255,255,0.15);}
-    .jump:hover{transform:translateY(-5px);box-shadow:0 8px 20px rgba(124,58,237,0.25);filter:brightness(1.05);}
-    .jump-title{color:#fff;font-size:24px;font-weight:800;margin-bottom:4px;text-shadow:0 2px 4px rgba(0,0,0,0.1);}
-    .jump-sub{color:rgba(255,255,255,0.9);font-size:14px;}
-    </style></head><body>
-    <div class="container">
-        <div class="card invite" onclick="copyInvite(this)">
-            <div class="invite-label">👇 第一步：点击复制邀请码</div>
-            <div class="invite-code">5yzMbpxn</div>
-            <div class="invite-hint" id="status">点击立即复制</div>
-        </div>
-        <a href="https://aixtdz.com/" target="_blank" class="card jump">
-            <div class="jump-title">🚀 前往小提大作</div>
-            <div class="jump-sub">第二步：点击跳转，开启创作</div>
-        </a>
-    </div>
-    <script>
-    function copyInvite(e){
-        const text = '5yzMbpxn';
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        document.body.appendChild(textArea);
-        textArea.select();
-        try { document.execCommand('copy'); const hint = e.querySelector('#status'); hint.innerText = '✅ 复制成功！'; hint.style.opacity = '1'; hint.style.color = '#10b981'; setTimeout(()=>{ hint.innerText = '点击立即复制'; hint.style.opacity = '0'; hint.style.color = '#94a3b8'; }, 2000); } catch (err) {}
-        document.body.removeChild(textArea);
-    }
-    </script></body></html>
-    """, height=180) 
-    
+    components.html("""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;800&display=swap');body{margin:0;padding:20px;font-family:'Inter',sans-serif;overflow:hidden;background:transparent;}.container{display:flex;gap:20px;width:100%;}.card{flex:1;border-radius:16px;height:120px;display:flex;flex-direction:column;justify-content:center;align-items:center;cursor:pointer;transition:all 0.3s;box-sizing:border-box;}.invite{background:#fff;border:2px dashed #cbd5e1;position:relative;}.invite:hover{border-color:#6366f1;background:#f5f3ff;transform:translateY(-5px);box-shadow:0 10px 20px rgba(0,0,0,0.03);}.invite-label{font-size:13px;color:#64748b;margin-bottom:5px;}.invite-code{font-size:28px;font-weight:800;color:#4f46e5;letter-spacing:1px;}.invite-hint{font-size:12px;color:#94a3b8;margin-top:5px;opacity:0;transition:0.2s;}.invite:hover .invite-hint{opacity:1;color:#6366f1;}.jump{flex:1.5;background:linear-gradient(135deg,#4f46e5,#7c3aed);text-decoration:none;box-shadow:0 4px 15px rgba(124,58,237,0.1);border:1px solid rgba(255,255,255,0.15);}.jump:hover{transform:translateY(-5px);box-shadow:0 8px 20px rgba(124,58,237,0.25);filter:brightness(1.05);}.jump-title{color:#fff;font-size:24px;font-weight:800;margin-bottom:4px;text-shadow:0 2px 4px rgba(0,0,0,0.1);}.jump-sub{color:rgba(255,255,255,0.9);font-size:14px;}</style></head><body><div class="container"><div class="card invite" onclick="copyInvite(this)"><div class="invite-label">👇 第一步：点击复制邀请码</div><div class="invite-code">5yzMbpxn</div><div class="invite-hint" id="status">点击立即复制</div></div><a href="https://aixtdz.com/" target="_blank" class="card jump"><div class="jump-title">🚀 前往小提大作</div><div class="jump-sub">第二步：点击跳转，开启创作</div></a></div><script>function copyInvite(e){const text='5yzMbpxn';const textArea=document.createElement("textarea");textArea.value=text;document.body.appendChild(textArea);textArea.select();try{document.execCommand('copy');const hint=e.querySelector('#status');hint.innerText='✅ 复制成功！';hint.style.opacity='1';hint.style.color='#10b981';setTimeout(()=>{hint.innerText='点击立即复制';hint.style.opacity='0';hint.style.color='#94a3b8';},2000);}catch(err){}document.body.removeChild(textArea);}</script></body></html>""", height=180) 
     st.write("")
     st.markdown("#### 📖 新手保姆级教程")
     steps = [("注册登录", "点击上方大按钮前往，注册时记得填写邀请码。"), ("创建画布", "登录后，在首页点击 <b>“创建自由画布”</b>。"), ("上传原图", "在画布中，点击组件栏的 <b>“+”</b> 号，上传剧照。"), ("一键改图", "点击 <b>右侧边框</b>，复制下方指令输入，等待奇迹！")]
     for idx, (title, desc) in enumerate(steps, 1):
         st.markdown(f"""<div class="step-card"><div class="step-icon">{idx}</div><div class="step-content"><h4>{title}</h4><p>{desc}</p></div></div>""", unsafe_allow_html=True)
-
     cmd_text = "将原图剧名：[原剧名] 改为：[你的新剧名]"
-    components.html(f"""
-    <!DOCTYPE html><html><head><style>
-    @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@500&display=swap');
-    body{{margin:0;padding:20px;font-family:'Fira Code',monospace;overflow:hidden;background:transparent;}}
-    .terminal{{background:#0f172a;border-radius:12px;border:1px solid #334155;overflow:hidden;cursor:pointer;transition:0.3s;box-shadow:0 5px 15px rgba(0,0,0,0.1);}}
-    .terminal:hover{{border-color:#6366f1;transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.15);}}
-    .header{{background:#1e293b;padding:10px 16px;display:flex;align-items:center;border-bottom:1px solid #334155;}}
-    .dots{{display:flex;gap:6px;margin-right:12px;}}
-    .dot{{width:10px;height:10px;border-radius:50%;}}
-    .red{{background:#ef4444;}} .yellow{{background:#f59e0b;}} .green{{background:#22c55e;}}
-    .title{{color:#64748b;font-size:12px;}}
-    .body{{padding:20px;color:#e2e8f0;font-size:14px;display:flex;align-items:center;}}
-    .prompt{{color:#22c55e;margin-right:10px;}}
-    .hl{{color:#a78bfa;font-weight:bold;}}
-    .success-overlay{{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(16,185,129,0.95);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:16px;opacity:0;pointer-events:none;transition:0.2s;}}
-    .terminal:active .success-overlay{{opacity:1;}}
-    </style></head><body>
-    <div class="terminal" onclick="copyCmd()">
-        <div class="header"><div class="dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><div class="title">root@ai-generator ~ % (点击复制)</div></div>
-        <div class="body"><span class="prompt">➜</span><span>将原图剧名：<span class="hl">[原剧名]</span> 改为：<span class="hl">[你的新剧名]</span></span></div>
-        <div class="success-overlay" id="overlay">✅ 指令已复制到剪贴板</div>
-    </div>
-    <script>
-    function copyCmd(){{
-        const text = `{cmd_text}`;
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        const overlay = document.getElementById('overlay');
-        overlay.style.opacity = '1';
-        setTimeout(()=>{{ overlay.style.opacity = '0'; }}, 1500);
-    }}
-    </script></body></html>
-    """, height=160) 
+    components.html(f"""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@500&display=swap');body{{margin:0;padding:20px;font-family:'Fira Code',monospace;overflow:hidden;background:transparent;}}.terminal{{background:#0f172a;border-radius:12px;border:1px solid #334155;overflow:hidden;cursor:pointer;transition:0.3s;box-shadow:0 5px 15px rgba(0,0,0,0.1);}}.terminal:hover{{border-color:#6366f1;transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.15);}}.header{{background:#1e293b;padding:10px 16px;display:flex;align-items:center;border-bottom:1px solid #334155;}}.dots{{display:flex;gap:6px;margin-right:12px;}}.dot{{width:10px;height:10px;border-radius:50%;}}.red{{background:#ef4444;}}.yellow{{background:#f59e0b;}}.green{{background:#22c55e;}}.title{{color:#64748b;font-size:12px;}}.body{{padding:20px;color:#e2e8f0;font-size:14px;display:flex;align-items:center;}}.prompt{{color:#22c55e;margin-right:10px;}}.hl{{color:#a78bfa;font-weight:bold;}}.success-overlay{{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(16,185,129,0.95);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:16px;opacity:0;pointer-events:none;transition:0.2s;}}.terminal:active .success-overlay{{opacity:1;}}</style></head><body><div class="terminal" onclick="copyCmd()"><div class="header"><div class="dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><div class="title">root@ai-generator ~ % (点击复制)</div></div><div class="body"><span class="prompt">➜</span><span>将原图剧名：<span class="hl">[原剧名]</span> 改为：<span class="hl">[你的新剧名]</span></span></div><div class="success-overlay" id="overlay">✅ 指令已复制到剪贴板</div></div><script>function copyCmd(){{const text=`{cmd_text}`;const textArea=document.createElement("textarea");textArea.value=text;document.body.appendChild(textArea);textArea.select();document.execCommand('copy');document.body.removeChild(textArea);const overlay=document.getElementById('overlay');overlay.style.opacity='1';setTimeout(()=>{{overlay.style.opacity='0';}},1500);}}</script></body></html>""", height=160) 
 
 def page_brainstorm():
     st.markdown("## 💡 爆款选题灵感库"); st.markdown("---")
@@ -572,7 +539,6 @@ def page_brainstorm():
     c1, c2 = st.columns([3, 1])
     with c1: topic = st.text_input("🔍 输入你的赛道/关键词", placeholder="例如：职场、美妆、减肥、副业...")
     with c2: st.write(""); st.write(""); generate_btn = st.button("🧠 帮我想选题", type="primary", use_container_width=True)
-    
     if generate_btn and topic:
         prompt = f"我是做【{topic}】领域的。现在文案枯竭，请帮我生成 10 个绝对会火的爆款选题。要求：1. 必须反直觉，打破认知。2. 必须直击痛点，引发焦虑或强烈好奇。3. 格式：1. 标题：xxxx | 钩子：xxxx"
         try:
@@ -592,7 +558,6 @@ def page_naming():
     with c1: niche = st.selectbox("🎯 赛道", ["短剧", "小说", "口播", "情感", "带货"])
     with c2: style = st.selectbox("🎨 风格", ["高冷", "搞笑", "文艺", "粗暴", "反差"])
     keywords = st.text_input("🔑 关键词 (选填)")
-    
     if st.button("🎲 生成名字", type="primary", use_container_width=True):
         prompt = f"为【{niche}】赛道生成10个{style}风格账号名，含关键词：{keywords}。格式：1. 名字+解释。"
         try:
@@ -607,8 +572,31 @@ def page_naming():
 
 def page_account():
     st.markdown("## 👤 个人中心"); st.markdown("---")
-    t1, t2 = st.tabs(["💳 账户", "💬 反馈"])
+    t1, t2 = st.tabs(["🎁 邀请有礼", "💳 账户", "💬 反馈"])
+    
+    # 🔥 个人中心：邀请裂变模块 🔥
     with t1:
+        my_code, invite_count = get_user_invite_info(CURRENT_USER)
+        st.markdown(f"""
+        <div class="referral-box">
+            <div class="referral-title">🎉 邀请好友，无限续杯 VIP！</div>
+            <div class="referral-desc">每成功邀请 1 位好友注册，双方各得 <b>{REWARD_DAYS_REFERRER} 天</b> 尊贵 VIP 时长。</div>
+            <div class="referral-code-display" onclick="copyCode(this)">{my_code}<div style="font-size:10px;margin-top:5px;color:#9a3412;">(点击复制)</div></div>
+            <div class="stat-row">
+                <div class="stat-item"><div class="stat-num">{invite_count}</div><div class="stat-lbl">已邀请人数</div></div>
+                <div class="stat-item"><div class="stat-num">{invite_count * REWARD_DAYS_REFERRER}</div><div class="stat-lbl">获得天数</div></div>
+            </div>
+        </div>
+        <script>
+        function copyCode(e){{
+            navigator.clipboard.writeText('{my_code}').then(()=>{{st.toast('复制成功！快去分享吧',{{icon:'🎁'}})}});
+        }}
+        </script>
+        """, unsafe_allow_html=True)
+        # 兼容性复制按钮
+        render_copy_button_html(my_code, "referral_copy_btn")
+        
+    with t2:
         st.metric("账号", CURRENT_USER)
         st.metric("状态", "VIP" if IS_VIP else "普通用户", delta=VIP_MSG)
         shop_url = get_setting("shop_url")
@@ -619,7 +607,7 @@ def page_account():
             s, m = activate_code(CURRENT_USER, c)
             if s: st.success(m); time.sleep(1); st.rerun()
             else: st.error(m)
-    with t2:
+    with t3:
         txt = st.text_area("请输入您的建议...")
         if st.button("提交"): submit_feedback(CURRENT_USER, txt); st.success("已提交！")
         conn = sqlite3.connect(DB_FILE); c = conn.cursor()

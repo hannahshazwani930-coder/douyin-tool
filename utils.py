@@ -12,10 +12,9 @@ def hash_password(password):
 def generate_invite_code():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
-# --- CSS 样式配置 (拆分变量以防语法错误) ---
-
+# --- 核心样式注入 ---
 def inject_css(mode="app"):
-    # 1. 基础样式
+    # 1. 基础通用
     base_css = """
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -28,11 +27,13 @@ def inject_css(mode="app"):
     """
     st.markdown(base_css, unsafe_allow_html=True)
 
-    # 2. 登录页样式 (左右排版 + 极光)
+    # ============================================================
+    # 🔐 登录页样式 (回归：单卡片内部分栏 + 极光)
+    # ============================================================
     if mode == "auth":
         st.markdown("""
         <style>
-            /* 极光背景动画 */
+            /* 1. 背景：深色极光流光 */
             .stApp {
                 background: linear-gradient(-45deg, #020617, #0f172a, #1e3a8a, #172554);
                 background-size: 400% 400%;
@@ -40,54 +41,64 @@ def inject_css(mode="app"):
             }
             @keyframes authGradient { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
 
-            /* 布局容器：允许左右排版 */
+            /* 2. 核心卡片 (The Slice)：将整个容器变成一张居中的大卡片 */
             div.block-container {
-                max-width: 1200px !important;
-                padding-top: 8vh !important;
-            }
-
-            /* 左侧文案 */
-            .hero-title { font-size: 48px; font-weight: 800; color: white; line-height: 1.2; margin-bottom: 20px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-            .hero-sub { font-size: 18px; color: #cbd5e1; line-height: 1.6; margin-bottom: 40px; font-weight: 300; }
-            .hero-tag { display:inline-block; background:rgba(37,99,235,0.2); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); padding:5px 15px; border-radius:20px; font-size:12px; margin-right:10px; }
-
-            /* 右侧登录卡片 (玻璃拟态) */
-            .login-card-container {
-                background: rgba(255, 255, 255, 0.95);
+                background-color: rgba(255, 255, 255, 0.98); /* 纯白/玻璃底 */
                 border-radius: 24px;
-                padding: 40px;
-                box-shadow: 0 25px 60px rgba(0,0,0,0.5);
-                backdrop-filter: blur(20px);
+                box-shadow: 0 30px 80px rgba(0,0,0,0.6); /* 深邃阴影 */
+                padding: 60px 50px !important;
+                max-width: 1100px !important; /* 宽幅足以容纳左右排版 */
+                margin: auto;
+                
+                /* 绝对居中定位 */
+                position: absolute;
+                top: 50%; left: 50%;
+                transform: translate(-50%, -50%);
+                overflow: hidden;
             }
 
-            /* 输入框 (标准样式，白底) */
+            /* 3. 左侧文案区修饰 */
+            .auth-left-decor {
+                border-right: 1px solid #f1f5f9;
+                padding-right: 40px;
+                height: 100%;
+                display: flex; flex-direction: column; justify-content: center;
+            }
+            .hero-title { font-size: 42px; font-weight: 800; color: #0f172a; line-height: 1.2; margin-bottom: 20px; letter-spacing: -1px; }
+            .hero-sub { font-size: 16px; color: #64748b; line-height: 1.6; margin-bottom: 30px; }
+            .hero-tags { display: flex; gap: 10px; }
+            .tag-pill { background: #eff6ff; color: #2563eb; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+
+            /* 4. 输入框 (标准样式，确保清晰可见) */
             .stTextInput input {
                 background-color: #f8fafc !important;
-                color: #0f172a !important;
                 border: 1px solid #cbd5e1 !important;
+                color: #1e293b !important;
                 border-radius: 8px !important;
-                height: 45px !important;
+                height: 48px !important;
             }
-            .stTextInput input:focus { border-color: #3b82f6 !important; background: white !important; }
+            .stTextInput input:focus { border-color: #3b82f6 !important; background-color: #fff !important; }
             
-            /* 按钮 */
+            /* 5. 按钮 */
             div.stButton > button {
-                width: 100%; height: 45px;
-                background: linear-gradient(90deg, #2563eb, #3b82f6);
+                width: 100%; height: 48px; background: linear-gradient(90deg, #2563eb, #3b82f6);
                 color: white; border: none; border-radius: 8px; font-weight: 600;
             }
-            div.stButton > button:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(37,99,235,0.4); }
+            div.stButton > button:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(37,99,235,0.3); }
 
-            /* Tab 样式 */
-            .stTabs [data-baseweb="tab-list"] { gap: 20px; border-bottom: 1px solid #e2e8f0 !important; margin-bottom: 20px; }
-            .stTabs [data-baseweb="tab"] { height: 45px; color: #64748b; font-weight: 600; font-size: 15px; }
-            .stTabs [aria-selected="true"] { color: #2563eb !important; border-bottom: 2px solid #2563eb !important; }
+            /* 6. Tabs */
+            .stTabs [data-baseweb="tab-list"] { gap: 20px; border-bottom: 1px solid #f1f5f9 !important; margin-bottom: 25px; }
+            .stTabs [data-baseweb="tab"] { height: 45px; color: #64748b; font-weight: 600; }
+            .stTabs [aria-selected="true"] { color: #2563eb !important; border-bottom: 3px solid #2563eb !important; }
 
+            /* 隐藏侧边栏 */
             [data-testid="stSidebar"] { display: none; }
         </style>
         """, unsafe_allow_html=True)
 
-    # 3. 系统内页样式 (浅色 + 悬浮控制台)
+    # ============================================================
+    # 💠 系统内页样式 (完美版保留)
+    # ============================================================
     elif mode == "app":
         st.markdown("""
         <style>

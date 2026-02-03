@@ -3,10 +3,9 @@ import streamlit as st
 import time
 from config import ADMIN_ACCOUNT
 from database import init_db, get_user_vip_status, login_user, register_user
-# 引入全量修复后的 utils
 from utils import inject_css, render_wechat_pill, render_sidebar_user_card, render_tech_support_btn
 
-# 页面配置
+# --- 导入视图 ---
 from views.home import view_home
 from views.rewrite import view_rewrite
 from views.brainstorm import view_brainstorm
@@ -22,13 +21,13 @@ init_db()
 # 🔐 登录 / 注册 (左右排版 + 极光设计)
 # ==========================================
 def login_page():
-    # 注入登录专用 CSS
+    # 注入 Auth 样式 (深色极光)
     inject_css(mode="auth")
     
-    # 创建左右两列 (左侧文字 1.2 : 右侧卡片 1)
+    # 左右排版布局
     col_text, col_form = st.columns([1.2, 1], gap="large")
     
-    # --- 左侧：极光文案 ---
+    # 左侧：极光文案
     with col_text:
         st.markdown("<br><br>", unsafe_allow_html=True)
         st.markdown("""
@@ -47,7 +46,7 @@ def login_page():
         </div>
         """, unsafe_allow_html=True)
 
-    # --- 右侧：登录表单 (白色玻璃卡片) ---
+    # 右侧：登录表单 (白色玻璃卡片)
     with col_form:
         st.markdown('<div class="login-card-container">', unsafe_allow_html=True)
         
@@ -94,7 +93,7 @@ def login_page():
                         if success: st.balloons(); st.success("✅ 注册成功！请切换登录");
                         else: st.error(f"⛔ {msg}")
 
-        st.markdown('</div>', unsafe_allow_html=True) # End login-card-container
+        st.markdown('</div>', unsafe_allow_html=True) # End login-card
 
 # ==========================================
 # 主程序
@@ -103,7 +102,7 @@ def main():
     if 'user_phone' not in st.session_state:
         login_page()
     else:
-        # 注入内页 CSS (完美版文案改写样式)
+        # 注入 App 样式 (浅色 + 悬浮控制台)
         inject_css(mode="app")
         
         current_user = st.session_state['user_phone']

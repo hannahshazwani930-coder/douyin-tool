@@ -17,18 +17,17 @@ def generate_invite_code():
 # ==============================================================================
 
 def inject_css(page_id="auth"):
-    # 1. 全局基础 - 隐藏原生组件
+    # 1. 全局基础
     base_css = """
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         html, body, [class*="css"] { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
         
-        /* 隐藏 Streamlit 顶栏 */
+        /* 隐藏原生头部 */
         header[data-testid="stHeader"] { display: none !important; height: 0 !important; visibility: hidden !important; }
-        #MainMenu { display: none !important; }
-        [data-testid="stSidebarCollapsedControl"] { display: none !important; }
         [data-testid="stToolbar"] { display: none !important; }
         [data-testid="stDecoration"] { display: none !important; }
+        #MainMenu { display: none !important; }
         
         /* 侧边栏 */
         [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
@@ -68,35 +67,35 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ============================================================
-    # 🏠 [NEW] 首页 - 视觉欺骗去白框法
+    # 🏠 [NEW] 首页 - 垂直压缩修复版
     # ============================================================
     elif page_id == "home":
         st.markdown("""
         <style>
-            /* 1. 背景同化术：将所有层级背景强制设为灰色，这样就算漏出缝隙也是灰色的 */
-            .stApp, 
-            div[data-testid="stAppViewContainer"], 
-            div[data-testid="block-container"] {
-                background-color: #f8fafc !important;
-            }
+            .stApp { background-color: #f8fafc; }
             
-            /* 2. 容器物理位置修正 */
+            /* 1. 容器清零 */
             div[data-testid="block-container"] { 
                 max-width: 1200px !important; 
-                padding-top: 0px !important; /* 强制归零 */
+                padding-top: 0px !important;
                 padding-left: 40px !important;
                 padding-right: 40px !important;
-                /* 只要背景色一致，这里不需要负太多，稍微提一提对齐即可 */
-                margin-top: -40px !important; 
+                margin-top: 0px !important;
             }
-
-            /* 悬浮岛头图 */
+            
+            /* 🔴 2. 消除组件垂直间距 (关键修复) */
+            /* 这行代码会强制让头图和下方的白色面板紧紧贴在一起，消灭缝隙 */
+            div[data-testid="stVerticalBlock"] { gap: 0 !important; }
+            
+            /* 3. 悬浮岛头图 */
             .home-header-card {
                 background: linear-gradient(120deg, #2563eb, #1d4ed8);
                 border-radius: 20px; padding: 50px 40px; text-align: center; color: white;
                 box-shadow: 0 15px 40px -10px rgba(37, 99, 235, 0.4); 
-                margin-top: 30px; 
-                margin-bottom: 30px; position: relative; overflow: hidden;
+                margin-top: 20px;
+                /* 🔴 增加底部负边距，让下面的元素被吸上来 */
+                margin-bottom: -30px; 
+                position: relative; overflow: hidden; z-index: 1;
             }
             .home-header-card::before {
                 content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
@@ -106,6 +105,16 @@ def inject_css(page_id="auth"):
             @keyframes rotateLight { from {transform: rotate(0deg);} to {transform: rotate(360deg);} }
             .header-title-v3 { font-size: 36px; font-weight: 800; margin-bottom: 10px; position: relative; z-index: 2; }
             .header-sub-v3 { font-size: 15px; opacity: 0.95; font-weight: 400; position: relative; z-index: 2; }
+
+            /* 4. 白色控制台 (核心功能区容器) */
+            .creation-console {
+                background: white; border-radius: 24px; 
+                padding: 40px; 
+                /* 🔴 向上提拉，覆盖可能存在的白条，并制造层级感 */
+                margin-top: 0px; 
+                position: relative; z-index: 2; /* 层级高于头图，确保盖住 */
+                box-shadow: 0 -10px 40px -10px rgba(0,0,0,0.05); /* 顶部阴影 */
+            }
 
             /* 核心功能 */
             .feature-box-v3 {
@@ -128,40 +137,28 @@ def inject_css(page_id="auth"):
             .news-tag-v3 { background: #fff7ed; color: #ea580c; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 4px; border: 1px solid #ffedd5; flex-shrink: 0; }
             .news-text-v3 { font-size: 14px; color: #334155; font-weight: 500; }
 
-            /* 标题与中控 */
+            /* 标题 */
             .section-title-v3 { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
             .section-title-v3::before { content: ""; display: block; width: 4px; height: 18px; background: #3b82f6; border-radius: 2px; }
-            .creation-console { background: white; border-radius: 24px; padding: 10px 40px 40px 40px; margin-top: 0px; }
             div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 10; }
             div.stButton button:hover { background: transparent; }
 
-            /* --- 变现项目 V6 (无复制功能，纯展示) --- */
-            .proj-card-v6 {
-                background: white;
-                border-radius: 16px;
-                border: 1px solid #e2e8f0;
-                padding: 24px;
-                height: 100%;
-                display: flex; flex-direction: column;
-                position: relative; overflow: hidden;
+            /* 变现项目 V7 (无乱码纯净版) */
+            .proj-card-v7 {
+                background: white; border-radius: 16px; border: 1px solid #e2e8f0;
+                padding: 24px; height: 100%; display: flex; flex-direction: column;
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             }
-            .proj-card-v6::before {
-                content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-                background: linear-gradient(90deg, #3b82f6, #06b6d4); opacity: 0.8;
+            .proj-card-v7:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(0,0,0,0.08); border-color: #3b82f6; }
+            .pure-head { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+            .pure-icon { font-size: 24px; }
+            .pure-title { font-size: 16px; font-weight: 700; color: #0f172a; }
+            .pure-desc { font-size: 13px; color: #64748b; line-height: 1.6; flex-grow: 1; margin-bottom: 20px; }
+            .pure-footer {
+                margin-top: auto; padding-top: 15px; border-top: 1px dashed #e2e8f0;
+                color: #64748b; font-size: 12px; display: flex; align-items: center; gap: 6px; font-family: monospace;
             }
-            .proj-card-v6:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(0,0,0,0.08); border-color: #3b82f6; }
-            .proj-head-v6 { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
-            .proj-icon-v6 { font-size: 24px; }
-            .proj-title-v6 { font-size: 16px; font-weight: 700; color: #0f172a; }
-            .proj-desc-v6 { font-size: 13px; color: #64748b; line-height: 1.6; flex-grow: 1; margin-bottom: 20px; }
-            .proj-footer-v6 {
-                background-color: #f8fafc; border-top: 1px dashed #cbd5e1;
-                margin: 0 -24px -24px -24px; padding: 12px 24px;
-                display: flex; justify-content: space-between; align-items: center;
-            }
-            .proj-tag-v6 { background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
-            .proj-wx-v6 { font-family: monospace; font-size: 12px; color: #64748b; font-weight: 600; }
+            .footer-icon { font-size: 14px; }
         </style>
         """, unsafe_allow_html=True)
 
@@ -238,7 +235,7 @@ def inject_css(page_id="auth"):
         </style>
         """, unsafe_allow_html=True)
 
-# --- 组件函数 (保持原样) ---
+# --- 组件函数 ---
 def render_sidebar_user_card(username, vip_info):
     status_bg = "#eff6ff" if "VIP" in vip_info or "管理员" in vip_info else "#f1f5f9"
     st.sidebar.markdown(f"""<div style="background: {status_bg}; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 20px;"><div style="display:flex; align-items:center; margin-bottom: 8px;"><div style="width: 32px; height: 32px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 10px; border: 1px solid #e2e8f0;">👤</div><div style="font-weight: 700; color: #0f172a; font-size: 14px; overflow: hidden; text-overflow: ellipsis;">{username}</div></div><div style="background: white; padding: 6px 10px; border-radius: 6px; font-size: 12px; color: #2563eb; font-weight: 600; border: 1px solid #e2e8f0; text-align: center;">{vip_info}</div></div>""", unsafe_allow_html=True)
@@ -262,4 +259,20 @@ def render_home_project_card(icon, title, desc, tag): return ""
 def render_page_banner(title, desc): st.markdown(f"""<div class="page-banner"><div class="banner-title">{title}</div><div class="banner-desc">{desc}</div></div>""", unsafe_allow_html=True)
 def render_conversion_tip(): st.markdown("""<div class="conversion-tip"><span>💰</span><span><b>商业化建议：</b> 已自动植入私域钩子，预计提升 30% 导流效率。</span></div>""", unsafe_allow_html=True)
 def render_feature_card_home(icon, title, desc): return ""
-# (渲染一体化卡片函数已不再需要，直接在views/home.py中写死HTML)
+
+# 🔴 纯 HTML 渲染卡片 (无乱码，无交互，纯展示)
+def render_pure_html_card(icon, title, desc, wx_id):
+    html = f"""
+    <div class="proj-card-v7">
+        <div class="pure-head">
+            <span class="pure-icon">{icon}</span>
+            <span class="pure-title">{title}</span>
+        </div>
+        <div class="pure-desc">{desc}</div>
+        <div class="pure-footer">
+            <span class="footer-icon">📋</span>
+            <span>资料领取: {wx_id}</span>
+        </div>
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)

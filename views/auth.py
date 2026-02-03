@@ -3,40 +3,43 @@ import streamlit as st
 from database import login_user, register_user
 
 def view_auth():
-    # 1. 页面大背景与标题 (使用原生 markdown，简洁大气)
+    # 1. 页面大标题（原生布局）
+    st.write("\n") # 顶部留空
     st.markdown("<h1 style='text-align: center;'>💠 爆款工场 Pro</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: gray;'>AI 驱动的一站式短视频创作辅助系统</p>", unsafe_allow_html=True)
-    
-    # 顶部留空
+    st.markdown("<p style='text-align: center; color: #666;'>AI 驱动的一站式短视频创作辅助系统</p>", unsafe_allow_html=True)
     st.write("\n")
 
-    # 2. 物理级对齐：通过 columns [1, 2, 1] 锁定中间卡片的宽度
-    # 这里的 2 就是卡片的宽度，数值越小卡片越窄
-    empty_l, card_area, empty_r = st.columns([1, 2, 1])
+    # 2. 控制卡片宽度：[1份侧边, 2.5份卡片, 1份侧边] 比例让卡片适中
+    _, card_col, _ = st.columns([1, 2.5, 1])
 
-    with card_area:
-        # 3. 核心：使用原生带边框的容器，这就是“卡片”本身
+    with card_col:
+        # 3. 镶嵌效果：使用原生带边框容器，这就是你的“卡片”
         with st.container(border=True):
-            # 4. 内部左右排版
-            col_brand, col_form = st.columns([1, 1.2], gap="medium")
+            # 4. 左右排版：左侧品牌介绍 (2份)，右侧交互表单 (3份)
+            left_side, right_side = st.columns([2, 3], gap="large")
 
-            with col_brand:
-                # 左侧品牌视觉
+            with left_side:
                 st.write("\n")
-                st.info("**专业版 2026**")
+                st.info("**专业版 v2026**")
                 st.write("---")
-                st.write("🚀 **全模块化设计**")
-                st.write("🔒 **独立安全存储**")
-                st.write("📈 **抖音深度算法**")
-                st.caption("让创作更有生命力")
-
-            with col_form:
-                # 右侧登录/注册逻辑切换
-                tab_login, tab_reg = st.tabs(["安全登录", "快速注册"])
+                st.markdown("""
+                🚀 **核心功能**
+                - AI 文案改写
+                - 智能海报生成
+                - 数据趋势分析
                 
-                with tab_login:
-                    # 使用原生 form 确保回车自动提交
-                    with st.form("login_native"):
+                🔒 **安全保障**
+                - 模块化独立存储
+                """)
+                st.caption("让创作更高效、更专业")
+
+            with right_side:
+                # 5. 表单切换：原生 Tabs，逻辑极其稳固
+                tab_l, tab_r = st.tabs(["🔒 安全登录", "📝 快速注册"])
+                
+                with tab_l:
+                    # 使用 st.form 确保回车键可以触发登录
+                    with st.form("login_native_final"):
                         u = st.text_input("账号", placeholder="手机号 / 邮箱")
                         p = st.text_input("密码", type="password", placeholder="请输入密码")
                         submit = st.form_submit_button("立即登录", use_container_width=True)
@@ -50,14 +53,14 @@ def view_auth():
                                 else:
                                     st.error(msg)
                             else:
-                                st.warning("请填写完整")
+                                st.warning("请完善登录信息")
 
-                with tab_reg:
-                    with st.form("reg_native"):
-                        ru = st.text_input("设置账号", placeholder="建议用手机号")
+                with tab_r:
+                    with st.form("reg_native_final"):
+                        ru = st.text_input("设置账号", placeholder="手机号或邮箱")
                         rp = st.text_input("设置密码", type="password")
                         ri = st.text_input("邀请码", value="888888")
-                        r_submit = st.form_submit_button("注 册", use_container_width=True)
+                        r_submit = st.form_submit_button("创建账号", use_container_width=True)
                         
                         if r_submit:
                             success, msg = register_user(ru, rp, ri)
@@ -66,7 +69,7 @@ def view_auth():
                             else:
                                 st.error(msg)
 
-    # 5. 底部版权声明
-    st.write("\n" * 3)
+    # 6. 底部版权声明（纯净版）
+    st.write("\n" * 4)
     st.divider()
     st.caption("<center>© 2026 DOUYIN MASTER PRO. ALL RIGHTS RESERVED.</center>", unsafe_allow_html=True)

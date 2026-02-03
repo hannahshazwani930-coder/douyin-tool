@@ -1,8 +1,4 @@
 # main.py
-import streamlit as st
-import time
-from config import ADMIN_ACCOUNT
-from database import init_db, get_user_vip_status, login_user, register_user
 from utils import load_isolated_css, render_wechat_pill
 
 # --- 导入视图 ---
@@ -134,4 +130,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 

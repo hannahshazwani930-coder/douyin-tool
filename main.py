@@ -1,11 +1,12 @@
 # main.py
 import streamlit as st
-import time  # <--- 新增：用于登录跳转延迟
+import time
 from config import ADMIN_ACCOUNT
-from database import init_db, get_user_vip_status
-from utils import inject_css, render_wechat_pill, hash_password # <--- 确保utils里有hash_password
+# 👇 修改点1：从 database 导入 login_user 和 register_user
+from database import init_db, get_user_vip_status, login_user, register_user
+from utils import inject_css, render_wechat_pill
 
-# --- 导入视图 (注意：删除了 views.auth) ---
+# --- 导入视图 ---
 from views.home import view_home
 from views.rewrite import view_rewrite
 from views.brainstorm import view_brainstorm
@@ -22,20 +23,20 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 初始化 ---
+# --- 初始化数据库 ---
 init_db()
 
 # ==========================================
-# 👇 这里是插入的全新登录/注册逻辑
+# 登录 / 注册 页面逻辑
 # ==========================================
 def login_page():
-    # 1. 注入登录页专用 CSS
+    # 注入登录页专用 CSS
     inject_css(mode="auth")
     
-    # 2. 创建左右分栏布局
+    # 创建左右分栏布局
     col_left, col_right = st.columns([1.3, 1], gap="large")
     
-    # --- 左侧：品牌展示与悬停卡片 ---
+    # --- 左侧：品牌展示 ---
     with col_left:
         st.markdown("<br><br>", unsafe_allow_html=True)
         st.markdown("""
@@ -74,7 +75,7 @@ def login_page():
         </div>
         """, unsafe_allow_html=True)
 
-    # --- 右侧：登录/注册 嵌入模块 ---
+    # --- 右侧：登录/注册 表单 ---
     with col_right:
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -91,29 +92,32 @@ def login_page():
                 submit_login = st.form_submit_button("立即登录", use_container_width=True)
                 
                 if submit_login:
-                    # [注意]：此处需要连接你的真实数据库验证逻辑
-                    # 示例逻辑：(你需要替换为 database.verify_user(username, password))
-                    if username and password: 
-                        # 假设验证通过
-                        st.success("登录成功！正在进入系统...")
-                        st.session_state['user_phone'] = username # 核心：设置状态
-                        time.sleep(1)
-                        st.rerun()
+                    if not username or not password:
+                        st.warning("⚠️ 请输入账号和密码")
                     else:
-                        st.error("请输入账号和密码")
+                        # 👇 修改点2：调用数据库真实登录接口
+                        success, msg = login_user(username, password)
+                        
+                        if success:
+                            st.success(f"✅ {msg}，正在跳转...")
+                            st.session_state['user_phone'] = username # 记录登录状态
+                            time.sleep(0.5)
+                            st.rerun()
+                        else:
+                            st.error(f"⛔ {msg}")
 
-        # === 注册模块 (按你要求修改) ===
+        # === 注册模块 ===
         with tab_register:
             with st.form("register_form"):
                 st.write("")
-                # 1. 注册方式：手机或邮箱
-                new_user = st.text_input("手机号 或 邮箱", placeholder="请输入有效的联系方式")
+                # 1. 注册方式
+                new_user = st.text_input("手机号 或 邮箱", placeholder="作为您的唯一登录凭证")
                 
-                # 2. 密码与确认密码
+                # 2. 密码
                 new_pass = st.text_input("设置密码", type="password", placeholder="不少于6位")
                 confirm_pass = st.text_input("确认密码", type="password", placeholder="请再次输入密码")
                 
-                # 3. 邀请码默认值
+                # 3. 邀请码 (默认888888)
                 invite_code = st.text_input("邀请码", value="888888", help="默认为管理员邀请码")
                 
                 submit_reg = st.form_submit_button("创建账号", use_container_width=True)
@@ -121,31 +125,29 @@ def login_page():
                 if submit_reg:
                     if not new_user:
                         st.warning("⚠️ 请输入手机号或邮箱")
-                    elif not new_pass:
-                        st.warning("⚠️ 请设置密码")
+                    elif not new_pass or len(new_pass) < 6:
+                        st.warning("⚠️ 密码长度不能少于6位")
                     elif new_pass != confirm_pass:
                         st.error("⛔ 两次输入的密码不一致")
-                    elif invite_code != "888888":
-                        st.error("⛔ 邀请码无效")
                     else:
-                        # [注意]：此处连接你的数据库注册逻辑
-                        # database.add_user(new_user, hash_password(new_pass))
-                        st.balloons()
-                        st.success("✅ 注册成功！请切换到【登录】页进行登录。")
+                        # 👇 修改点3：调用数据库真实注册接口
+                        # 注意：database.py 会自动处理密码加密和生成新邀请码
+                        success, msg = register_user(new_user, new_pass, invite_code)
+                        
+                        if success:
+                            st.balloons()
+                            st.success(f"✅ {msg}！请点击左侧【账号登录】标签页进行登录。")
+                        else:
+                            st.error(f"⛔ {msg}")
 
-# ==========================================
-# 👆 插入结束
-# ==========================================
 
-
-# --- 主程序 ---
+# --- 主程序入口 ---
 def main():
     # 检查登录状态
     if 'user_phone' not in st.session_state:
-        # view_auth()  <--- 删除这一行
-        login_page() # <--- 替换为新的函数
+        login_page() # 未登录显示登录页
     else:
-        # 登录后的逻辑保持不变
+        # 已登录显示主系统
         inject_css("app")
         
         # --- 侧边栏 ---

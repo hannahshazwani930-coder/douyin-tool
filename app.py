@@ -371,24 +371,24 @@ def page_poster():
     # 🔥 终极美化 Banner 🔥
     st.markdown("""<div class="poster-hero-container"><div class="hero-icon-wrapper">🚀</div><div class="hero-text-content"><h2 class="hero-title">算力全面升级！好莱坞级光影引擎</h2><p class="hero-desc">为了提供极致的渲染效果，海报功能已迁移至性能更强的独立工作站。</p></div></div>""", unsafe_allow_html=True)
     
-    # 🔥 双卡片：增加 Padding 防止切边；阴影微调 🔥
+    # 🔥 极致微调阴影 🔥
     components.html("""
     <!DOCTYPE html><html><head><style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;800&display=swap');
-    body{margin:0;padding:20px;font-family:'Inter',sans-serif;overflow:hidden;background:transparent;} /* Padding 20px 确保悬浮不切 */
+    body{margin:0;padding:20px;font-family:'Inter',sans-serif;overflow:hidden;background:transparent;} 
     .container{display:flex;gap:20px;width:100%;}
     .card{flex:1;border-radius:16px;height:120px;display:flex;flex-direction:column;justify-content:center;align-items:center;cursor:pointer;transition:all 0.3s;box-sizing:border-box;}
     
     .invite{background:#fff;border:2px dashed #cbd5e1;position:relative;}
-    .invite:hover{border-color:#6366f1;background:#f5f3ff;transform:translateY(-5px);box-shadow:0 10px 25px rgba(0,0,0,0.05);}
+    .invite:hover{border-color:#6366f1;background:#f5f3ff;transform:translateY(-5px);box-shadow:0 10px 20px rgba(0,0,0,0.03);} /* 极淡阴影 */
     .invite-label{font-size:13px;color:#64748b;margin-bottom:5px;}
     .invite-code{font-size:28px;font-weight:800;color:#4f46e5;letter-spacing:1px;}
     .invite-hint{font-size:12px;color:#94a3b8;margin-top:5px;opacity:0;transition:0.2s;}
     .invite:hover .invite-hint{opacity:1;color:#6366f1;}
     
-    /* 修正：默认微阴影(0.2)，悬浮柔和阴影 */
-    .jump{flex:1.5;background:linear-gradient(135deg,#4f46e5,#7c3aed);text-decoration:none;box-shadow:0 4px 15px rgba(124,58,237,0.2);border:1px solid rgba(255,255,255,0.15);}
-    .jump:hover{transform:translateY(-5px);box-shadow:0 15px 35px rgba(124,58,237,0.4);filter:brightness(1.05);}
+    /* 修正：阴影降低浓度 50% */
+    .jump{flex:1.5;background:linear-gradient(135deg,#4f46e5,#7c3aed);text-decoration:none;box-shadow:0 4px 15px rgba(124,58,237,0.1);border:1px solid rgba(255,255,255,0.15);}
+    .jump:hover{transform:translateY(-5px);box-shadow:0 8px 20px rgba(124,58,237,0.25);filter:brightness(1.05);}
     .jump-title{color:#fff;font-size:24px;font-weight:800;margin-bottom:4px;text-shadow:0 2px 4px rgba(0,0,0,0.1);}
     .jump-sub{color:rgba(255,255,255,0.9);font-size:14px;}
     </style></head><body>
@@ -423,7 +423,7 @@ def page_poster():
         document.body.removeChild(textArea);
     }
     </script></body></html>
-    """, height=180) # 高度增加到 180px
+    """, height=180) 
     
     st.write("")
     st.markdown("#### 📖 新手保姆级教程")
@@ -431,15 +431,15 @@ def page_poster():
     for idx, (title, desc) in enumerate(steps, 1):
         st.markdown(f"""<div class="step-card"><div class="step-icon">{idx}</div><div class="step-content"><h4>{title}</h4><p>{desc}</p></div></div>""", unsafe_allow_html=True)
 
-    # 🔥 终端：Padding 防切边 + 微阴影修正 🔥
+    # 🔥 终端美化：阴影微调 🔥
     cmd_text = "将原图剧名：[原剧名] 改为：[你的新剧名]"
     components.html(f"""
     <!DOCTYPE html><html><head><style>
     @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@500&display=swap');
     body{{margin:0;padding:20px;font-family:'Fira Code',monospace;overflow:hidden;background:transparent;}}
-    /* 修正：阴影降低不透明度 */
-    .terminal{{background:#0f172a;border-radius:12px;border:1px solid #334155;overflow:hidden;cursor:pointer;transition:0.3s;box-shadow:0 5px 15px rgba(0,0,0,0.15);}}
-    .terminal:hover{{border-color:#6366f1;transform:translateY(-2px);box-shadow:0 15px 35px rgba(0,0,0,0.25);}}
+    /* 修正：阴影降低浓度 */
+    .terminal{{background:#0f172a;border-radius:12px;border:1px solid #334155;overflow:hidden;cursor:pointer;transition:0.3s;box-shadow:0 5px 15px rgba(0,0,0,0.1);}}
+    .terminal:hover{{border-color:#6366f1;transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.15);}}
     .header{{background:#1e293b;padding:10px 16px;display:flex;align-items:center;border-bottom:1px solid #334155;}}
     .dots{{display:flex;gap:6px;margin-right:12px;}}
     .dot{{width:10px;height:10px;border-radius:50%;}}
@@ -470,7 +470,7 @@ def page_poster():
         setTimeout(()=>{{ overlay.style.opacity = '0'; }}, 1500);
     }}
     </script></body></html>
-    """, height=160) # 高度足够
+    """, height=160) 
 
 def page_brainstorm():
     st.markdown("## 💡 爆款选题灵感库"); st.markdown("---")

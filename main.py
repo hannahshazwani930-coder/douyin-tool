@@ -3,7 +3,7 @@ import streamlit as st
 import time
 from config import ADMIN_ACCOUNT
 from database import init_db, get_user_vip_status, login_user, register_user
-from utils import inject_css, render_wechat_pill, render_sidebar_user_card, render_tech_support_btn
+from utils import load_isolated_css, render_wechat_pill
 
 # --- 导入视图 ---
 from views.home import view_home
@@ -73,32 +73,41 @@ def login_page():
 # ==========================================
 def main():
     if 'user_phone' not in st.session_state:
-        login_page()
+        # 🔒 加载登录页独立样式
+        load_isolated_css("auth")
+        view_auth()
     else:
-        current_user = st.session_state['user_phone']
-        is_vip, msg = get_user_vip_status(current_user)
-        
+        # --- 侧边栏与导航 ---
         with st.sidebar:
-            st.markdown("""<div style="display:flex; align-items:center; gap:8px; margin-bottom: 15px;"><div style="background:#2563eb; width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:16px;">P</div><div style="font-weight:700; font-size:16px; color:#0f172a;">爆款工场 Pro</div></div>""", unsafe_allow_html=True)
-            render_sidebar_user_card(current_user, msg)
+            current_user = st.session_state['user_phone']
+            is_vip, msg = get_user_vip_status(current_user)
             
-            menu_opts = ["🏠 首页", "📝 文案改写", "💡 爆款选题", "🎨 海报生成", "🏷️ 账号起名", "👤 个人中心"]
-            if current_user == ADMIN_ACCOUNT: menu_opts.append("🕵️‍♂️ 管理后台")
+            st.markdown(f"👤 用户：{current_user}")
+            if is_vip: 
+                st.success(f"{msg}")
+            else: 
+                st.warning("普通用户")
             
-            default_idx = 0
-            if 'nav_menu_selection' in st.session_state:
-                target = st.session_state['nav_menu_selection']
-                if target in menu_opts: default_idx = menu_opts.index(target)
-                del st.session_state['nav_menu_selection']
-
-            nav = st.radio("导航", menu_opts, index=default_idx, label_visibility="collapsed")
+            ops = ["🏠 首页", "📝 文案改写", "💡 爆款选题", "🎨 海报生成", "🏷️ 账号起名", "👤 个人中心"]
+            if current_user == ADMIN_ACCOUNT:
+                ops.append("🕵️‍♂️ 管理后台")
             
-            st.markdown("<div style='flex-grow:1; min-height: 20px;'></div>", unsafe_allow_html=True)
+            nav = st.radio("导航", ops, label_visibility="collapsed")
             st.markdown("---")
-            render_tech_support_btn("TG777188")
+            
+            # 使用新版的微信组件
+            render_wechat_pill("🎁 领取资料", "W7774X")
+            
             if st.button("🚪 退出登录", use_container_width=True):
                 del st.session_state['user_phone']
                 st.rerun()
+
+        # --- 页面路由与隔离加载 ---
+        if nav == "🏠 首页":
+            load_isolated_css("home")
+            # 这里调用您 views/home.py 里的函数
+            from views.home import view_home
+            view_home()
 
         # 🔴 每一个页面都拥有独立的 CSS ID
         if nav == "🏠 首页":
@@ -125,3 +134,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

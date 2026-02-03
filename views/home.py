@@ -1,24 +1,35 @@
 # views/home.py
 import streamlit as st
-from utils import render_cta_wechat, render_home_project_card
+from utils import render_cta_wechat, render_home_project_card, render_feature_nav_card
+from database import get_active_announcements
 
 def view_home():
-    # 顶部欢迎语
-    st.markdown("### 👋 欢迎来到抖音爆款工场 Pro")
-    st.markdown("这里是您的全能创作工作台，请从左侧选择功能开始工作。", unsafe_allow_html=True)
+    st.markdown("### 👋 欢迎使用抖音爆款工场 Pro")
     
+    # 1. 功能展示区 (Requirement 4)
+    st.markdown("<div style='margin-bottom:10px; font-weight:600; color:#64748b;'>🚀 核心功能</div>", unsafe_allow_html=True)
+    c1, c2, c3, c4 = st.columns(4)
+    with c1: 
+        st.markdown(render_feature_nav_card("📝", "文案改写"), unsafe_allow_html=True)
+    with c2:
+        st.markdown(render_feature_nav_card("💡", "爆款选题"), unsafe_allow_html=True)
+    with c3:
+        st.markdown(render_feature_nav_card("🎨", "海报生成"), unsafe_allow_html=True)
+    with c4:
+        st.markdown(render_feature_nav_card("🏷️", "账号起名"), unsafe_allow_html=True)
+        
     st.markdown("---")
     
-    # --- 核心项目切片 (Requirement 3) ---
+    # 2. 热门变现项目
     st.markdown("<div style='margin-bottom:15px; font-weight:600; color:#64748b;'>🔥 热门变现项目</div>", unsafe_allow_html=True)
-    
     col1, col2, col3 = st.columns(3)
     
+    # Requirement 3: 修正御灵AI介绍
     with col1:
         st.markdown(render_home_project_card(
-            "🤖", "御灵 AI 矩阵",
-            "基于大模型的全自动矩阵托管系统。支持多账号批量发布、AI自动回复与粉丝互动，实现无人值守的流量变现。",
-            "自动化 / 矩阵营销"
+            "🤖", "御灵 AI 协同",
+            "人机协同创作工作流。专注于漫次元、动态漫及拟真人视频制作，一键生成高质量动漫内容，赋能二次元赛道变现。",
+            "AI动漫 / 人机协同"
         ), unsafe_allow_html=True)
         
     with col2:
@@ -35,6 +46,15 @@ def view_home():
             "TikTok / 跨境电商"
         ), unsafe_allow_html=True)
         
-    # --- 底部领取资料 (Requirement 3) ---
-    # 调用 utils 里的高级 CTA 组件
+    # 3. 领取资料 (Requirement 5)
     render_cta_wechat("W7774X")
+    
+    # 4. 公告区 (Requirement 5)
+    st.markdown("<div style='margin-top:30px; margin-bottom:10px; font-weight:600; color:#64748b;'>📢 系统公告</div>", unsafe_allow_html=True)
+    anns = get_active_announcements()
+    if anns:
+        for ann in anns:
+            content, time = ann
+            st.info(f"**[{str(time)[:10]}]** {content}")
+    else:
+        st.caption("暂无最新公告")

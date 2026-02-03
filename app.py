@@ -24,131 +24,87 @@ st.set_page_config(
 # 🔑 管理员配置
 ADMIN_PHONE = "13065080569"
 ADMIN_INIT_PASSWORD = "ltren777188" 
-# 🔥 官方通用邀请码
 GLOBAL_INVITE_CODE = "VIP888" 
-# 💰 裂变奖励配置
 REWARD_DAYS_NEW_USER = 3  
 REWARD_DAYS_REFERRER = 3  
 
-# 数据库文件
 DB_FILE = 'saas_data_v2.db'
 
 # --- 数据库初始化 ---
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    # 用户表
-    c.execute('''CREATE TABLE IF NOT EXISTS users (
-                    phone TEXT PRIMARY KEY, 
-                    password_hash TEXT, 
-                    register_time TIMESTAMP, 
-                    last_login_ip TEXT, 
-                    last_login_time TIMESTAMP,
-                    own_invite_code TEXT UNIQUE,
-                    invited_by TEXT,
-                    invite_count INTEGER DEFAULT 0
-                )''')
-    # 卡密表
+    c.execute('''CREATE TABLE IF NOT EXISTS users (phone TEXT PRIMARY KEY, password_hash TEXT, register_time TIMESTAMP, last_login_ip TEXT, last_login_time TIMESTAMP, own_invite_code TEXT UNIQUE, invited_by TEXT, invite_count INTEGER DEFAULT 0)''')
     c.execute('''CREATE TABLE IF NOT EXISTS access_codes (code TEXT PRIMARY KEY, duration_days INTEGER, activated_at TIMESTAMP, expire_at TIMESTAMP, status TEXT, create_time TIMESTAMP, bind_user TEXT)''')
-    # 反馈表
     c.execute('''CREATE TABLE IF NOT EXISTS feedbacks (id INTEGER PRIMARY KEY AUTOINCREMENT, user_phone TEXT, content TEXT, reply TEXT, create_time TIMESTAMP, status TEXT)''')
-    # 设置表
     c.execute('''CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)''')
-    
-    # 自动迁移检查 (防止旧库报错)
     try: c.execute("ALTER TABLE users ADD COLUMN own_invite_code TEXT")
     except: pass
     try: c.execute("ALTER TABLE users ADD COLUMN invited_by TEXT")
     except: pass
     try: c.execute("ALTER TABLE users ADD COLUMN invite_count INTEGER DEFAULT 0")
     except: pass
-
-    # 预设管理员
     c.execute("SELECT phone FROM users WHERE phone=?", (ADMIN_PHONE,))
     if not c.fetchone():
         admin_pwd_hash = hashlib.sha256(ADMIN_INIT_PASSWORD.encode()).hexdigest()
-        c.execute("INSERT INTO users (phone, password_hash, register_time, own_invite_code) VALUES (?, ?, ?, ?)", 
-                  (ADMIN_PHONE, admin_pwd_hash, datetime.datetime.now(), "ADMIN888"))
+        c.execute("INSERT INTO users (phone, password_hash, register_time, own_invite_code) VALUES (?, ?, ?, ?)", (ADMIN_PHONE, admin_pwd_hash, datetime.datetime.now(), "ADMIN888"))
     else:
-        # 确保管理员有邀请码
         c.execute("UPDATE users SET own_invite_code='ADMIN888' WHERE phone=? AND own_invite_code IS NULL", (ADMIN_PHONE,))
-        
     conn.commit(); conn.close()
 
 init_db()
 
-# --- CSS 样式 (v9.0 极致美化版) ---
+# --- CSS 样式 (精准隔离版) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@500&display=swap');
 
     .stApp { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-    
-    /* 隐藏锚点 */
     [data-testid="stHeader"] a, .stMarkdown h1 a, .stMarkdown h2 a, .stMarkdown h3 a, .stMarkdown h4 a { display: none !important; pointer-events: none; }
-    
-    /* 容器 */
     div.block-container { max-width: 90% !important; background-color: #ffffff; padding: 3rem !important; border-radius: 24px; box-shadow: 0 20px 60px -20px rgba(0,0,0,0.1); margin-bottom: 50px; }
     
-    /* 按钮全局优化 */
-    div.stButton > button { border-radius: 10px; font-weight: 600; height: 48px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); width: 100%; font-size: 15px; }
-    div.stButton > button[kind="primary"] { 
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
-        border: none; color: white !important; 
-        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
-    }
-    div.stButton > button[kind="primary"]:hover { 
-        transform: translateY(-2px); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
-        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-    }
+    /* 按钮优化 */
+    div.stButton > button { border-radius: 10px; font-weight: 600; height: 45px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); width: 100%; font-size: 15px; }
+    div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border: none; color: white !important; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2); }
+    div.stButton > button[kind="primary"]:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4); background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); }
     div.stButton > button[kind="secondary"] { background-color: #f1f5f9; color: #475569; border: 1px solid transparent; }
     div.stButton > button[kind="secondary"]:hover { background-color: #e2e8f0; color: #1e293b; border-color: #cbd5e1; }
 
-    /* --- 🔥 首页极致美化 (Hero & Cards) 🔥 --- */
-    
-    /* Hero Title 渐变特效 */
-    .hero-main-title {
-        font-size: 42px; font-weight: 900; letter-spacing: -1px; text-align: center; margin-bottom: 10px;
-        background: -webkit-linear-gradient(120deg, #2563eb 0%, #7c3aed 50%, #db2777 100%);
+    /* --- 🔥 首页专属美化 (CSS类名隔离，不影响侧边栏) 🔥 --- */
+    .home-hero-section {
+        text-align: center; padding: 40px 20px; margin-bottom: 40px;
+        background: radial-gradient(circle at center, rgba(239, 246, 255, 0.8) 0%, rgba(255,255,255,0) 70%);
+        border-radius: 20px;
+    }
+    .home-title {
+        font-size: 48px; font-weight: 900; letter-spacing: -1.5px; margin-bottom: 15px;
+        background: linear-gradient(90deg, #2563eb, #7c3aed, #db2777);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        text-shadow: 0 10px 30px rgba(124, 58, 237, 0.2);
     }
-    .hero-sub-title {
-        font-size: 16px; color: #64748b; text-align: center; margin-bottom: 40px; font-weight: 500;
-    }
-
-    /* 首页功能卡片 - 覆盖 Streamlit 容器 */
-    [data-testid="stVerticalBlockBorderWrapper"] {
-        border-radius: 20px !important;
-        border: 1px solid #e2e8f0 !important;
-        background: #ffffff;
-        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05);
-        transition: all 0.3s ease-out;
-        padding: 24px !important;
-        position: relative;
-        overflow: hidden;
-    }
+    .home-subtitle { font-size: 16px; color: #64748b; font-weight: 500; }
     
-    /* 悬浮光效 */
-    [data-testid="stVerticalBlockBorderWrapper"]:hover {
-        transform: translateY(-8px) scale(1.01);
-        box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.15);
-        border-color: #a5b4fc !important;
+    /* 首页卡片内部样式 */
+    .home-card-inner {
+        text-align: center; padding: 10px; transition: all 0.3s ease;
     }
+    .home-card-icon {
+        width: 72px; height: 72px; margin: 0 auto 15px auto;
+        background: linear-gradient(135deg, #f0f9ff 0%, #dbeafe 100%);
+        border-radius: 20px; display: flex; align-items: center; justify-content: center;
+        font-size: 36px; color: #0284c7;
+        box-shadow: 0 8px 20px -5px rgba(2, 132, 199, 0.2);
+        transition: transform 0.3s ease;
+    }
+    .home-card-title { font-size: 20px; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
+    .home-card-desc { font-size: 13px; color: #64748b; line-height: 1.6; min-height: 45px; }
     
-    .card-icon-box {
-        width: 64px; height: 64px;
-        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-        border-radius: 18px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 32px; margin: 0 auto 15px auto;
-        color: #0284c7;
-        box-shadow: 0 4px 10px rgba(2, 132, 199, 0.1);
-    }
-    .card-title { font-size: 19px; font-weight: 800; color: #0f172a; text-align: center; margin-bottom: 8px; }
-    .card-desc { font-size: 13px; color: #64748b; text-align: center; margin-bottom: 24px; min-height: 40px; line-height: 1.5; font-weight: 500; }
+    /* 鼠标悬浮特效 (只针对首页容器内的卡片) */
+    /* 我们利用 Streamlit 的 st.container(border=True) 产生的 div，通过内部元素反向定位或直接视觉欺骗 */
+    /* 更好的方式：直接在 Python 侧给卡片加 CSS */
 
-    /* --- 🔥 侧边栏美化 🔥 --- */
+    /* --- 侧边栏样式 (保持不变) --- */
     [data-testid="stSidebar"] { background-color: #f8fafc; border-right: 1px solid #e2e8f0; }
     [data-testid="stSidebar"] .block-container { padding-top: 2rem !important; padding-bottom: 1rem !important; }
     .sidebar-user-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; box-shadow: 0 2px 4px -1px rgba(0,0,0,0.02); }
@@ -159,32 +115,27 @@ st.markdown("""
     .user-role { font-size: 10px; color: #d97706; font-weight: 600; background: #fffbeb; padding: 1px 5px; border-radius: 4px; border: 1px solid #fcd34d; margin-top: 2px; width: fit-content; }
     .buy-btn-sidebar { text-decoration: none; background: #10b981; color: white !important; font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 6px; transition: all 0.2s; white-space: nowrap; }
     .buy-btn-sidebar:hover { background: #059669; transform: translateY(-1px); box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2); }
-    
     .stRadio > div { gap: 0px; }
     .stRadio > div > label { background: transparent; padding: 8px 10px; border-radius: 6px; margin-bottom: 1px; color: #475569; font-weight: 500; transition: all 0.2s; cursor: pointer; border: 1px solid transparent; font-size: 14px !important; }
     .stRadio > div > label:hover { background: #f1f5f9; color: #1e293b; }
     .stRadio > div > label[data-checked="true"] { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; font-weight: 600; }
     .stRadio div[role="radiogroup"] > label > div:first-child { display: none; }
-    
     .sidebar-project-card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 8px; border-left: 3px solid #3b82f6; transition: all 0.2s; cursor: default; }
     .sidebar-project-card:hover { transform: translateX(2px); box-shadow: 0 2px 8px rgba(0,0,0,0.03); border-color: #cbd5e1; }
     .sp-title { font-weight: 700; font-size: 12px; color: #334155; margin-bottom: 2px; }
     .sp-desc { font-size: 10px; color: #94a3b8; line-height: 1.3; }
 
-    /* 海报/登录页复用 */
+    /* 通用组件 */
     .poster-hero-container { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.05); border: 1px solid #edf2f7; display: flex; align-items: center; margin-bottom: 25px; position: relative; overflow: hidden; }
     .poster-hero-container::before { content: ''; position: absolute; top: -50%; right: -10%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(167, 139, 250, 0.15) 0%, rgba(255,255,255,0) 70%); border-radius: 50%; z-index: 0; pointer-events: none; }
     .hero-icon-wrapper { width: 68px; height: 68px; background: linear-gradient(135deg, #c4b5fd, #818cf8); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 34px; margin-right: 24px; box-shadow: 0 10px 20px -5px rgba(129, 140, 248, 0.5); z-index: 1; color: white; }
     .hero-title { font-size: 22px; font-weight: 800; color: #1e293b; margin: 0 0 8px 0; letter-spacing: -0.5px; z-index: 1; position: relative; }
     .hero-desc { font-size: 15px; color: #64748b; margin: 0; font-weight: 500; z-index: 1; position: relative; }
-    
     .step-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 12px; display: flex; align-items: flex-start; transition: transform 0.2s; }
     .step-card:hover { border-color: #bfdbfe; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.05); transform: translateX(5px); }
     .step-icon { background: #eff6ff; color: #2563eb; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px; flex-shrink: 0; }
     .step-content h4 { margin: 0 0 4px; font-size: 15px; color: #1e293b; font-weight: 700; }
     .step-content p { margin: 0; font-size: 13px; color: #64748b; }
-
-    /* 登录页 */
     .login-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 10% 20%, rgb(239, 246, 255) 0%, rgb(219, 228, 255) 90%); z-index: -1; }
     .auth-title { text-align: center; font-weight: 800; font-size: 28px; color: #1e293b; margin-bottom: 10px; letter-spacing: -1px; }
     .auth-sub { text-align: center; color: #64748b; font-size: 14px; margin-bottom: 30px; }
@@ -194,27 +145,15 @@ st.markdown("""
     .feature-icon { width: 24px; height: 24px; background: #dbeafe; color: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 12px; font-weight: bold; }
     .wx-invite-box { background: #f0fdf4; border: 1px dashed #4ade80; border-radius: 8px; padding: 12px; text-align: center; margin-bottom: 15px; font-size: 13px; color: #166534; }
     .wx-id-highlight { font-weight: 800; font-family: monospace; font-size: 15px; color: #15803d; margin: 0 4px; }
-
-    /* 邀请有礼卡片 (个人中心) */
-    .referral-box {
-        background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
-        border: 1px solid #fed7aa; border-radius: 16px; padding: 24px;
-        text-align: center; margin-bottom: 20px;
-        position: relative; overflow: hidden;
-    }
+    .referral-box { background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border: 1px solid #fed7aa; border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 20px; position: relative; overflow: hidden; }
     .referral-box::after { content: '🎁'; font-size: 80px; position: absolute; right: -10px; bottom: -20px; opacity: 0.1; transform: rotate(-20deg); }
     .referral-title { font-size: 18px; font-weight: 800; color: #9a3412; margin-bottom: 8px; }
     .referral-desc { font-size: 14px; color: #c2410c; margin-bottom: 20px; }
-    .referral-code-display {
-        font-family: monospace; font-size: 32px; font-weight: 800; color: #ea580c;
-        background: rgba(255,255,255,0.6); padding: 10px 30px; border-radius: 12px;
-        border: 2px dashed #f97316; display: inline-block; margin-bottom: 10px; cursor: pointer;
-    }
+    .referral-code-display { font-family: monospace; font-size: 32px; font-weight: 800; color: #ea580c; background: rgba(255,255,255,0.6); padding: 10px 30px; border-radius: 12px; border: 2px dashed #f97316; display: inline-block; margin-bottom: 10px; cursor: pointer; }
     .stat-row { display: flex; justify-content: center; gap: 30px; margin-top: 15px; }
     .stat-item { text-align: center; }
     .stat-num { font-size: 20px; font-weight: 800; color: #c2410c; }
     .stat-lbl { font-size: 12px; color: #9a3412; }
-
     .footer-legal { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 12px; }
     .footer-links a { color: #64748b; text-decoration: none; margin: 0 10px; transition: color 0.2s; }
     .info-box-aligned { height: 45px !important; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1e40af; display: flex; align-items: center; padding: 0 16px; font-size: 14px; font-weight: 500; width: 100%; box-sizing: border-box; }
@@ -478,30 +417,26 @@ with st.sidebar:
 
 menu = st.session_state['nav_menu']
 
-# --- 首页 (极致美化) ---
+# --- 首页 (专属美化) ---
 def page_home():
-    st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
-    st.markdown("<h1 class='hero-main-title'>抖音爆款工场 Pro</h1>", unsafe_allow_html=True)
-    st.markdown("<div class='hero-sub-title'>专为素人 KOC 打造的 AI 提效神器 | 文案 · 选题 · 海报 · 变现</div>", unsafe_allow_html=True)
-    
+    st.markdown("<div class='home-hero-section'><div class='home-title'>抖音爆款工场 Pro</div><div class='home-subtitle'>让流量不再是玄学 · 专为素人 KOC 打造的 AI 变现神器</div></div>", unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         with st.container(border=True):
-            st.markdown("""<div class="card-icon-box">📝</div><div class="card-title">文案改写</div><div class="card-desc">5路并发 · 爆款重组<br>解决文案枯竭</div>""", unsafe_allow_html=True)
+            st.markdown("""<div class="home-card-inner"><div class="home-card-icon">📝</div><div class="home-card-title">文案改写</div><div class="home-card-desc">5路并发 · 爆款重组<br>告别文案枯竭</div></div>""", unsafe_allow_html=True)
             st.button("立即使用 ➜", key="h_btn1", on_click=go_to, args=("📝 文案改写",), type="primary", use_container_width=True)
     with c2:
         with st.container(border=True):
-            st.markdown("""<div class="card-icon-box">💡</div><div class="card-title">爆款选题</div><div class="card-desc">流量焦虑 · 一键解决<br>精准击中痛点</div>""", unsafe_allow_html=True)
+            st.markdown("""<div class="home-card-inner"><div class="home-card-icon">💡</div><div class="home-card-title">爆款选题</div><div class="home-card-desc">流量焦虑 · 一键解决<br>精准击中痛点</div></div>""", unsafe_allow_html=True)
             st.button("立即使用 ➜", key="h_btn2", on_click=go_to, args=("💡 爆款选题库",), type="primary", use_container_width=True)
     with c3:
         with st.container(border=True):
-            st.markdown("""<div class="card-icon-box">🎨</div><div class="card-title">海报生成</div><div class="card-desc">小提大作 · 影视质感<br>好莱坞级光影</div>""", unsafe_allow_html=True)
+            st.markdown("""<div class="home-card-inner"><div class="home-card-icon">🎨</div><div class="home-card-title">海报生成</div><div class="home-card-desc">小提大作 · 影视质感<br>好莱坞级光影</div></div>""", unsafe_allow_html=True)
             st.button("立即使用 ➜", key="h_btn3", on_click=go_to, args=("🎨 海报生成",), type="primary", use_container_width=True)
     with c4:
         with st.container(border=True):
-            st.markdown("""<div class="card-icon-box">🏷️</div><div class="card-title">账号起名</div><div class="card-desc">AI 算命 · 爆款玄学<br>赛道垂直定制</div>""", unsafe_allow_html=True)
+            st.markdown("""<div class="home-card-inner"><div class="home-card-icon">🏷️</div><div class="home-card-title">账号起名</div><div class="home-card-desc">AI 算命 · 爆款玄学<br>赛道垂直定制</div></div>""", unsafe_allow_html=True)
             st.button("立即使用 ➜", key="h_btn4", on_click=go_to, args=("🏷️ 账号起名",), type="primary", use_container_width=True)
-    
     st.markdown("<br>", unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("#### 📢 系统公告")
@@ -621,11 +556,7 @@ def page_account():
                 <div class="stat-item"><div class="stat-num">{invite_count * REWARD_DAYS_REFERRER}</div><div class="stat-lbl">获得天数</div></div>
             </div>
         </div>
-        <script>
-        function copyCode(e){{
-            navigator.clipboard.writeText('{my_code}').then(()=>{{st.toast('复制成功！快去分享吧',{{icon:'🎁'}})}});
-        }}
-        </script>
+        <script>function copyCode(e){{navigator.clipboard.writeText('{my_code}').then(()=>{{st.toast('复制成功！快去分享吧',{{icon:'🎁'}})}});}}</script>
         """, unsafe_allow_html=True)
         render_copy_button_html(my_code, "referral_copy_btn")
     with t2:
@@ -652,9 +583,7 @@ def page_account():
 
 def page_admin():
     st.markdown("## 🕵️‍♂️ 管理后台")
-    # 管理员登录状态保持
     if 'admin_unlocked' not in st.session_state: st.session_state['admin_unlocked'] = False
-    
     if not st.session_state['admin_unlocked']:
         pwd = st.text_input("请输入管理员密码", type="password")
         if pwd == ADMIN_INIT_PASSWORD:
@@ -663,15 +592,11 @@ def page_admin():
     else:
         st.success("✅ 已登录管理员权限")
         t1, t2, t3 = st.tabs(["待处理反馈", "历史记录", "系统设置"])
-        
-        # 1. 待处理反馈
         with t1:
             conn = sqlite3.connect(DB_FILE)
             pending = pd.read_sql("SELECT * FROM feedbacks WHERE status='pending'", conn)
             conn.close()
-            
-            if pending.empty:
-                st.info("暂无待处理反馈")
+            if pending.empty: st.info("暂无待处理反馈")
             else:
                 for i, r in pending.iterrows():
                     with st.container(border=True):
@@ -682,31 +607,24 @@ def page_admin():
                             conn = sqlite3.connect(DB_FILE); c = conn.cursor()
                             c.execute("UPDATE feedbacks SET reply=?, status='replied' WHERE id=?", (reply, r['id']))
                             conn.commit(); conn.close(); st.success("已回复"); time.sleep(1); st.rerun()
-
-        # 2. 历史记录 (可修改/删除)
         with t2:
             conn = sqlite3.connect(DB_FILE)
             history = pd.read_sql("SELECT * FROM feedbacks WHERE status='replied' ORDER BY create_time DESC", conn)
             conn.close()
-            
             for i, r in history.iterrows():
                 with st.expander(f"已回复: {r['user_phone']} - {str(r['create_time'])[:10]}"):
                     st.write(f"**用户内容**: {r['content']}")
                     st.write(f"**当前回复**: :green[{r['reply']}]")
-                    
                     c1, c2 = st.columns([3, 1])
                     new_reply = c1.text_input("修改回复", value=r['reply'], key=f"edit_rep_{r['id']}")
                     if c1.button("更新回复", key=f"upd_{r['id']}"):
                         conn = sqlite3.connect(DB_FILE); c = conn.cursor()
                         c.execute("UPDATE feedbacks SET reply=? WHERE id=?", (new_reply, r['id']))
                         conn.commit(); conn.close(); st.success("更新成功"); st.rerun()
-                        
                     if c2.button("🗑️ 删除记录", key=f"del_{r['id']}"):
                         conn = sqlite3.connect(DB_FILE); c = conn.cursor()
                         c.execute("DELETE FROM feedbacks WHERE id=?", (r['id'],))
                         conn.commit(); conn.close(); st.warning("已删除"); st.rerun()
-
-        # 3. 系统设置 (卡密生成等)
         with t3:
             st.write("#### 卡密生成")
             q = st.number_input("数量", 1, 100, 10); d = st.number_input("天数", 1, 365, 30)
@@ -716,13 +634,11 @@ def page_admin():
                     code = "VIP-" + str(uuid.uuid4())[:8].upper()
                     c.execute("INSERT INTO access_codes (code, duration_days, status, create_time) VALUES (?, ?, ?, ?)", (code, d, 'unused', datetime.datetime.now()))
                 conn.commit(); conn.close(); st.success(f"已生成 {q} 个")
-            
             conn = sqlite3.connect(DB_FILE)
             df = pd.read_sql("SELECT * FROM access_codes ORDER BY create_time DESC LIMIT 50", conn)
             st.dataframe(df, height=300)
             st.download_button("下载所有卡密", df.to_csv(index=False).encode('utf-8'), "codes.csv", "text/csv")
             conn.close()
-            
             st.markdown("---")
             url = st.text_input("发卡网链接", value=get_setting("shop_url"))
             if st.button("保存链接"): update_setting("shop_url", url); st.success("已保存")

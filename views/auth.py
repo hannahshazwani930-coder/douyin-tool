@@ -3,92 +3,102 @@ import streamlit as st
 from database import login_user, register_user
 
 def view_auth():
-    # 彻底隐藏所有 Streamlit 顶部冗余信息和表单提示的“黑科技”
+    # --- 1. 深度精致化 CSS (仅针对表单提示和基础美化) ---
     st.markdown("""
         <style>
-            /* 隐藏表单底部的 "Press Enter to submit" 提示 */
-            .stForm p { display: none !important; }
-            /* 隐藏顶部工具栏 */
+            /* 仅隐藏表单底部的 Press Enter 提示，不影响按钮 */
+            [data-testid="stForm"] p { display: none !important; }
+            /* 隐藏顶部冗余 */
             header, [data-testid="stHeader"] { visibility: hidden; }
+            /* 调优 Tab 字体 */
+            button[data-baseweb="tab"] { font-size: 16px !important; font-weight: 600 !important; }
         </style>
     """, unsafe_allow_html=True)
 
     st.write("\n" * 2)
 
-    # 1. 物理宽度锁定：比例 [1.2, 3.2, 1.2] 营造紧凑卡片感
-    _, card_container, _ = st.columns([1.1, 3.2, 1.1])
+    # --- 2. 比例控制：[1.1, 3.0, 1.1] 营造呼吸感 ---
+    _, card_container, _ = st.columns([1.1, 3.0, 1.1])
 
     with card_container:
-        # 2. 悬浮感卡片：使用原生边框容器
         with st.container(border=True):
-            # 3. 左右排版：左侧吸粉区 (45%)，右侧交互区 (55%)
-            col_left, col_right = st.columns([1.8, 2.2], gap="large")
+            # 左右分栏：左侧精致卖点 (42%)，右侧交互表单 (58%)
+            col_left, col_right = st.columns([1, 1.4], gap="large")
 
             with col_left:
-                # --- 左边：吸引眼球的文案 ---
+                # --- 左边：紧凑精致的文案排版 ---
                 st.write("\n")
-                st.markdown("<h2 style='color:#1E3A8A; margin-bottom:0;'>💠 爆款工场 Pro</h2>", unsafe_allow_html=True)
-                st.markdown("<p style='color:#64748B; font-weight:500;'>每一秒，都在创造爆款</p>", unsafe_allow_html=True)
-                st.write("---")
+                st.markdown("<h2 style='color:#1E3A8A; margin-bottom:5px; font-size: 28px;'>💠 爆款工场</h2>", unsafe_allow_html=True)
+                st.markdown("<p style='color:#94A3B8; font-size: 14px; margin-bottom: 25px;'>抖音创作者的 AI 军师</p>", unsafe_allow_html=True)
                 
-                # 核心卖点点阵
-                st.markdown("""
-                <div style='line-height:2.2;'>
-                    <span style='font-size:18px;'>🚀 <b>AI 灵感引擎</b></span><br>
-                    <span style='font-size:13px; color:#666;'>告别枯竭，一键生成百万级爆款脚本</span><br><br>
-                    <span style='font-size:18px;'>📊 <b>算法深挖</b></span><br>
-                    <span style='font-size:13px; color:#666;'>实时拆解抖音流量池，锁定下一个热门</span><br><br>
-                    <span style='font-size:18px;'>⚡ <b>极速创作</b></span><br>
-                    <span style='font-size:13px; color:#666;'>从创意到成品，效率提升 10 倍以上</span>
-                </div>
-                """, unsafe_allow_html=True)
+                # 精致点阵图标排版
+                features = [
+                    ("🎯", "精准选题", "通过算法捕捉流量蓝海"),
+                    ("✍️", "爆款文案", "AI 一键重构高转化脚本"),
+                    ("⚡", "效率革命", "创作成本降低 90% 以上")
+                ]
+                
+                for icon, title, desc in features:
+                    st.markdown(f"""
+                        <div style='margin-bottom: 20px;'>
+                            <div style='display: flex; align-items: center; gap: 10px;'>
+                                <span style='font-size: 20px;'>{icon}</span>
+                                <b style='font-size: 16px; color: #334155;'>{title}</b>
+                            </div>
+                            <div style='font-size: 12px; color: #64748B; margin-left: 32px;'>{desc}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
                 
                 st.write("\n")
-                st.info("💡 已有 5000+ 创作者加入")
+                st.success("已助力 10k+ 内容出圈")
 
             with col_right:
                 # --- 右边：登录/注册交互 ---
-                tab_login, tab_reg = st.tabs(["🔒 安全登录", "✨ 开启创作"])
+                tab_login, tab_reg = st.tabs(["安全登录", "开启创作"])
                 
                 with tab_login:
-                    with st.form("login_form", border=False):
+                    # 使用原生 form，并确保按钮逻辑正确
+                    with st.form("login_form_final", border=False):
+                        st.write("\n")
                         acc = st.text_input("账号", placeholder="手机号 / 邮箱", label_visibility="collapsed")
                         pwd = st.text_input("密码", type="password", placeholder="请输入密码", label_visibility="collapsed")
                         
-                        if st.form_submit_button("立 即 登 录", use_container_width=True):
+                        # 核心：确保按钮在表单内
+                        submit = st.form_submit_button("登 录", use_container_width=True)
+                        if submit:
                             if acc and pwd:
                                 success, msg = login_user(acc, pwd)
                                 if success:
                                     st.session_state['user_phone'] = acc
                                     st.rerun()
                                 else: st.error(msg)
-                            else: st.warning("请填写完整信息")
+                            else: st.warning("请完善信息")
 
                 with tab_reg:
-                    with st.form("register_form", border=False):
-                        r_acc = st.text_input("设置账号", placeholder="建议使用手机号", label_visibility="collapsed")
-                        r_pwd = st.text_input("设置密码", type="password", placeholder="设置登录密码", label_visibility="collapsed")
-                        r_pwd_confirm = st.text_input("确认密码", type="password", placeholder="请再次输入密码", label_visibility="collapsed")
-                        r_inv = st.text_input("邀请码", value="888888", placeholder="请输入邀请码", label_visibility="collapsed")
+                    with st.form("reg_form_final", border=False):
+                        st.write("\n")
+                        r_acc = st.text_input("账号", placeholder="建议使用手机号", label_visibility="collapsed")
+                        r_pwd = st.text_input("密码", type="password", placeholder="设置 6-16 位密码", label_visibility="collapsed")
+                        r_pwd_2 = st.text_input("确认密码", type="password", placeholder="再次确认密码", label_visibility="collapsed")
+                        r_inv = st.text_input("邀请码", value="888888", label_visibility="collapsed")
                         
-                        if st.form_submit_button("免 费 注 册", use_container_width=True):
-                            if not r_acc or not r_pwd:
-                                st.warning("请填写账号和密码")
-                            elif r_pwd != r_pwd_confirm:
-                                st.error("两次输入的密码不一致")
+                        # 按钮逻辑
+                        reg_submit = st.form_submit_button("注 册", use_container_width=True)
+                        if reg_submit:
+                            if r_pwd != r_pwd_2:
+                                st.error("两次密码输入不一致")
+                            elif not r_acc or not r_pwd:
+                                st.warning("信息不完整")
                             else:
                                 success, msg = register_user(r_acc, r_pwd, r_inv)
-                                if success:
-                                    st.success("注册成功！请切换至登录页")
-                                else:
-                                    st.error(msg)
+                                if success: st.success("注册成功！请登录")
+                                else: st.error(msg)
 
-    # 4. 底部居中免责声明
-    st.write("\n" * 2)
+    # --- 3. 底部剧中声明 ---
+    st.write("\n" * 4)
     st.markdown("""
-        <div style="text-align: center; color: #BBB; font-size: 11px; font-family: sans-serif;">
-            <hr style="border:0.5px solid #EEE; width:200px; margin: 10px auto;">
-            使用即代表同意《用户协议》与《隐私保护政策》<br>
-            © 2026 DOUYIN MASTER PRO. ALL RIGHTS RESERVED.
+        <div style="text-align: center; color: #94A3B8; font-size: 11px;">
+            <p>© 2026 DOUYIN MASTER PRO. ALL RIGHTS RESERVED.</p>
+            <p style="opacity: 0.6;">使用即代表同意用户服务协议与隐私政策</p>
         </div>
     """, unsafe_allow_html=True)

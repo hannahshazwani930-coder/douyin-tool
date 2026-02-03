@@ -3,28 +3,33 @@ import streamlit as st
 from database import login_user, register_user
 
 def view_auth():
-    # --- 1. 终极 CSS 修复：强制显示按钮文字，精准剔除提示语 ---
+    # --- 1. 终极 CSS 方案：彻底抹除所有动态提示，强制找回按钮文字 ---
     st.markdown("""
         <style>
-            /* 1. 隐藏表单底部烦人的提示语 (使用最底层的特定类名) */
-            .stForm [data-testid="stMarkdownContainer"] p {
+            /* [物理抹除] 隐藏表单内所有非组件类段落文字，彻底杀掉 Press Enter 提示 */
+            [data-testid="stForm"] [data-testid="stMarkdownContainer"] p {
                 visibility: hidden !important;
                 height: 0 !important;
                 margin: 0 !important;
+                line-height: 0 !important;
+                font-size: 0 !important;
             }
             
-            /* 2. 核心修复：通过按钮内部的专属 Div 强制找回文字 */
-            /* Streamlit 按钮文字通常包裹在 [data-testid="stMarkdownContainer"] 的 p 标签内 */
+            /* [精准锁定] 唯独允许按钮内的文字显示，并强制覆盖上面的隐藏规则 */
             button[kind="primaryFormSubmit"] [data-testid="stMarkdownContainer"] p {
                 visibility: visible !important;
+                height: auto !important;
                 display: block !important;
                 color: white !important;
                 font-size: 16px !important;
                 font-weight: 700 !important;
+                line-height: normal !important;
             }
             
-            /* 3. 页面全局沉浸感优化 */
+            /* [UI 净化] 隐藏顶部冗余 */
             header, [data-testid="stHeader"] { visibility: hidden; }
+            
+            /* [交互美化] Tab 标签样式锁定 */
             button[data-baseweb="tab"] { color: #94A3B8 !important; }
             button[aria-selected="true"] { color: #1E3A8A !important; border-bottom-color: #1E3A8A !important; }
         </style>
@@ -40,12 +45,11 @@ def view_auth():
             col_left, col_right = st.columns([1.8, 2.2], gap="large")
 
             with col_left:
-                # --- 左边：精致紧凑的视觉营销 ---
+                # --- 左边：极简精致的视觉营销 ---
                 st.write("\n")
                 st.markdown("<h2 style='color:#1E3A8A; margin-bottom:5px; font-size: 28px;'>💠 爆款工场</h2>", unsafe_allow_html=True)
                 st.markdown("<p style='color:#94A3B8; font-size: 14px; margin-bottom: 25px;'>抖音创作者的 AI 军师</p>", unsafe_allow_html=True)
                 
-                # 功能点阵
                 features = [
                     ("🎯", "精准选题", "算法锁定流量蓝海"),
                     ("✍️", "爆款文案", "AI 重构高转化脚本"),
@@ -71,12 +75,11 @@ def view_auth():
                 tab_login, tab_reg = st.tabs(["安全登录", "开启创作"])
                 
                 with tab_login:
-                    with st.form("login_final_secure", border=False):
+                    with st.form("login_final_v3", border=False):
                         st.write("\n")
                         acc = st.text_input("账号", placeholder="手机号 / 邮箱", label_visibility="collapsed")
                         pwd = st.text_input("密码", type="password", placeholder="请输入密码", label_visibility="collapsed")
                         
-                        # 按钮显示文字：立即登录
                         if st.form_submit_button("立即登录", use_container_width=True):
                             if acc and pwd:
                                 success, msg = login_user(acc, pwd)
@@ -87,14 +90,13 @@ def view_auth():
                             else: st.warning("请完善登录信息")
 
                 with tab_reg:
-                    with st.form("reg_final_secure", border=False):
+                    with st.form("reg_final_v3", border=False):
                         st.write("\n")
                         r_acc = st.text_input("账号", placeholder="手机号/邮箱", label_visibility="collapsed")
                         r_pwd = st.text_input("密码", type="password", placeholder="设置登录密码", label_visibility="collapsed")
-                        r_pwd_2 = st.text_input("确认密码", type="password", placeholder="再次输入密码", label_visibility="collapsed")
+                        r_pwd_2 = st.text_input("确认密码", type="password", placeholder="再次确认密码", label_visibility="collapsed")
                         r_inv = st.text_input("邀请码", value="888888", label_visibility="collapsed")
                         
-                        # 按钮显示文字：免费注册
                         if st.form_submit_button("免费注册", use_container_width=True):
                             if r_pwd != r_pwd_2:
                                 st.error("两次密码输入不一致")

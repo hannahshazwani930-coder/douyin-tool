@@ -54,7 +54,7 @@ def init_db():
 
 init_db()
 
-# --- 全局基础 CSS (内页通用) ---
+# --- 全局基础 CSS (内页通用，安全区) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -73,29 +73,30 @@ st.markdown("""
     div.stButton > button[kind="secondary"] { background-color: #f1f5f9; color: #475569; border: 1px solid transparent; }
     div.stButton > button[kind="secondary"]:hover { background-color: #e2e8f0; color: #1e293b; border-color: #cbd5e1; }
 
-    /* --- 🔥 首页卡片式 Hero (新) 🔥 --- */
-    .hero-card-container {
-        background: white;
+    /* --- 🔥 首页卡片式 Hero (v9.3) 🔥 --- */
+    .hero-bg-animated {
+        background: linear-gradient(-45deg, #eff6ff, #f0fdf4, #fff7ed, #eef2ff);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
         border-radius: 24px;
-        padding: 40px;
+        padding: 60px 40px; /* 增加内部空间 */
         text-align: center;
-        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05);
-        border: 1px solid #f1f5f9;
-        margin-bottom: 30px;
-        position: relative;
-        overflow: hidden;
+        box-shadow: 0 15px 40px -10px rgba(0,0,0,0.08);
+        border: 1px solid rgba(255,255,255,0.5);
+        margin-bottom: 40px;
     }
-    .hero-card-container::before {
-        content: ''; position: absolute; top: -50%; left: -10%; width: 300px; height: 300px;
-        background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(255,255,255,0) 70%);
-        border-radius: 50%; z-index: 0; pointer-events: none;
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
     }
     .hero-title {
-        font-size: 42px; font-weight: 900; letter-spacing: -1px; margin-bottom: 12px; position: relative; z-index: 1;
-        background: -webkit-linear-gradient(120deg, #1e293b 0%, #3b82f6 100%);
+        font-size: 48px; font-weight: 900; letter-spacing: -1.5px; margin-bottom: 16px;
+        background: -webkit-linear-gradient(120deg, #1e293b 0%, #2563eb 50%, #7c3aed 100%);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        text-shadow: 0 2px 10px rgba(59, 130, 246, 0.1);
     }
-    .hero-subtitle { font-size: 16px; color: #64748b; font-weight: 500; position: relative; z-index: 1; }
+    .hero-subtitle { font-size: 18px; color: #64748b; font-weight: 500; letter-spacing: 0.5px; }
 
     /* --- 首页功能卡片美化 --- */
     .home-card-inner { text-align: center; padding: 10px; }
@@ -109,7 +110,7 @@ st.markdown("""
     .home-card-title { font-size: 19px; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
     .home-card-desc { font-size: 13px; color: #64748b; line-height: 1.5; min-height: 40px; }
     
-    /* 首页容器悬浮特效 (仅在首页生效，因Streamlit结构，这里使用通用选择器，但在内页会被内容覆盖) */
+    /* 首页容器悬浮特效 */
     [data-testid="stVerticalBlockBorderWrapper"] {
         border-radius: 16px !important; border: 1px solid #e2e8f0 !important;
         background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01);
@@ -153,7 +154,7 @@ st.markdown("""
     .step-content h4 { margin: 0 0 4px; font-size: 15px; color: #1e293b; font-weight: 700; }
     .step-content p { margin: 0; font-size: 13px; color: #64748b; }
     
-    /* 个人中心 - 邀请有礼 */
+    /* 个人中心 */
     .referral-box { background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border: 1px solid #fed7aa; border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 20px; position: relative; overflow: hidden; }
     .referral-box::after { content: '🎁'; font-size: 80px; position: absolute; right: -10px; bottom: -20px; opacity: 0.1; transform: rotate(-20deg); }
     .referral-title { font-size: 18px; font-weight: 800; color: #9a3412; margin-bottom: 8px; }
@@ -330,111 +331,103 @@ def submit_feedback(phone, content):
     conn.commit(); conn.close()
 
 # ==========================================
-# 1. 认证模块 (独立CSS隔离)
+# 1. 认证模块 (登录页终极美化)
 # ==========================================
 if 'user_phone' not in st.session_state:
     auto = check_ip_auto_login()
     if auto: st.session_state['user_phone'] = auto; st.toast(f"欢迎回来 {auto}", icon="👋"); time.sleep(0.5); st.rerun()
 
 def auth_page():
-    # 🔥 登录页专属 CSS (隔离) 🔥
+    # 🔥 登录页专属 CSS (隔离: 仅在登录态生效，且通过特定类名控制) 🔥
     st.markdown("""
     <style>
-        /* 强制覆盖背景 */
+        /* 动态流光背景 - 仅针对登录页 */
         .stApp {
-            background: radial-gradient(at 10% 20%, rgb(239, 246, 255) 0%, rgb(219, 228, 255) 90%) !important;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
         }
-        /* 隐藏侧边栏按钮 */
+        @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
+        
         [data-testid="stSidebarCollapsedControl"] { display: none; }
         
-        .login-card {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+        .login-glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 24px; padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+            animation: fadein 0.8s;
         }
-        .login-header {
-            font-size: 32px; font-weight: 800; color: #1e293b; letter-spacing: -1px; margin-bottom: 5px;
-        }
-        .login-sub {
-            font-size: 14px; color: #64748b; margin-bottom: 30px;
-        }
-        .feature-row { display: flex; align-items: center; margin-bottom: 20px; }
-        .f-icon { 
-            width: 32px; height: 32px; background: #eff6ff; color: #2563eb; 
-            border-radius: 8px; display: flex; align-items: center; justify-content: center; 
-            margin-right: 15px; font-size: 16px;
-        }
-        .f-text { font-size: 14px; color: #334155; font-weight: 500; }
-        .wx-box { background: #f0fdf4; border: 1px dashed #22c55e; border-radius: 8px; padding: 12px; text-align: center; color: #15803d; font-size: 13px; margin-bottom: 10px; }
+        @keyframes fadein { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .lp-header { font-size: 36px; font-weight: 800; color: #1e293b; letter-spacing: -1px; margin-bottom: 8px; }
+        .lp-sub { font-size: 16px; color: #475569; margin-bottom: 30px; font-weight: 500; }
+        .lp-feature { display: flex; align-items: center; margin-bottom: 18px; font-size: 15px; color: #334155; font-weight: 600; }
+        .lp-icon { width: 32px; height: 32px; background: rgba(255,255,255,0.8); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 18px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div style='height: 8vh;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 5vh;'></div>", unsafe_allow_html=True)
     
-    c1, c2, c3 = st.columns([1, 10, 1]) # 使用宽列居中
+    c1, c2, c3 = st.columns([1, 10, 1])
     with c2:
-        # 使用原生容器模拟大卡片
         with st.container():
-            col_left, col_right = st.columns([1, 1.2], gap="large")
+            # 使用自定义HTML结构模拟左右分栏
+            c_left, c_right = st.columns([1.1, 1], gap="large")
             
-            # 左侧：价值主张
-            with col_left:
-                st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-                st.markdown("<div class='login-header'>抖音爆款工场</div>", unsafe_allow_html=True)
-                st.markdown("<div class='login-sub'>专为 KOC 打造的 AI 变现操作系统</div>", unsafe_allow_html=True)
-                
+            with c_left:
+                st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
+                st.markdown("<div class='lp-header'>抖音爆款工场 Pro</div>", unsafe_allow_html=True)
+                st.markdown("<div class='lp-sub'>全网首个 AI + KOC 商业变现操作系统</div>", unsafe_allow_html=True)
                 st.markdown("""
-                <div class='feature-row'><div class='f-icon'>🚀</div><div class='f-text'>5路并发 · 极速文案清洗改写</div></div>
-                <div class='feature-row'><div class='f-icon'>💡</div><div class='f-text'>爆款选题 · 击穿流量焦虑</div></div>
-                <div class='feature-row'><div class='f-icon'>🎨</div><div class='f-text'>海报生成 · 影视级光影质感</div></div>
-                <div class='feature-row'><div class='f-icon'>💰</div><div class='f-text'>裂变系统 · 邀请好友免费续杯</div></div>
+                <div class='lp-feature'><div class='lp-icon'>🚀</div>5路并发 · 极速文案清洗改写</div>
+                <div class='lp-feature'><div class='lp-icon'>💡</div>爆款选题 · 击穿流量焦虑</div>
+                <div class='lp-feature'><div class='lp-icon'>🎨</div>海报生成 · 影视级光影质感</div>
+                <div class='lp-feature'><div class='lp-icon'>💰</div>裂变系统 · 邀请好友免费续杯</div>
                 """, unsafe_allow_html=True)
-                
-                st.markdown("<div style='margin-top: 40px; font-size: 12px; color: #94a3b8;'>© 2026 Douyin Factory Pro. All rights reserved.</div>", unsafe_allow_html=True)
-
-            # 右侧：登录/注册表单
-            with col_right:
-                with st.container(border=True): # 使用 border=True 模拟卡片
-                    t1, t2, t3 = st.tabs(["🔐 登录", "✨ 注册", "🆘 找回"])
-                    with t1:
-                        with st.form("login"):
-                            ph = st.text_input("手机号"); pw = st.text_input("密码", type="password")
-                            if st.form_submit_button("立即登录", type="primary", use_container_width=True):
-                                s, m = login_user(ph, pw)
-                                if s: st.session_state['user_phone'] = ph; st.rerun()
-                                else: st.error(m)
-                    with t2:
-                        st.info(f"🎁 新人福利：注册即送 {REWARD_DAYS_NEW_USER} 天 VIP")
-                        ph = st.text_input("手机号", key="r_ph")
-                        pw1 = st.text_input("设置密码", type="password", key="r_p1")
-                        pw2 = st.text_input("确认密码", type="password", key="r_p2")
-                        
-                        with st.expander("❓ 没有邀请码？"):
-                            st.markdown(f"<div class='wx-box'>添加客服 <b>W7774X</b> 回复“注册”获取</div>", unsafe_allow_html=True)
-                            render_hover_copy_box("W7774X", "点击复制微信号")
-                        
-                        invite_code = st.text_input("邀请码", key="r_invite", placeholder="VIP888")
-                        
-                        if st.button("立即注册", type="primary", use_container_width=True):
-                            if pw1 != pw2: st.error("两次密码不一致")
-                            elif not invite_code: st.error("请输入邀请码")
+            
+            with c_right:
+                # 登录框容器
+                st.markdown('<div class="login-glass-card">', unsafe_allow_html=True)
+                t1, t2, t3 = st.tabs(["🔐 登录", "✨ 注册", "🆘 找回"])
+                with t1:
+                    with st.form("login_form"):
+                        ph = st.text_input("手机号", placeholder="请输入手机号")
+                        pw = st.text_input("密码", type="password", placeholder="请输入密码")
+                        if st.form_submit_button("立即登录", type="primary", use_container_width=True):
+                            s, m = login_user(ph, pw)
+                            if s: st.session_state['user_phone'] = ph; st.rerun()
+                            else: st.error(m)
+                with t2:
+                    st.info(f"🎁 新人福利：注册即送 {REWARD_DAYS_NEW_USER} 天 VIP")
+                    ph = st.text_input("手机号", key="r_ph")
+                    pw1 = st.text_input("设置密码", type="password", key="r_p1")
+                    pw2 = st.text_input("确认密码", type="password", key="r_p2")
+                    with st.expander("❓ 没有邀请码？"):
+                        st.markdown(f"<div class='wx-invite-box'>添加客服 <b>W7774X</b> 回复“注册”获取</div>", unsafe_allow_html=True)
+                        render_hover_copy_box("W7774X", "点击复制微信号")
+                    invite_code = st.text_input("邀请码", key="r_invite", placeholder="VIP888")
+                    if st.button("立即注册", type="primary", use_container_width=True):
+                        if pw1 != pw2: st.error("两次密码不一致")
+                        elif not invite_code: st.error("请输入邀请码")
+                        else:
+                            is_valid = False
+                            if invite_code == GLOBAL_INVITE_CODE: is_valid = True
                             else:
-                                is_valid = False
-                                if invite_code == GLOBAL_INVITE_CODE: is_valid = True
-                                else:
-                                    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
-                                    c.execute("SELECT phone FROM users WHERE own_invite_code=?", (invite_code,))
-                                    if c.fetchone(): is_valid = True
-                                    conn.close()
-                                if is_valid:
-                                    s, m = register_user(ph, pw1, invite_code)
-                                    if s: st.success(m); st.balloons(); time.sleep(2); st.session_state['user_phone'] = ph; st.rerun()
-                                    else: st.error(m)
-                                else: st.error("❌ 邀请码无效")
-                    with t3: st.info("请联系客服微信：W7774X 重置密码")
+                                conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+                                c.execute("SELECT phone FROM users WHERE own_invite_code=?", (invite_code,))
+                                if c.fetchone(): is_valid = True
+                                conn.close()
+                            if is_valid:
+                                s, m = register_user(ph, pw1, invite_code)
+                                if s: st.success(m); st.balloons(); time.sleep(2); st.session_state['user_phone'] = ph; st.rerun()
+                                else: st.error(m)
+                            else: st.error("❌ 邀请码无效")
+                with t3: st.info("请联系客服微信：W7774X 重置密码")
+                st.markdown('</div>', unsafe_allow_html=True) # Close card
+
+    render_footer()
 
 if 'user_phone' not in st.session_state:
     auth_page(); st.stop()
@@ -483,9 +476,12 @@ menu = st.session_state['nav_menu']
 
 # --- 首页 (Hero Card Style) ---
 def page_home():
+    # 顶部留白
+    st.markdown("<div style='height: 4rem;'></div>", unsafe_allow_html=True)
+    
     # 🔥 首页专属卡片式 Hero 🔥
     st.markdown("""
-    <div class="hero-card-container">
+    <div class="hero-bg-animated">
         <div class="hero-title">抖音爆款工场 Pro</div>
         <div class="hero-subtitle">让流量不再是玄学 · 专为素人 KOC 打造的 AI 变现神器</div>
     </div>

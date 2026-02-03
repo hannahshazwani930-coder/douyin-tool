@@ -17,20 +17,29 @@ def generate_invite_code():
 # ==============================================================================
 
 def inject_css(page_id="auth"):
-    # 1. 全局重置
+    # 1. 全局基础 (隐藏 Streamlit 原生组件)
     base_css = """
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         html, body, [class*="css"] { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-        header[data-testid="stHeader"] { display: none !important; height: 0 !important; visibility: hidden !important; }
+        
+        /* 彻底隐藏 Streamlit 顶栏 */
+        header[data-testid="stHeader"] { display: none !important; height: 0px !important; visibility: hidden !important; }
         #MainMenu { display: none !important; }
         [data-testid="stSidebarCollapsedControl"] { display: none !important; }
+        
+        /* 侧边栏基础 */
+        [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
+        div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; transition: all 0.2s; }
+        div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; transform: translateX(4px); }
+        div[role="radiogroup"] label[aria-checked="true"] { background-color: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe; font-weight: 600 !important; }
+        div[role="radiogroup"] > label > div:first-child { display: none !important; }
     </style>
     """
     st.markdown(base_css, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 登录页样式 (绝对不动)
+    # 🔒 [LOCKED] 登录页 (Auth) - 绝对不动
     # ----------------------------------------------------------------
     if page_id == "auth":
         st.markdown("""
@@ -57,103 +66,120 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🏠 首页独立设计 (HOME) - 沉浸式
+    # 🏠 [NEW] 首页独立设计 - 悬浮/暗影/交互
     # ----------------------------------------------------------------
     elif page_id == "home":
         st.markdown("""
         <style>
             .stApp { background-color: #f8fafc; }
-            /* 侧边栏 */
-            [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
-            div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; }
-            div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; }
-            div[role="radiogroup"] label[aria-checked="true"] { background-color: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe; font-weight: 600 !important; }
-            div[role="radiogroup"] > label > div:first-child { display: none !important; }
+            /* 1. 容器清零 */
+            div.block-container { max-width: 1280px !important; padding: 0 40px 50px 40px !important; margin-top: 0px !important; }
 
-            /* 容器 */
-            div.block-container { max-width: 1200px !important; padding: 0 40px 50px 40px !important; margin-top: 0 !important; }
-            
-            /* 头图 */
-            .home-hero-bg {
-                background: radial-gradient(circle at 50% 0%, #2563eb 0%, #1e40af 40%, #0f172a 100%);
-                height: 380px; margin: -60px -40px 0 -40px; padding-top: 80px;
-                text-align: center; color: white; position: relative; z-index: 0;
+            /* 2. 沉浸式头图 */
+            .flowing-header {
+                background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%);
+                border-bottom-left-radius: 48px; border-bottom-right-radius: 48px;
+                padding: 70px 40px 180px 40px; text-align: center; color: white;
+                margin: -60px -40px 0 -40px; box-shadow: 0 20px 60px -20px rgba(37, 99, 235, 0.5); 
+                position: relative; z-index: 0;
             }
-            .hero-main-text { font-size: 48px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 15px; text-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-            .hero-sub-text { font-size: 16px; color: rgba(255,255,255,0.8); font-weight: 400; letter-spacing: 0.5px; text-transform: uppercase; }
+            .header-title { font-size: 46px; font-weight: 900; letter-spacing: -1.5px; margin-bottom: 12px; text-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+            .header-sub { font-size: 16px; opacity: 0.9; background: rgba(255,255,255,0.15); padding: 6px 18px; border-radius: 30px; backdrop-filter: blur(10px); display: inline-block; border: 1px solid rgba(255,255,255,0.2); }
 
-            /* 悬浮中控台 */
-            .home-dashboard {
-                background: #ffffff; border-radius: 24px; padding: 40px 50px;
-                margin-top: -120px; position: relative; z-index: 10;
-                box-shadow: 0 25px 60px -15px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,1);
+            /* 3. 悬浮中控台 */
+            .creation-console {
+                background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px);
+                border-radius: 32px; padding: 40px;
+                box-shadow: 0 40px 100px -30px rgba(0,0,0,0.12); border: 1px solid #ffffff; 
+                position: relative; z-index: 10; margin-top: -120px;
             }
 
-            .section-header { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 25px; margin-top: 10px; display: flex; align-items: center; gap: 10px; }
-            .section-header::before { content: ""; display: block; width: 4px; height: 18px; background: #3b82f6; border-radius: 2px; }
+            /* 4. 栏目标题 */
+            .section-label { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+            .section-label::before { content: ""; display: block; width: 5px; height: 20px; background: linear-gradient(to bottom, #3b82f6, #60a5fa); border-radius: 10px; }
 
-            .feature-card {
-                background: white; border: 1px solid #e2e8f0; border-radius: 16px;
-                padding: 25px 20px; text-align: center; height: 160px;
+            /* 5. 核心功能卡片 (Feature Card) */
+            .feature-card-pro {
+                background: white; border: 1px solid #f1f5f9; border-radius: 20px;
+                padding: 30px 20px; text-align: center; height: 180px;
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                position: relative; overflow: hidden;
             }
-            .feature-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.15); border-color: #bfdbfe; }
-            .feat-icon { font-size: 32px; margin-bottom: 12px; }
-            .feat-title { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
-            .feat-desc { font-size: 12px; color: #64748b; }
+            .feature-card-pro:hover {
+                transform: translateY(-8px);
+                box-shadow: 0 20px 40px -10px rgba(59, 130, 246, 0.2);
+                border-color: #bfdbfe;
+            }
+            .feat-icon { font-size: 36px; margin-bottom: 15px; }
+            .feat-title { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+            .feat-desc { font-size: 13px; color: #64748b; line-height: 1.4; }
 
-            .project-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 25px; height: 100%; transition: all 0.3s; }
-            .project-card:hover { background: white; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border-color: #cbd5e1; }
-            .proj-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-            .proj-title { font-size: 16px; font-weight: 700; color: #334155; }
-            .proj-desc { font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 15px; min-height: 40px; }
-            .proj-tag { background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; display: inline-block; }
+            /* 6. 系统公告悬浮条 */
+            .news-container {
+                margin-top: 30px; margin-bottom: 30px;
+                background: linear-gradient(90deg, #fff7ed, #ffedd5);
+                border: 1px solid #fed7aa; border-radius: 12px;
+                height: 46px; display: flex; align-items: center; padding: 0 20px;
+                box-shadow: 0 4px 15px -3px rgba(249, 115, 22, 0.15);
+                overflow: hidden; position: relative;
+            }
+            .news-icon { font-size: 20px; margin-right: 15px; flex-shrink: 0; animation: bellShake 3s infinite; }
+            @keyframes bellShake { 0%,100% {transform:rotate(0);} 10%,30%,50%,70%,90% {transform:rotate(5deg);} 20%,40%,60%,80% {transform:rotate(-5deg);} }
+            .news-scroller { white-space: nowrap; animation: scrollText 30s linear infinite; display: inline-block; font-size: 14px; color: #9a3412; font-weight: 500; }
+            @keyframes scrollText { 0% {transform: translateX(100%);} 100% {transform: translateX(-100%);} }
 
+            /* 7. 变现任务卡片 (Monetize Card) */
+            .monetize-card {
+                background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px;
+                padding: 25px; height: 100%; position: relative;
+                transition: all 0.3s;
+            }
+            .monetize-card:hover { border-color: #cbd5e1; box-shadow: 0 15px 35px -5px rgba(0,0,0,0.08); }
+            .mon-head { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+            .mon-title { font-size: 16px; font-weight: 700; color: #0f172a; }
+            .mon-desc { font-size: 13px; color: #64748b; line-height: 1.6; margin-bottom: 25px; min-height: 42px; }
+            
+            /* 微信领取徽章 (Interactive Badge) */
+            .wechat-badge {
+                position: absolute; bottom: 20px; right: 20px;
+                background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;
+                padding: 6px 14px; border-radius: 30px;
+                font-size: 12px; font-weight: 600; font-family: 'Courier New', monospace;
+                cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+                z-index: 50; /* 确保在最上层 */
+            }
+            .wechat-badge:hover { background: #059669; color: white; border-color: #059669; box-shadow: 0 5px 15px -3px rgba(16, 185, 129, 0.4); transform: translateY(-2px); }
+            .wechat-badge:active { transform: scale(0.95); }
+
+            /* 隐形跳转按钮 (针对功能区) */
             div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 5; }
             div.stButton button:hover { background: transparent; }
-
-            .welfare-box {
-                background: linear-gradient(135deg, #10b981, #059669); color: white;
-                border-radius: 16px; padding: 25px; position: relative; overflow: hidden;
-                box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3); transition: transform 0.2s; cursor: pointer;
-            }
-            .welfare-box:active { transform: scale(0.98); }
-            .notice-list { background: #fff7ed; border: 1px solid #ffedd5; border-radius: 16px; padding: 20px; height: 100%; }
-            .notice-item { display: flex; gap: 10px; margin-bottom: 10px; font-size: 13px; align-items: center; border-bottom: 1px dashed #fed7aa; padding-bottom: 8px; }
-            .notice-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         </style>
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 📝 文案改写页独立样式 (REWRITE)
+    # 🔒 [LOCKED] 文案改写页 (Rewrite) - 绝对不动
     # ----------------------------------------------------------------
     elif page_id == "rewrite":
         st.markdown("""
         <style>
             .stApp { background-color: #f8fafc; }
-            [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
-            div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; }
-            div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; }
-            div[role="radiogroup"] label[aria-checked="true"] { background-color: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe; font-weight: 600 !important; }
-            div[role="radiogroup"] > label > div:first-child { display: none !important; }
-
             div.block-container { max-width: 1400px !important; padding: 0 40px 50px 40px !important; margin-top: 0 !important; }
-            .rewrite-header {
+            .flowing-header {
                 background: linear-gradient(-45deg, #1e3a8a, #2563eb, #3b82f6, #0ea5e9); background-size: 400% 400%; animation: gradientBG 10s ease infinite;
                 border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
                 padding: 60px 40px 180px 40px; color: white; text-align: center;
-                margin: -60px -40px 0 -40px; box-shadow: 0 20px 50px rgba(37, 99, 235, 0.3); position: relative; z-index: 0;
+                margin: -60px -40px -100px -40px; box-shadow: 0 20px 50px rgba(37, 99, 235, 0.3); position: relative; z-index: 0;
             }
             @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
             .header-title { font-size: 42px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             .header-sub { font-size: 15px; opacity: 0.95; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 30px; backdrop-filter: blur(10px); display: inline-block; border: 1px solid rgba(255,255,255,0.2); }
-
             div.stButton button[kind="primary"], div.stButton button[kind="secondary"] { position: relative; z-index: 20; }
-            .rewrite-console {
+            .creation-console {
                 background: white; border-radius: 24px; padding: 10px 40px 40px 40px;
                 box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; 
-                position: relative; z-index: 10; margin-top: -100px;
+                position: relative; z-index: 10; margin-top: -50px; 
             }
             .stTextArea > div { border: none !important; box-shadow: none !important; background: transparent !important; }
             .stTextArea > label { display: none !important; }
@@ -170,20 +196,14 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 💡 爆款选题页独立样式 (BRAINSTORM) - 恢复
+    # 🔒 [LOCKED] 选题/海报/起名/个人中心 (General) - 绝对不动
     # ----------------------------------------------------------------
-    elif page_id == "brainstorm":
+    elif page_id == "general":
         st.markdown("""
         <style>
             .stApp { background-color: #f8fafc; }
-            [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
-            div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; }
-            div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; }
-            div[role="radiogroup"] label[aria-checked="true"] { background-color: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe; font-weight: 600 !important; }
-            div[role="radiogroup"] > label > div:first-child { display: none !important; }
-            
             div.block-container { max-width: 1200px !important; padding: 2rem 40px 50px 40px !important; }
-            .page-banner { background: linear-gradient(120deg, #f59e0b, #d97706); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4); }
+            .page-banner { background: linear-gradient(120deg, #2563eb, #1d4ed8); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4); }
             .banner-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
             .banner-desc { font-size: 15px; opacity: 0.9; line-height: 1.5; }
             div[data-testid="stVerticalBlock"] > div { background: transparent; }
@@ -192,84 +212,18 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🎨 海报生成页独立样式 (POSTER) - 恢复
-    # ----------------------------------------------------------------
-    elif page_id == "poster":
-        st.markdown("""
-        <style>
-            .stApp { background-color: #f8fafc; }
-            [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
-            div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; }
-            div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; }
-            div[role="radiogroup"] label[aria-checked="true"] { background-color: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe; font-weight: 600 !important; }
-            div[role="radiogroup"] > label > div:first-child { display: none !important; }
-
-            div.block-container { max-width: 1200px !important; padding: 2rem 40px 50px 40px !important; }
-            .page-banner { background: linear-gradient(120deg, #ec4899, #db2777); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(236, 72, 153, 0.4); }
-            .banner-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
-            .banner-desc { font-size: 15px; opacity: 0.9; line-height: 1.5; }
-            div[data-testid="stVerticalBlock"] > div { background: transparent; }
-            .stButton > button { border-radius: 8px; font-weight: 600; border: none; }
-        </style>
-        """, unsafe_allow_html=True)
-
-    # ----------------------------------------------------------------
-    # 🏷️ 账号起名页独立样式 (NAMING) - 恢复
-    # ----------------------------------------------------------------
-    elif page_id == "naming":
-        st.markdown("""
-        <style>
-            .stApp { background-color: #f8fafc; }
-            [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
-            div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; }
-            div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; }
-            div[role="radiogroup"] label[aria-checked="true"] { background-color: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe; font-weight: 600 !important; }
-            div[role="radiogroup"] > label > div:first-child { display: none !important; }
-
-            div.block-container { max-width: 1200px !important; padding: 2rem 40px 50px 40px !important; }
-            .page-banner { background: linear-gradient(120deg, #8b5cf6, #7c3aed); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.4); }
-            .banner-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
-            .banner-desc { font-size: 15px; opacity: 0.9; line-height: 1.5; }
-            div[data-testid="stVerticalBlock"] > div { background: transparent; }
-            .stButton > button { border-radius: 8px; font-weight: 600; border: none; }
-        </style>
-        """, unsafe_allow_html=True)
-
-    # ----------------------------------------------------------------
-    # 👤 个人中心页独立样式 (ACCOUNT) - 恢复
-    # ----------------------------------------------------------------
-    elif page_id == "account":
-        st.markdown("""
-        <style>
-            .stApp { background-color: #f8fafc; }
-            [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
-            div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; }
-            div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; }
-            div[role="radiogroup"] label[aria-checked="true"] { background-color: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe; font-weight: 600 !important; }
-            div[role="radiogroup"] > label > div:first-child { display: none !important; }
-
-            div.block-container { max-width: 1000px !important; padding: 2rem 40px 50px 40px !important; }
-            .page-banner { background: linear-gradient(120deg, #64748b, #475569); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(100, 116, 139, 0.4); }
-            .banner-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
-            .banner-desc { font-size: 15px; opacity: 0.9; line-height: 1.5; }
-        </style>
-        """, unsafe_allow_html=True)
-
-    # ----------------------------------------------------------------
-    # 🕵️‍♂️ 管理后台页独立样式 (ADMIN) - 恢复深色侧边栏
+    # 🔒 [LOCKED] 管理后台 (Admin) - 绝对不动 (深色侧边栏)
     # ----------------------------------------------------------------
     elif page_id == "admin":
         st.markdown("""
         <style>
             .stApp { background-color: #f1f5f9; }
-            /* 深色侧边栏 */
             [data-testid="stSidebar"] { background-color: #1e293b; border-right: 1px solid #334155; padding-top: 1rem; }
             [data-testid="stSidebar"] * { color: #e2e8f0 !important; }
             div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; }
             div[role="radiogroup"] label:hover { background-color: #334155 !important; }
             div[role="radiogroup"] label[aria-checked="true"] { background-color: #3b82f6 !important; color: white !important; border: 1px solid #60a5fa; font-weight: 600 !important; }
             div[role="radiogroup"] > label > div:first-child { display: none !important; }
-
             div.block-container { max-width: 1600px !important; padding: 2rem 40px 50px 40px !important; }
             .page-banner { background: linear-gradient(120deg, #1e293b, #0f172a); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.4); }
             .banner-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; }

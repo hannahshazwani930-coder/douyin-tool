@@ -1,11 +1,10 @@
 # views/home.py
 import streamlit as st
-from utils import render_home_project_card, render_cta_wechat, render_feature_card_home
+import streamlit.components.v1 as components
 from database import get_active_announcements
 
 def view_home():
-    # 1. 顶部：流光极光 Header
-    # 注意：样式已由 main.py 加载，这里只负责渲染 HTML 结构
+    # 1. 沉浸式极光头图
     st.markdown("""
     <div class="flowing-header">
         <div class="header-title">抖音爆款工场 Pro</div>
@@ -13,89 +12,98 @@ def view_home():
     </div>
     """, unsafe_allow_html=True)
     
-    # 2. 核心内容区：一体化白卡 (Creation Console)
-    # CSS 中已设置负边距，使其向上覆盖 Header 底部，消除白框
+    # 2. 悬浮中控台容器
     st.markdown('<div class="creation-console">', unsafe_allow_html=True)
     
-    # --- A. 核心功能导航 ---
-    st.markdown('<div class="custom-label" style="font-size:18px; margin-bottom:20px; border-left:4px solid #3b82f6; padding-left:10px;">🚀 核心功能</div>', unsafe_allow_html=True)
+    # === A. 核心功能区 (悬浮微交互卡片) ===
+    st.markdown('<div class="section-label">🚀 核心创作引擎</div>', unsafe_allow_html=True)
     
     c1, c2, c3, c4 = st.columns(4, gap="medium")
     
-    # 定义功能数据 (Icon, 标题, 描述, 对应侧边栏的完整名称)
-    # 🔴 关键：target_menu 必须与 main.py 中的 menu_opts 完全一致(含Emoji)
     features = [
         ("📝", "文案改写", "深度去重 爆款逻辑", "📝 文案改写"),
-        ("💡", "爆款选题", "挖掘全网 最热流量", "💡 爆款选题"),
-        ("🎨", "海报生成", "一键生成 专业封面", "🎨 海报生成"),
-        ("🏷️", "账号起名", "玄学起名 易记好听", "🏷️ 账号起名"),
+        ("💡", "爆款选题", "全网挖掘 流量风向", "💡 爆款选题"),
+        ("🎨", "海报生成", "封面设计 点击飙升", "🎨 海报生成"),
+        ("🏷️", "账号起名", "玄学好名 易记吸粉", "🏷️ 账号起名"),
     ]
     
-    # 渲染功能入口
-    for i, (icon, title, desc, target_menu) in enumerate(features):
+    for i, (icon, title, desc, target) in enumerate(features):
         with [c1, c2, c3, c4][i]:
-            # 1. 渲染视觉卡片 (HTML)
-            st.markdown(render_feature_card_home(icon, title, desc), unsafe_allow_html=True)
+            # 渲染卡片视觉
+            st.markdown(f"""
+            <div class="feature-card-pro">
+                <div class="feat-icon">{icon}</div>
+                <div class="feat-title">{title}</div>
+                <div class="feat-desc">{desc}</div>
+            </div>
+            """, unsafe_allow_html=True)
             
-            # 2. 渲染隐形跳转按钮 (覆盖在卡片之上)
-            # key 用于区分不同按钮，避免 Streamlit 报错
-            if st.button(f"立即使用 {title}", key=f"home_nav_btn_{i}", use_container_width=True):
-                st.session_state['nav_menu_selection'] = target_menu
+            # 隐形点击层
+            if st.button(f"nav_home_{i}", key=f"feat_btn_{i}", use_container_width=True):
+                st.session_state['nav_menu_selection'] = target
                 st.rerun()
 
-    st.markdown("<div style='height:40px'></div>", unsafe_allow_html=True)
+    # === B. 系统公告 (悬浮长条 + 滚动播放) ===
+    st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+    
+    anns = get_active_announcements()
+    ann_text = "   |   ".join([f"📅 {str(time)[5:10]} {content}" for content, time in anns]) if anns else "暂无最新系统公告，请留意后续更新。"
+    
+    # 使用 marquee 滚动效果 (CSS 动画在 utils.py 中定义)
+    st.markdown(f"""
+    <div class="news-container">
+        <div class="news-icon">📢</div>
+        <div class="news-scroller">{ann_text}   |   {ann_text}   |   {ann_text}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # --- B. 热门变现项目 (保留所有详细文案) ---
-    st.markdown('<div class="custom-label" style="font-size:18px; margin-bottom:20px; border-left:4px solid #f59e0b; padding-left:10px;">🔥 热门变现项目</div>', unsafe_allow_html=True)
+    # === C. 热门变现任务 (带复制功能徽章) ===
+    st.markdown('<div class="section-label">🔥 热门变现项目</div>', unsafe_allow_html=True)
     
-    col1, col2, col3 = st.columns(3, gap="medium")
+    p1, p2, p3 = st.columns(3, gap="medium")
     
-    with col1:
-        st.markdown(render_home_project_card(
-            "🤖", "御灵 AI 协同",
-            "人机协同创作工作流。专注于漫次元、动态漫及拟真人视频制作，一键生成高质量动漫内容，大幅降低制作门槛。",
-            "AI动漫 / 人机协同"
-        ), unsafe_allow_html=True)
-        
-    with col2:
-        st.markdown(render_home_project_card(
-            "👥", "素人 KOC 孵化",
-            "从零打造素人IP，提供全套人设定位、脚本库与拍摄指导。连接品牌方资源，实现快速商单变现与私域引流。",
-            "IP孵化 / 商单资源"
-        ), unsafe_allow_html=True)
-        
-    with col3:
-        st.markdown(render_home_project_card(
-            "🌏", "文娱出海变现",
-            "TikTok 短剧与游戏推广出海项目。提供海外热门素材、翻译工具及本地化运营策略，赚取美金收益。",
-            "TikTok / 跨境电商"
-        ), unsafe_allow_html=True)
-        
-    st.markdown("<div style='height:40px'></div>", unsafe_allow_html=True)
-
-    # --- C. 底部：福利与公告 ---
-    c_left, c_right = st.columns([1.5, 1], gap="large")
+    # 项目数据: (图标, 标题, 描述)
+    projects = [
+        ("🤖", "御灵 AI 协同", "人机协同创作工作流。专注于漫次元、动态漫及拟真人视频制作，大幅降低制作门槛。"),
+        ("👥", "素人 KOC 孵化", "从零打造素人IP，提供全套人设定位、脚本库与拍摄指导，连接品牌方资源变现。"),
+        ("🌏", "文娱出海变现", "TikTok 短剧与游戏推广出海项目。提供海外热门素材、翻译工具及本地化运营策略。")
+    ]
     
-    with c_left:
-        st.markdown('<div class="custom-label" style="font-size:18px; margin-bottom:15px; border-left:4px solid #10b981; padding-left:10px;">🎁 内部福利</div>', unsafe_allow_html=True)
-        render_cta_wechat("W7774X")
-        
-    with c_right:
-        st.markdown('<div class="custom-label" style="font-size:18px; margin-bottom:15px; border-left:4px solid #ef4444; padding-left:10px;">📢 系统公告</div>', unsafe_allow_html=True)
-        # 获取数据库中的公告
-        anns = get_active_announcements()
-        if anns:
-            for content, time_val in anns:
-                # 格式化时间显示
-                date_str = str(time_val)[5:10] # 只取 MM-DD
-                st.markdown(f"""
-                <div class="ann-card">
-                    <span style="font-weight:700; white-space:nowrap; color:#ea580c;">📅 {date_str}</span>
-                    <span style="line-height:1.4; color:#7c2d12;">{content}</span>
+    # 注入 JS 脚本 (用于复制)
+    copy_script = """
+    <script>
+    function copyWechat() {
+        navigator.clipboard.writeText('W7774X').then(function() {
+            alert('✅ 微信 W7774X 已复制！\\n请添加微信并备注【资料】领取内部白皮书。');
+        }, function(err) {
+            console.error('复制失败: ', err);
+        });
+    }
+    </script>
+    """
+    components.html(copy_script, height=0) # 隐形注入
+    
+    for i, (icon, title, desc) in enumerate(projects):
+        with [p1, p2, p3][i]:
+            # 使用 parent.document... 调用上面注入的函数比较麻烦，
+            # 简单粗暴点：直接在 onclick 里写 navigator.clipboard (需 HTTPS 或 localhost)
+            # 或者利用 utils.py 里已有的 render_copy_btn 逻辑
+            
+            # 这里我们用最稳妥的纯 HTML 渲染，onclick 直接触发
+            st.markdown(f"""
+            <div class="monetize-card">
+                <div class="mon-head">
+                    <span style="font-size:24px;">{icon}</span>
+                    <span class="mon-title">{title}</span>
                 </div>
-                """, unsafe_allow_html=True)
-        else:
-            st.info("暂无最新公告")
+                <div class="mon-desc">{desc}</div>
+                
+                <div class="wechat-badge" onclick="navigator.clipboard.writeText('W7774X'); alert('✅ 微信 W7774X 已复制！')">
+                    <span style="font-size:14px;">💬</span>
+                    <span>W7774X</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-    # 闭合控制台卡片
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("<div style='height:40px'></div>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True) # End Console

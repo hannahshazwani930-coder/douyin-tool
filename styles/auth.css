@@ -1,0 +1,75 @@
+/* * 🔐 [LOCKED: ULTRA-PRO ALIGNMENT] 
+ * 权限：只读锁定。解决白块错位及对齐问题。
+ */
+
+/* 强制隐藏 Streamlit 默认的白块顶部栏 */
+header[data-testid="stHeader"] {
+    visibility: hidden;
+}
+
+.stApp {
+    background: linear-gradient(-45deg, #050a18, #0c1631, #162e64, #050a18);
+    background-size: 400% 400%;
+    animation: aurora 12s ease infinite;
+}
+
+/* 核心：清除所有原生容器的边距干扰 */
+div.block-container {
+    max-width: 100% !important;
+    padding: 0 !important;
+}
+
+/* 强制居中的横屏卡片容器 */
+.auth-card-inner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 850px;
+    height: 520px;
+    background: white;
+    border-radius: 28px;
+    display: flex; /* 确保左右分栏横向排列 */
+    overflow: hidden;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+    z-index: 9999;
+}
+
+/* 左侧：品牌区 */
+.side-brand-panel {
+    width: 40%;
+    background: #1e3a8a;
+    background-image: radial-gradient(circle at 0% 0%, #2563eb 0%, transparent 75%);
+    height: 100%;
+    padding: 50px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* 右侧：表单区 */
+.form-panel {
+    width: 60%;
+    background: white;
+    height: 100%;
+    padding: 40px 50px;
+}
+
+/* 消除原生 Column 组件的边距干扰 */
+[data-testid="column"] {
+    padding: 0 !important;
+    width: 100% !important;
+}
+
+/* 外部免责声明 */
+.external-disclaimer {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+    z-index: 10000;
+}

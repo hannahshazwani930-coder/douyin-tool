@@ -1,22 +1,26 @@
-/* * 🔐 [LOCKED: THE GOLDEN LANDSCAPE] 
- * 视觉风格：极简、大气、专业。
+/* * 🔐 [LOCKED: FINAL PRODUCTION VERSION] 
+ * 目标：彻底解决对齐偏差，消除多余白块。
  */
 
-/* 彻底隐藏 Streamlit 原生干扰 */
-header, [data-testid="stSidebar"], [data-testid="stHeader"] { visibility: hidden; }
-
-.stApp {
-    background: #050a18;
-    background-image: radial-gradient(circle at 100% 0%, #162e64 0%, transparent 50%),
-                      radial-gradient(circle at 0% 100%, #0c1631 0%, transparent 50%);
+/* 1. 屏蔽一切原生干扰 */
+header, [data-testid="stHeader"], [data-testid="stSidebar"] { 
+    display: none !important; 
 }
 
-/* 强制居中容器 */
+/* 2. 极暗深邃背景 */
+.stApp {
+    background: #050a18 !important;
+    background-image: radial-gradient(circle at 100% 0%, #162e64 0%, transparent 40%),
+                      radial-gradient(circle at 0% 100%, #0c1631 0%, transparent 40%) !important;
+}
+
+/* 3. 根容器归零 */
 div.block-container {
     max-width: 100% !important;
     padding: 0 !important;
 }
 
+/* 4. 横屏卡片主体 */
 .auth-wrapper {
     position: fixed;
     top: 50%; left: 50%;
@@ -26,38 +30,38 @@ div.block-container {
     background: white;
     border-radius: 32px;
     display: flex;
-    overflow: hidden;
     box-shadow: 0 50px 100px rgba(0,0,0,0.8);
-    z-index: 999;
+    overflow: hidden;
+    z-index: 1000;
 }
 
-/* 左侧品牌 */
-.side-brand {
-    width: 40%;
+/* 左侧品牌区 */
+.side-panel {
+    width: 350px;
     background: linear-gradient(135deg, #2563eb, #1e3a8a);
-    padding: 50px;
+    padding: 60px 40px;
     color: white;
     display: flex;
     flex-direction: column;
     justify-content: center;
 }
 
-/* 右侧交互：直接控制 Streamlit 组件在这个区域显示 */
-.form-area {
-    width: 60%;
+/* 右侧表单区：强制锁定内间距 */
+.form-panel {
+    flex: 1;
     background: white;
-    padding: 50px 60px;
+    padding: 40px 60px;
+    position: relative;
 }
 
-/* 统一输入框大气感 */
+/* 输入框大气化 */
 .stTextInput input {
-    height: 45px !important;
+    height: 48px !important;
     border-radius: 12px !important;
     border: 1px solid #e2e8f0 !important;
-    background: #f8fafc !important;
 }
 
-/* 登录按钮大气感 */
+/* 按钮悬浮锁定 */
 div.stButton > button {
     width: 100%;
     height: 50px;
@@ -66,16 +70,21 @@ div.stButton > button {
     border-radius: 12px !important;
     font-weight: 700 !important;
     border: none !important;
-    margin-top: 10px;
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 免责声明外置 */
-.footer-text {
+div.stButton > button:hover {
+    background: #2563eb !important;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+}
+
+/* 外部下方声明 */
+.footer-disclaimer {
     position: fixed;
-    bottom: 30px;
+    bottom: 40px;
     width: 100%;
     text-align: center;
-    color: rgba(255,255,255,0.4);
+    color: rgba(255, 255, 255, 0.4);
     font-size: 12px;
-    letter-spacing: 1px;
 }

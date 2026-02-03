@@ -4,15 +4,14 @@ from utils import load_isolated_css
 from database import login_user, register_user
 
 def view_auth():
-    # 🔒 锁定加载：确保 CSS 路由正确
+    # 🔒 锁定加载：确保样式路由正确
     load_isolated_css("auth")
     
-    # --- [第一层：卡片主容器] ---
-    # 使用 HTML 注入确保左右分栏在同一个层级
+    # --- [核心卡片主容器] ---
     st.markdown('<div class="auth-card-inner">', unsafe_allow_html=True)
     
-    # 划分左右比例 3.5 : 6.5
-    left, right = st.columns([0.35, 0.65], gap="none")
+    # 修复点：将 gap="none" 改为 "small" 以符合 Streamlit 规范
+    left, right = st.columns([0.35, 0.65], gap="small")
     
     with left:
         # 左侧蓝色品牌区
@@ -29,11 +28,11 @@ def view_auth():
 
     with right:
         # 右侧白色表单区
-        # 注意：这里我们使用 Streamlit 原生组件，它们会被 CSS 自动渲染到右侧
         st.markdown('<div style="padding: 20px 30px;">', unsafe_allow_html=True)
         tab1, tab2 = st.tabs(["🔑 登录", "📝 注册"])
         
         with tab1:
+            # 使用 st.form 确保回车登录逻辑
             with st.form("login_form", clear_on_submit=False):
                 acc = st.text_input("手机号 / 邮箱", placeholder="请输入账号", key="login_acc")
                 pwd = st.text_input("密码", type="password", placeholder="请输入密码", key="login_pwd")
@@ -58,14 +57,14 @@ def view_auth():
                     if r_p1 != r_p2: st.error("两次密码不一致")
                     else:
                         success, msg = register_user(r_acc, r_p1, inv)
-                        if success: st.success("注册成功！")
+                        if success: st.success("注册成功！请登录")
                         else: st.error(msg)
         st.markdown('</div>', unsafe_allow_html=True)
     
-    # 关闭卡片主容器标签
+    # 结束卡片容器
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- [第二层：外部下方免责声明] ---
+    # --- [外部下方免责声明] ---
     st.markdown("""
         <div class="external-disclaimer">
             <p>登录即代表您同意《用户协议》及《隐私政策》</p>

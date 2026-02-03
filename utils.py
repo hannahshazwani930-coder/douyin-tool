@@ -8,18 +8,14 @@ import string
 # --- 基础工具 ---
 
 def hash_password(password):
-    """SHA256加密"""
     return hashlib.sha256(password.encode()).hexdigest()
 
 def generate_invite_code():
-    """生成6位随机邀请码"""
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
 # --- UI 组件 & 样式 ---
 
 def inject_css(mode="app"):
-    """注入全局 CSS 样式"""
-    
     base_css = """
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -28,12 +24,10 @@ def inject_css(mode="app"):
         #MainMenu { visibility: hidden; }
         [data-testid="stSidebarCollapsedControl"] { display: none; }
         [data-testid="InputInstructions"] { display: none !important; }
-
         div.stButton > button {
-            border-radius: 6px; font-weight: 600; border: none;
-            padding: 0.4rem 0.8rem; font-size: 14px;
+            border-radius: 8px; font-weight: 600; border: none;
+            padding: 0.5rem 1rem; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         div.stButton > button:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
     </style>
@@ -73,20 +67,14 @@ def inject_css(mode="app"):
         .stApp { background-color: #f8fafc; }
         [data-testid="stSidebar"] {
             background-color: #ffffff; border-right: 1px solid #e2e8f0;
-            box-shadow: 4px 0 15px rgba(0,0,0,0.02);
-            padding-top: 1rem;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.02); padding-top: 1rem;
         }
-        
-        /* 侧边栏紧凑优化 */
+        /* Sidebar Nav */
         div[role="radiogroup"] > label > div:first-child { display: none !important; }
         div[role="radiogroup"] { gap: 4px; }
         div[role="radiogroup"] label {
-            padding: 8px 12px !important;
-            border-radius: 6px !important;
-            transition: all 0.2s ease;
-            margin-bottom: 2px;
-            border: 1px solid transparent;
-            font-size: 14px;
+            padding: 10px 12px !important; border-radius: 8px !important;
+            transition: all 0.2s ease; margin-bottom: 4px; border: 1px solid transparent; font-size: 14px;
         }
         div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; color: #1e293b !important; }
         div[role="radiogroup"] label[data-baseweb="radio"] > div:nth-child(2) { margin-left: 0 !important; }
@@ -94,25 +82,32 @@ def inject_css(mode="app"):
             background-color: #eff6ff !important; color: #2563eb !important;
             font-weight: 600 !important; border: 1px solid #bfdbfe;
         }
-
-        section[data-testid="stSidebar"] > div { padding-top: 20px; }
-        div.block-container { padding-top: 2rem; max-width: 1100px; }
         
-        /* 首页项目卡片样式 */
+        div.block-container { padding-top: 2rem; max-width: 1100px; padding-bottom: 5rem; }
+        section[data-testid="stSidebar"] > div { padding-top: 20px; }
+        
+        /* Card Styles */
+        .app-card { background: white; padding: 24px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); margin-bottom: 20px; }
+        
+        /* Project Card */
         .project-card {
             background: white; border-radius: 12px; padding: 20px;
             border: 1px solid #e2e8f0; transition: all 0.3s ease;
             height: 100%; display: flex; flex-direction: column;
         }
-        .project-card:hover {
-            transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); border-color: #bfdbfe;
+        .project-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); border-color: #93c5fd; }
+        .proj-title { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: flex; align-items: center; }
+        .proj-desc { font-size: 12px; color: #64748b; line-height: 1.5; flex-grow: 1; }
+        .proj-tag { font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #f1f5f9; color: #475569; margin-top: 15px; width: fit-content; }
+        
+        /* Feature Nav Card */
+        .feature-nav-card {
+            background: white; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 15px; text-align: center; cursor: pointer; transition: 0.2s;
         }
-        .proj-title { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: flex; align-items: center; }
-        .proj-desc { font-size: 13px; color: #64748b; line-height: 1.5; flex-grow: 1; }
-        .proj-tag { 
-            font-size: 11px; padding: 3px 8px; border-radius: 10px; 
-            background: #f1f5f9; color: #475569; margin-top: 15px; width: fit-content; 
-        }
+        .feature-nav-card:hover { border-color: #3b82f6; background: #eff6ff; }
+        .fn-icon { font-size: 24px; margin-bottom: 8px; }
+        .fn-text { font-size: 14px; font-weight: 600; color: #334155; }
     </style>
     """
     
@@ -121,35 +116,41 @@ def inject_css(mode="app"):
     else: st.markdown(app_css, unsafe_allow_html=True)
 
 def render_sidebar_user_card(username, vip_info):
-    """侧边栏用户卡片：支持显示剩余天数"""
-    if "VIP" in vip_info or "管理员" in vip_info:
-        status_color = "#2563eb"
-        bg_color = "#eff6ff"
-    else:
-        status_color = "#64748b"
-        bg_color = "#f8fafc"
-
+    """侧边栏用户卡片：修复剩余天数不显示问题"""
+    # 提取纯文本信息
+    status_bg = "#eff6ff" if "VIP" in vip_info or "管理员" in vip_info else "#f1f5f9"
+    status_color = "#2563eb" if "VIP" in vip_info or "管理员" in vip_info else "#64748b"
+    
     html = f"""
-    <div style="
-        background: {bg_color}; border: 1px solid #e2e8f0; border-radius: 10px;
-        padding: 12px; margin-bottom: 15px; display: flex; align-items: center;
-    ">
-        <div style="
-            width: 36px; height: 36px; background: white; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px; border: 1px solid #e2e8f0; margin-right: 10px;
-        ">👤</div>
-        <div style="flex-grow: 1; overflow: hidden;">
-            <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 2px;">{username}</div>
-            <div style="font-size: 12px; color: {status_color}; font-weight: 500;">{vip_info}</div>
+    <div style="background: {status_bg}; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+        <div style="display:flex; align-items:center; margin-bottom: 8px;">
+            <div style="width: 32px; height: 32px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 10px; border: 1px solid #e2e8f0;">👤</div>
+            <div style="font-weight: 700; color: #0f172a; font-size: 14px; overflow: hidden; text-overflow: ellipsis;">{username}</div>
+        </div>
+        <div style="background: white; padding: 6px 10px; border-radius: 6px; font-size: 12px; color: {status_color}; font-weight: 600; border: 1px solid #e2e8f0; text-align: center;">
+            {vip_info}
         </div>
     </div>
     """
     st.sidebar.markdown(html, unsafe_allow_html=True)
 
-# 👇👇👇 [这里补回了 render_copy_btn 函数] 👇👇👇
+def render_tech_support_btn(wx_id):
+    """侧边栏：大号技术合作按钮 (Requirement 2)"""
+    html = f"""
+    <div onclick="navigator.clipboard.writeText('{wx_id}'); document.getElementById('tech-btn').innerText='✅ 已复制';" 
+         id="tech-btn"
+         style="
+        width: 100%; text-align: center; background: white; border: 1px solid #e2e8f0;
+        color: #334155; font-weight: 600; padding: 8px 0; border-radius: 6px;
+        cursor: pointer; font-size: 14px; margin-bottom: 10px; transition: 0.2s;
+    ">
+        🤝 技术合作: {wx_id}
+    </div>
+    """
+    st.sidebar.markdown(html, unsafe_allow_html=True)
+
 def render_copy_btn(text, key_suffix):
-    """渲染一键复制按钮"""
+    """一键复制按钮 (修复报错)"""
     safe_text = text.replace("`", "\`").replace("'", "\\'")
     html = f"""
     <script>
@@ -167,7 +168,7 @@ def render_copy_btn(text, key_suffix):
     components.html(html, height=50)
 
 def render_wechat_pill(label, wx_id):
-    """简单的微信复制胶囊 (侧边栏用)"""
+    """侧边栏：微信胶囊"""
     components.html(f"""
     <div style="display:flex;justify-content:space-between;align-items:center;background:white;border:1px solid #e2e8f0;border-radius:6px;padding:0 10px;height:34px;cursor:pointer;font-family:'Inter',sans-serif;font-size:12px;color:#334155;" onclick="navigator.clipboard.writeText('{wx_id}')">
         <span style="font-weight:600">{label}</span>
@@ -176,7 +177,7 @@ def render_wechat_pill(label, wx_id):
     """, height=40)
 
 def render_cta_wechat(wx_id):
-    """首页专用：带悬浮特效的微信资料领取按钮"""
+    """首页：领取资料按钮 (增加 Margin 防止显示不全)"""
     html = f"""
     <style>
     .cta-box {{
@@ -185,54 +186,42 @@ def render_cta_wechat(wx_id):
         display: flex; align-items: center; justify-content: space-between;
         cursor: pointer; transition: all 0.3s ease;
         box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-        margin-top: 30px; font-family: 'Inter', sans-serif;
+        margin: 20px 2px; /* 增加边距防止被切掉 */
+        font-family: 'Inter', sans-serif;
     }}
     .cta-box:hover {{ transform: translateY(-3px); box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4); }}
-    .cta-icon {{ font-size: 24px; margin-right: 15px; }}
-    .cta-text {{ flex-grow: 1; }}
     .cta-title {{ font-size: 16px; font-weight: 700; display: block; }}
     .cta-sub {{ font-size: 13px; opacity: 0.9; }}
     .cta-copy {{ background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; font-family: monospace; }}
     </style>
-    
-    <div class="cta-box" onclick="copyToClip('{wx_id}')" id="cta-btn">
+    <div class="cta-box" onclick="navigator.clipboard.writeText('{wx_id}');alert('微信号 {wx_id} 已复制！')">
         <div style="display:flex; align-items:center;">
-            <div class="cta-icon">🎁</div>
-            <div class="cta-text">
+            <div style="font-size: 24px; margin-right: 15px;">🎁</div>
+            <div>
                 <span class="cta-title">领取内部资料 & 项目白皮书</span>
                 <span class="cta-sub">添加微信，备注【资料】</span>
             </div>
         </div>
-        <div class="cta-copy" id="cta-code">📋 {wx_id}</div>
+        <div class="cta-copy">📋 {wx_id}</div>
     </div>
-
-    <script>
-    function copyToClip(text) {{
-        navigator.clipboard.writeText(text).then(function() {{
-            const codeElem = document.getElementById('cta-code');
-            const original = codeElem.innerHTML;
-            codeElem.innerHTML = '✅ 已复制';
-            codeElem.style.background = 'white';
-            codeElem.style.color = '#059669';
-            setTimeout(() => {{ 
-                codeElem.innerHTML = original; 
-                codeElem.style.background = 'rgba(255,255,255,0.2)';
-                codeElem.style.color = 'white';
-            }}, 2000);
-        }}, function(err) {{
-            console.error('Async: Could not copy text: ', err);
-        }});
-    }}
-    </script>
     """
-    components.html(html, height=90)
+    components.html(html, height=100)
 
 def render_home_project_card(icon, title, desc, tag):
-    """渲染首页的项目切片"""
+    """首页项目切片"""
     return f"""
     <div class="project-card">
         <div class="proj-title"><span style="margin-right:8px;">{icon}</span>{title}</div>
         <div class="proj-desc">{desc}</div>
         <div class="proj-tag">{tag}</div>
+    </div>
+    """
+
+def render_feature_nav_card(icon, title):
+    """首页顶部功能卡片"""
+    return f"""
+    <div class="feature-nav-card">
+        <div class="fn-icon">{icon}</div>
+        <div class="fn-text">{title}</div>
     </div>
     """

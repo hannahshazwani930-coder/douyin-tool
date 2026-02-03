@@ -1,0 +1,90 @@
+/* * 🔐 [ULTRA-PRO PRODUCTION - GLOBAL OVERRIDE] 
+ * 锁定目标：解决所有截图中的组件偏移、溢出和白块问题。
+ */
+
+/* 1. 强力清除原生 UI 干扰 */
+header, [data-testid="stHeader"], [data-testid="stSidebar"], [data-testid="stToolbar"] { 
+    display: none !important; 
+}
+
+/* 2. 背景：深邃科技蓝 */
+.stApp {
+    background: #050a18 !important;
+    overflow: hidden !important;
+}
+
+/* 3. 核心根容器：强制 850x520 白色卡片居中锁死 */
+div.block-container {
+    max-width: 850px !important;
+    height: 520px !important;
+    padding: 0 !important;
+    margin: auto !important;
+    position: fixed !important;
+    top: 50% !important; 
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    background: white !important;
+    border-radius: 32px !important;
+    box-shadow: 0 50px 100px rgba(0,0,0,0.8) !important;
+    display: flex !important; /* 关键：强制内部元素横向分布 */
+    z-index: 100 !important;
+}
+
+/* 4. 模拟左侧品牌面板 (伪元素实现，确保它永远挡在组件下面) */
+div.block-container::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0;
+    width: 360px; /* 锁死左侧比例 */
+    height: 100%;
+    background: linear-gradient(135deg, #2563eb, #1e3a8a);
+    z-index: 101;
+}
+
+/* 5. 强制纠偏：将所有右侧 Streamlit 组件“物理隔离”到 360px 之后 */
+[data-testid="stVerticalBlock"] > div {
+    margin-left: 360px !important; /* 强制位移，解决截图中的组件跑偏 */
+    padding: 20px 45px !important;
+    width: 490px !important; /* 850 - 360 */
+}
+
+/* 6. 品牌文字覆盖：利用绝对定位浮在蓝色面板上 */
+.brand-fixed-content {
+    position: absolute;
+    left: 0; top: 0;
+    width: 360px;
+    height: 520px;
+    padding: 60px 45px;
+    color: white;
+    z-index: 102;
+    pointer-events: none;
+}
+
+/* 7. 输入框与按钮美化 */
+.stTextInput input {
+    height: 48px !important;
+    border-radius: 12px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #f8fafc !important;
+}
+
+div.stButton > button {
+    width: 100% !important;
+    height: 50px !important;
+    background: #1e3a8a !important;
+    color: white !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    border: none !important;
+}
+
+/* 8. 外部免责声明：放在屏幕最底部 */
+.footer-disclaimer-fixed {
+    position: fixed;
+    bottom: 30px;
+    width: 100%;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 11px;
+    z-index: 1000;
+}

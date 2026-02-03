@@ -2,15 +2,18 @@
 import sqlite3
 import os
 from datetime import datetime, timedelta
-from config import ADMIN_ACCOUNT, ADMIN_PASSWORD, DEFAULT_INVITE_CODE
-
-DB_FILE = "system_data.db"
+from config import (
+    DB_FILE, 
+    ADMIN_ACCOUNT, 
+    ADMIN_PASSWORD, 
+    DEFAULT_INVITE_CODE,
+    REWARD_DAYS_NEW_USER
+)
 
 def init_db():
-    """初始化数据库表结构"""
+    """初始化数据库并创建管理员"""
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
-    # 用户表：增加注册时间和邀请者字段
     cursor.execute('''CREATE TABLE IF NOT EXISTS users (
         account TEXT PRIMARY KEY,
         password TEXT,
@@ -19,7 +22,7 @@ def init_db():
         vip_until DATE,
         created_at TIMESTAMP
     )''')
-    # 初始管理员账号
+    # 插入默认管理员
     cursor.execute("INSERT OR IGNORE INTO users VALUES (?, ?, ?, ?, ?, ?)",
                    (ADMIN_ACCOUNT, ADMIN_PASSWORD, "ADMIN888", "SYSTEM", "2099-12-31", datetime.now()))
     conn.commit()
@@ -42,15 +45,14 @@ def register_user(account, password, invite_code):
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     
-    # 检查账号是否存在
     cursor.execute("SELECT account FROM users WHERE account=?", (account,))
     if cursor.fetchone():
         conn.close()
         return False, "账号已存在"
     
-    # 默认赠送3天VIP
-    vip_date = (datetime.now() + timedelta(days=3)).strftime('%Y-%m-%d')
-    my_invite_code = account[-6:] # 简单生成个邀请码
+    # 赠送 VIP 天数
+    vip_date = (datetime.now() + timedelta(days=REWARD_DAYS_NEW_USER)).strftime('%Y-%m-%d')
+    my_invite_code = account[-6:] # 取账号后六位作为邀请码
     
     try:
         cursor.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)",
@@ -58,7 +60,7 @@ def register_user(account, password, invite_code):
         conn.commit()
         return True, "注册成功"
     except Exception as e:
-        return False, str(e)
+        return False, f"数据库错误: {str(e)}"
     finally:
         conn.close()
 
@@ -77,7 +79,11 @@ def get_user_invite_info(account):
     cursor = conn.cursor()
     cursor.execute("SELECT invite_code FROM users WHERE account=?", (account,))
     code = cursor.fetchone()
-    cursor.execute("SELECT COUNT(*) FROM users WHERE referrer=(SELECT invite_code FROM users WHERE account=?)", (account,))
-    count = cursor.fetchone()
+    # 统计有多少人的推荐人是我的邀请码
+    if code:
+        cursor.execute("SELECT COUNT(*) FROM users WHERE referrer=?", (code[0],))
+        count = cursor.fetchone()
+        conn.close()
+        return code[0], count[0] if count else 0
     conn.close()
-    return code[0] if code else "N/A", count[0] if count else 0
+    return "N/A", 0

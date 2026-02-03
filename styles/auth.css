@@ -1,90 +1,69 @@
-/* * 🔐 [LOCKED: FINAL PRODUCTION VERSION] 
- * 目标：彻底解决对齐偏差，消除多余白块。
+/* * 🔐 [FINAL PRODUCTION LOCKED] 
+ * 效率提升方案：强制组件定位偏移
  */
 
-/* 1. 屏蔽一切原生干扰 */
-header, [data-testid="stHeader"], [data-testid="stSidebar"] { 
-    display: none !important; 
-}
+/* 1. 隐藏干扰 */
+header, [data-testid="stHeader"], [data-testid="stSidebar"] { display: none !important; }
 
-/* 2. 极暗深邃背景 */
+/* 2. 背景锁定 */
 .stApp {
     background: #050a18 !important;
-    background-image: radial-gradient(circle at 100% 0%, #162e64 0%, transparent 40%),
-                      radial-gradient(circle at 0% 100%, #0c1631 0%, transparent 40%) !important;
 }
 
-/* 3. 根容器归零 */
+/* 3. 根容器强制对齐：这是解决偏移的关键 */
 div.block-container {
-    max-width: 100% !important;
+    max-width: 850px !important;
     padding: 0 !important;
+    margin: auto !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    background: white !important; /* 强制底色为白 */
+    border-radius: 32px !important;
+    height: 520px !important;
+    overflow: hidden !important;
 }
 
-/* 4. 横屏卡片主体 */
-.auth-wrapper {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 850px;
-    height: 520px;
-    background: white;
-    border-radius: 32px;
-    display: flex;
-    box-shadow: 0 50px 100px rgba(0,0,0,0.8);
-    overflow: hidden;
-    z-index: 1000;
-}
-
-/* 左侧品牌区 */
-.side-panel {
-    width: 350px;
+/* 4. 强制左侧品牌区固定 */
+.fixed-left-brand {
+    position: absolute;
+    left: 0; top: 0;
+    width: 340px; /* 850的40% */
+    height: 100%;
     background: linear-gradient(135deg, #2563eb, #1e3a8a);
-    padding: 60px 40px;
+    padding: 50px;
     color: white;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    z-index: 99; /* 确保在最上层 */
 }
 
-/* 右侧表单区：强制锁定内间距 */
-.form-panel {
-    flex: 1;
-    background: white;
-    padding: 40px 60px;
-    position: relative;
+/* 5. 核心：强制把 Streamlit 所有表单组件推到右侧 60% 的位置 */
+[data-testid="stForm"], [data-testid="stVerticalBlock"] > div:not(.fixed-left-brand) {
+    padding-left: 360px !important; /* 留出左侧空间 */
+    padding-right: 40px !important;
+    padding-top: 20px !important;
 }
 
-/* 输入框大气化 */
+/* 6. 输入框与按钮大气美化 */
 .stTextInput input {
-    height: 48px !important;
     border-radius: 12px !important;
-    border: 1px solid #e2e8f0 !important;
+    height: 48px !important;
 }
 
-/* 按钮悬浮锁定 */
 div.stButton > button {
-    width: 100%;
-    height: 50px;
+    width: 100% !important;
+    height: 50px !important;
     background: #1e3a8a !important;
     color: white !important;
     border-radius: 12px !important;
     font-weight: 700 !important;
-    border: none !important;
-    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-div.stButton > button:hover {
-    background: #2563eb !important;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
-}
-
-/* 外部下方声明 */
-.footer-disclaimer {
+/* 7. 免责声明外置（在 stApp 层级） */
+.footer-lock {
     position: fixed;
-    bottom: 40px;
-    width: 100%;
+    bottom: 30px; width: 100%;
     text-align: center;
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255,255,255,0.4);
     font-size: 12px;
 }

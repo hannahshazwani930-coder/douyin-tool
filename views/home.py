@@ -1,6 +1,6 @@
 # views/home.py
 import streamlit as st
-from utils import render_cta_wechat
+from utils import render_cta_wechat, render_project_card
 from database import get_active_announcements
 
 def view_home():
@@ -51,7 +51,7 @@ def view_home():
     </div>
     """, unsafe_allow_html=True)
 
-    # === C. 热门变现任务 (HTML 纯净版) - [LOCKED] ===
+    # === C. 热门变现项目 (独立封装组件，防乱码，带复制) ===
     st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
     st.markdown('<div class="section-label">🔥 热门变现项目</div>', unsafe_allow_html=True)
     
@@ -65,19 +65,8 @@ def view_home():
     
     for i, (icon, title, desc) in enumerate(projects):
         with [p1, p2, p3][i]:
-            st.markdown(f"""
-            <div class="monetize-card">
-                <div class="mon-head">
-                    <span class="mon-icon">{icon}</span>
-                    <span class="mon-title">{title}</span>
-                </div>
-                <div class="mon-desc">{desc}</div>
-                
-                <div class="wechat-badge" onclick="navigator.clipboard.writeText('W7774X'); alert('✅ 微信 W7774X 已复制！\\n请添加微信并备注【资料】领取内部白皮书。')">
-                    <span style="font-size:14px; color:#10b981;">💬</span>
-                    <span>W7774X</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            # 调用封装好的组件，确保样式隔离且无乱码
+            render_project_card(icon, title, desc, "W7774X")
 
     st.markdown("<div style='height:40px'></div>", unsafe_allow_html=True)
+

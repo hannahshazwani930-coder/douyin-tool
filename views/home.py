@@ -26,6 +26,7 @@ def view_home():
     
     for i, (icon, title, desc, target) in enumerate(features):
         with [c1, c2, c3, c4][i]:
+            # 渲染卡片
             st.markdown(f"""
             <div class="feature-card-pro">
                 <div class="feat-icon">{icon}</div>
@@ -33,6 +34,8 @@ def view_home():
                 <div class="feat-desc">{desc}</div>
             </div>
             """, unsafe_allow_html=True)
+            
+            # 隐形点击层 (覆盖全卡片)
             if st.button(f"nav_home_{i}", key=f"feat_btn_{i}", use_container_width=True):
                 st.session_state['nav_menu_selection'] = target
                 st.rerun()
@@ -49,7 +52,7 @@ def view_home():
     </div>
     """, unsafe_allow_html=True)
 
-    # === C. 热门变现任务 ===
+    # === C. 热门变现任务 (V2: 长按钮版) ===
     st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
     st.markdown('<div class="section-label">🔥 热门变现项目</div>', unsafe_allow_html=True)
     
@@ -71,9 +74,8 @@ def view_home():
                 </div>
                 <div class="mon-desc">{desc}</div>
                 
-                <div class="wechat-badge" onclick="navigator.clipboard.writeText('W7774X'); alert('✅ 微信 W7774X 已复制！\\n请添加微信并备注【资料】领取内部白皮书。')">
-                    <span style="font-size:14px; color:#10b981;">💬</span>
-                    <span>W7774X</span>
+                <div class="long-copy-btn" onclick="navigator.clipboard.writeText('W7774X'); alert('✅ 微信 W7774X 已复制！\\n请添加微信并备注【资料】领取内部白皮书。')">
+                    📋 复制微信领取资料 (W7774X)
                 </div>
             </div>
             """, unsafe_allow_html=True)

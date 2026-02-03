@@ -55,102 +55,104 @@ def init_db():
 
 init_db()
 
-# --- CSS 样式 (全站通用基础 + 登录页修复) ---
+# --- CSS 样式 (回归高级磨砂质感) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     
-    /* 1. 全局字体与背景 (重置为商务灰) */
-    .stApp { 
-        font-family: 'Inter', sans-serif; 
-        background-color: #f8fafc; /* Slate-50 */
-    }
-    
-    /* 隐藏顶部杂项 */
+    .stApp { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
     header { visibility: hidden; }
     [data-testid="stSidebarCollapsedControl"] { display: none; }
-    
-    /* 容器调整 */
     div.block-container { max-width: 1200px !important; padding: 2rem !important; }
 
     /* =========================================
-       2. 输入框终极修复 (Solid Style)
+       🔥 核心：功能页高级质感回归 (Main Area) 🔥
        ========================================= */
-    /* 强制所有文本输入框为白底、黑字、灰边框 */
-    .stTextInput input, .stTextInput > div > div > input {
-        background-color: #ffffff !important;
-        color: #1e293b !important; /* Slate-800 */
-        border: 1px solid #cbd5e1 !important; /* Slate-300 */
-        border-radius: 8px !important;
-        padding: 10px 12px !important;
+    
+    /* 卡片容器：半透明磨砂 + 柔光阴影 */
+    section.main [data-testid="stVerticalBlockBorderWrapper"] {
+        border-radius: 16px !important;
+        border: 1px solid rgba(255, 255, 255, 0.6) !important;
+        background: rgba(255, 255, 255, 0.8) !important;
+        backdrop-filter: blur(12px) !important;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05) !important;
+        padding: 24px !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    
+    /* 悬浮特效：上浮 + 蓝光辉光 */
+    section.main [data-testid="stVerticalBlockBorderWrapper"]:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px -5px rgba(59, 130, 246, 0.15) !important;
+        border-color: #bfdbfe !important;
+    }
+
+    /* 输入框：回归半透明高级灰 */
+    section.main .stTextInput > div > div > input,
+    section.main .stTextArea > div > div > textarea,
+    section.main .stSelectbox > div > div {
+        background-color: rgba(248, 250, 252, 0.8) !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #1e293b !important;
+        border-radius: 10px !important;
+        padding: 12px !important;
         font-size: 14px !important;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        transition: all 0.2s ease !important;
     }
     
     /* 聚焦状态 */
-    .stTextInput input:focus, .stTextInput > div > div > input:focus {
-        border-color: #3b82f6 !important; /* Blue-500 */
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
-        outline: none !important;
+    section.main .stTextInput > div > div > input:focus,
+    section.main .stTextArea > div > div > textarea:focus {
+        border-color: #3b82f6 !important;
+        background-color: #ffffff !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
     }
-    
-    /* 隐藏输入框上方的 Label (让界面更像 App) */
-    .stTextInput label { display: none !important; }
 
-    /* =========================================
-       3. 按钮系统
-       ========================================= */
-    div.stButton > button { 
-        border-radius: 8px; font-weight: 600; height: 44px; width: 100%; font-size: 14px; 
-        border: none; transition: 0.2s; 
-    }
+    /* 按钮系统 */
+    div.stButton > button { border-radius: 8px; font-weight: 600; height: 44px; width: 100%; font-size: 14px; border: none; transition: 0.2s; }
     div.stButton > button[kind="primary"] { 
-        background: #0f172a; color: white !important; 
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); 
+        color: white !important; 
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2); 
     }
-    div.stButton > button[kind="primary"]:hover { 
-        background: #334155; transform: translateY(-1px); 
-    }
-    div.stButton > button[kind="secondary"] { 
-        background: white; border: 1px solid #cbd5e1; color: #475569; 
-    }
-    div.stButton > button[kind="secondary"]:hover { 
-        border-color: #94a3b8; background: #f1f5f9; color: #0f172a; 
-    }
+    div.stButton > button[kind="primary"]:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3); }
+    div.stButton > button[kind="secondary"] { background: white; border: 1px solid #cbd5e1; color: #475569; }
+    div.stButton > button[kind="secondary"]:hover { border-color: #94a3b8; background: #f8fafc; color: #0f172a; }
 
     /* =========================================
-       4. 登录页专属卡片容器
+       🎨 首页 Hero 美化 (v9.3 风格)
        ========================================= */
-    .auth-container {
-        max-width: 420px;
-        margin: 0 auto;
-        background: white;
-        padding: 40px;
-        border-radius: 16px;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        border: 1px solid #e2e8f0;
+    .hero-container {
+        position: relative;
+        background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+        border-radius: 24px; padding: 50px 40px; text-align: center;
+        border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 40px;
+        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05);
     }
-    .auth-header {
-        text-align: center; margin-bottom: 30px;
+    .hero-container::before {
+        content: ''; position: absolute; top: -50%; right: -10%; width: 300px; height: 300px;
+        background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%); pointer-events: none;
     }
-    .auth-logo { font-size: 40px; margin-bottom: 10px; }
-    .auth-title { font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 5px; }
-    .auth-sub { font-size: 14px; color: #64748b; }
-    
-    /* Tab 样式微调 */
-    .stTabs [data-baseweb="tab-list"] {
-        justify-content: center; gap: 20px; border-bottom: 1px solid #f1f5f9; margin-bottom: 25px;
+    .hero-title {
+        font-size: 46px; font-weight: 900; letter-spacing: -1.5px; margin-bottom: 15px; position: relative; z-index: 1;
+        background: linear-gradient(120deg, #1e293b, #2563eb, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-    .stTabs [data-baseweb="tab"] {
-        background: transparent !important; border: none !important; padding: 8px 0 !important;
-        font-size: 14px; color: #64748b;
+    .hero-sub { font-size: 17px; color: #64748b; font-weight: 500; position: relative; z-index: 1; }
+
+    /* 功能图标 */
+    .home-card-inner { text-align: center; padding: 10px; }
+    .home-card-icon {
+        width: 68px; height: 68px; margin: 0 auto 15px auto;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-radius: 20px; display: flex; align-items: center; justify-content: center;
+        font-size: 32px; color: #2563eb;
+        box-shadow: 0 8px 16px -4px rgba(37, 99, 235, 0.15);
     }
-    .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        color: #2563eb; font-weight: 600; border-bottom: 2px solid #2563eb !important;
-    }
+    .home-card-title { font-size: 19px; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
+    .home-card-desc { font-size: 13px; color: #64748b; line-height: 1.5; min-height: 40px; }
 
     /* =========================================
-       5. 侧边栏 & 内页组件 (保持不动)
+       🚪 侧边栏 (保持紧凑稳定)
        ========================================= */
     [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; }
     .sidebar-user-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
@@ -166,53 +168,17 @@ st.markdown("""
     .stRadio > div > label[data-checked="true"] { background: #eff6ff; color: #2563eb; font-weight: 600; }
     .stRadio div[role="radiogroup"] > label > div:first-child { display: none; }
     
-    .sidebar-project-card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 3px solid #3b82f6; transition: all 0.2s; cursor: default; }
+    .sidebar-project-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 8px; border-left: 3px solid #3b82f6; transition: all 0.2s; cursor: default; }
     .sidebar-project-card:hover { transform: translateX(2px); border-color: #94a3b8; }
-    .sp-title { font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 2px; }
-    .sp-desc { font-size: 11px; color: #94a3b8; line-height: 1.4; }
+    .sp-title { font-weight: 700; font-size: 12px; color: #334155; margin-bottom: 2px; }
+    .sp-desc { font-size: 10px; color: #94a3b8; line-height: 1.3; }
 
-    /* 通用组件 */
-    .poster-hero-container { background: white; border-radius: 16px; padding: 24px; border: 1px solid #e2e8f0; display: flex; align-items: center; margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
-    .hero-icon-wrapper { width: 56px; height: 56px; background: #eff6ff; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-right: 20px; color: #2563eb; }
-    .hero-title { font-size: 20px; font-weight: 800; color: #1e293b; margin: 0 0 6px 0; }
-    .hero-desc { font-size: 14px; color: #64748b; margin: 0; }
-
-    /* 个人中心 */
+    /* 其他组件 */
     .referral-box { background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border: 1px solid #fed7aa; border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 20px; }
     .referral-code-display { font-family: monospace; font-size: 32px; font-weight: 800; color: #ea580c; background: rgba(255,255,255,0.6); padding: 10px 30px; border-radius: 12px; border: 2px dashed #f97316; display: inline-block; margin: 10px 0; cursor: pointer; }
+    .wx-invite-box { background: #f0fdf4; border: 1px dashed #22c55e; border-radius: 8px; padding: 12px; text-align: center; color: #15803d; font-size: 13px; margin-bottom: 10px; }
     .footer-legal { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 12px; }
     .footer-links a { color: #64748b; text-decoration: none; margin: 0 10px; transition: color 0.2s; }
-    .wx-invite-box { background: #f0fdf4; border: 1px dashed #22c55e; border-radius: 8px; padding: 12px; text-align: center; color: #15803d; font-size: 13px; margin-bottom: 10px; }
-    
-    /* 首页 Hero 卡片 */
-    .hero-card-container {
-        background: white; border-radius: 20px; padding: 40px; text-align: center;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 30px;
-        position: relative; overflow: hidden;
-    }
-    .hero-card-container::before {
-        content: ''; position: absolute; top: -50%; left: -10%; width: 300px; height: 300px;
-        background: radial-gradient(circle, rgba(59,130,246,0.05) 0%, transparent 70%);
-        border-radius: 50%; z-index: 0; pointer-events: none;
-    }
-    .hero-title-main { font-size: 42px; font-weight: 900; color: #1e293b; margin-bottom: 10px; letter-spacing: -0.5px; position: relative; z-index: 1; }
-    .hero-subtitle-main { font-size: 16px; color: #64748b; position: relative; z-index: 1; }
-    
-    .home-card-inner { text-align: center; padding: 15px; }
-    .home-card-icon { width: 60px; height: 60px; background: #eff6ff; color: #2563eb; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 15px auto; }
-    .home-card-title { font-size: 18px; font-weight: 700; color: #1e293b; text-align: center; margin-bottom: 6px; }
-    .home-card-desc { font-size: 13px; color: #64748b; text-align: center; margin-bottom: 10px; min-height: 40px; line-height: 1.4; }
-    
-    /* 首页卡片容器覆盖 - 只给首页 */
-    .home-card-wrapper [data-testid="stVerticalBlockBorderWrapper"] {
-        border-radius: 16px !important; border: 1px solid #e2e8f0 !important;
-        background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 24px !important;
-    }
-    .home-card-wrapper [data-testid="stVerticalBlockBorderWrapper"]:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 40px -5px rgba(59, 130, 246, 0.12); border-color: #bfdbfe !important;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -272,9 +238,6 @@ def add_vip_days(account, days, source="system"):
     c.execute("INSERT INTO access_codes (code, duration_days, activated_at, expire_at, status, create_time, bind_user) VALUES (?, ?, ?, ?, ?, ?, ?)",
               (new_code, days, now, expire_at, 'active', now, account))
     conn.commit(); conn.close()
-
-def generate_invite_code():
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
 def register_user(account, password, invite_code_used):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
@@ -374,65 +337,86 @@ def submit_feedback(phone, content):
     conn.commit(); conn.close()
 
 # ==========================================
-# 1. 认证模块 (干净版)
+# 1. 认证模块 (登录页 - 纯HTML重构版)
 # ==========================================
 if 'user_phone' not in st.session_state:
     auto = check_ip_auto_login()
     if auto: st.session_state['user_phone'] = auto; st.toast(f"欢迎回来 {auto}", icon="👋"); time.sleep(0.5); st.rerun()
 
 def auth_page():
-    # 顶部空隙
+    # 极光背景 + 登录页专属样式
+    st.markdown("""
+    <style>
+        .stApp {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%; animation: gradientBG 15s ease infinite;
+        }
+        @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
+        [data-testid="stSidebarCollapsedControl"] { display: none; }
+        
+        .lp-header { font-size: 36px; font-weight: 800; color: #ffffff; letter-spacing: -1px; margin-bottom: 8px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .lp-sub { font-size: 16px; color: rgba(255,255,255,0.9); margin-bottom: 30px; }
+        .lp-feature { display: flex; align-items: center; margin-bottom: 20px; color: white; font-weight: 500; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .lp-icon { width: 32px; height: 32px; background: rgba(255,255,255,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 15px; }
+        
+        /* 登录框修正 */
+        .login-box-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        
+        /* 登录页输入框样式重置 (避免看不清) */
+        .stTextInput > div > div > input {
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
     st.markdown("<div style='height: 10vh;'></div>", unsafe_allow_html=True)
-    
-    # 使用列布局居中
-    c1, c2, c3 = st.columns([1, 40, 1]) # 左右留白，中间 40 (最大宽度受 CSS block-container 限制)
+    c1, c2, c3 = st.columns([1, 8, 1])
     
     with c2:
-        # 手动 HTML 构建的“干净”卡片，不使用 st.container(border=True) 避免白框
-        st.markdown("""
-        <div class="auth-container">
-            <div class="auth-header">
-                <div class="auth-logo">💠</div>
-                <div class="auth-title">抖音爆款工场 Pro</div>
-                <div class="auth-sub">AI 驱动的 KOC 商业变现操作系统</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        col_l, col_r = st.columns([1.2, 1], gap="large")
+        with col_l:
+            st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div class='lp-header'>抖音爆款工场 Pro</div>", unsafe_allow_html=True)
+            st.markdown("<div class='lp-sub'>全网首个 AI + KOC 商业变现操作系统</div>", unsafe_allow_html=True)
+            st.markdown("""
+            <div class='lp-feature'><div class='lp-icon'>🚀</div>5路并发 · 极速文案清洗改写</div>
+            <div class='lp-feature'><div class='lp-icon'>💡</div>爆款选题 · 击穿流量焦虑</div>
+            <div class='lp-feature'><div class='lp-icon'>🎨</div>海报生成 · 影视级光影质感</div>
+            <div class='lp-feature'><div class='lp-icon'>💰</div>裂变系统 · 邀请好友免费续杯</div>
+            """, unsafe_allow_html=True)
         
-        # 在卡片内部使用 Streamlit 组件 (需要一定的 margin-top 负值把组件拉进去，或者直接放在下方容器)
-        # 更好的方式：利用 column 嵌套在 markdown 下方，视觉上连在一起
-        
-        # 这里为了稳妥，我们直接在下方放 Tab，视觉上接近
-        # 或者，我们可以把整个表单区做的窄一点，居中
-        
-        col_form_L, col_form_M, col_form_R = st.columns([1, 1.5, 1])
-        with col_form_M:
-            t1, t2, t3 = st.tabs(["登录", "注册", "找回"])
+        with col_r:
+            # 使用简单的 Markdown 容器做背景，内部放 Streamlit 组件
+            st.markdown('<div class="login-box-container">', unsafe_allow_html=True)
             
+            t1, t2, t3 = st.tabs(["登录", "注册", "找回"])
             with t1:
                 st.write("")
                 with st.form("login_form"):
                     acc = st.text_input("账号", placeholder="手机号 或 邮箱", label_visibility="collapsed")
                     pw = st.text_input("密码", type="password", placeholder="请输入密码", label_visibility="collapsed")
-                    st.markdown("<div style='height:15px'></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
                     if st.form_submit_button("立即登录", type="primary", use_container_width=True):
                         s, m = login_user(acc, pw)
                         if s: st.session_state['user_phone'] = acc; st.rerun()
                         else: st.error(m)
-            
             with t2:
-                st.info(f"🎁 新人注册即送 {REWARD_DAYS_NEW_USER} 天 VIP")
+                st.info(f"🎁 注册即送 {REWARD_DAYS_NEW_USER} 天 VIP")
                 acc = st.text_input("账号", key="r_acc", placeholder="手机号 或 邮箱", label_visibility="collapsed")
                 pw1 = st.text_input("密码", type="password", key="r_p1", placeholder="设置密码", label_visibility="collapsed")
                 pw2 = st.text_input("确认", type="password", key="r_p2", placeholder="确认密码", label_visibility="collapsed")
-                
                 with st.expander("❓ 获取邀请码"):
                     st.markdown(f"<div class='wx-invite-box'>添加客服 <b>W7774X</b> 回复“注册”获取</div>", unsafe_allow_html=True)
                     render_hover_copy_box("W7774X", "点击复制微信号")
-                
                 invite_code = st.text_input("邀请码", key="r_invite", placeholder="邀请码 (必填)", label_visibility="collapsed")
                 st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-                
                 if st.button("立即注册", type="primary", use_container_width=True):
                     if pw1 != pw2: st.error("密码不一致")
                     elif not invite_code: st.error("请输入邀请码")
@@ -449,15 +433,15 @@ def auth_page():
                             if s: st.success(m); st.balloons(); time.sleep(2); st.session_state['user_phone'] = acc; st.rerun()
                             else: st.error(m)
                         else: st.error("❌ 邀请码无效")
-            
             with t3:
                 st.write("")
                 st.warning("🔒 仅支持通过邮箱找回密码")
                 email = st.text_input("注册邮箱", placeholder="name@example.com", label_visibility="collapsed")
-                st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
                 if st.button("发送重置邮件", use_container_width=True):
-                    if "@" in email: st.success(f"重置链接已发送至 {email}")
+                    if "@" in email: st.success(f"邮件已发送至 {email}")
                     else: st.error("邮箱格式错误")
+            
+            st.markdown('</div>', unsafe_allow_html=True)
 
     render_footer()
 
@@ -510,16 +494,12 @@ menu = st.session_state['nav_menu']
 
 # --- 首页 ---
 def page_home():
-    # 使用自定义 CSS 类名包装，避免污染
-    st.markdown("<div class='home-card-wrapper'>", unsafe_allow_html=True)
-    st.markdown("<div style='height: 4rem;'></div>", unsafe_allow_html=True)
     st.markdown("""
-    <div class="hero-card-container">
-        <div class="hero-title-main">抖音爆款工场 Pro</div>
-        <div class="hero-subtitle-main">让流量不再是玄学 · 专为素人 KOC 打造的 AI 变现神器</div>
+    <div class="hero-container">
+        <div class="hero-title">抖音爆款工场 Pro</div>
+        <div class="hero-sub">让流量不再是玄学 · 专为素人 KOC 打造的 AI 变现神器</div>
     </div>
     """, unsafe_allow_html=True)
-    
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         with st.container(border=True):
@@ -537,9 +517,6 @@ def page_home():
         with st.container(border=True):
             st.markdown("""<div class="home-card-inner"><div class="home-card-icon">🏷️</div><div class="home-card-title">账号起名</div><div class="home-card-desc">AI 算命 · 爆款玄学<br>赛道垂直定制</div></div>""", unsafe_allow_html=True)
             st.button("立即使用 ➜", key="h_btn4", on_click=go_to, args=("🏷️ 账号起名",), type="primary", use_container_width=True)
-    
-    st.markdown("</div>", unsafe_allow_html=True) # End wrapper
-    
     st.markdown("<br>", unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("#### 📢 系统公告")

@@ -41,7 +41,7 @@ def init_db():
 
 init_db()
 
-# --- CSS 样式 (融合版：保留主页样式，更新侧边栏) ---
+# --- CSS 样式 ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -73,7 +73,7 @@ st.markdown("""
     div.stButton > button[kind="secondary"] { background-color: #f1f5f9; color: #475569; border: 1px solid transparent; }
     div.stButton > button[kind="secondary"]:hover { background-color: #e2e8f0; color: #1e293b; border-color: #cbd5e1; }
 
-    /* --- 🔥 侧边栏美化 (v6.2新增) 🔥 --- */
+    /* --- 🔥 侧边栏美化 🔥 --- */
     [data-testid="stSidebar"] {
         background-color: #f8fafc;
         border-right: 1px solid #e2e8f0;
@@ -107,7 +107,7 @@ st.markdown("""
     }
     .sidebar-project-card:hover { transform: translateX(3px); box-shadow: 0 4px 10px rgba(0,0,0,0.03); border-color: #cbd5e1; }
     .sp-title { font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 4px; }
-    .sp-desc { font-size: 11px; color: #94a3b8; line-height: 1.3; }
+    .sp-desc { font-size: 11px; color: #64748b; line-height: 1.3; }
 
     /* 侧边栏联系胶囊 */
     .contact-pill {
@@ -117,7 +117,7 @@ st.markdown("""
     }
     .contact-pill:hover { border-color: #3b82f6; color: #2563eb; background: #eff6ff; }
     
-    /* --- 🔥 首页功能卡片样式 (保持不变) 🔥 --- */
+    /* --- 🔥 首页功能卡片样式 🔥 --- */
     [data-testid="stVerticalBlockBorderWrapper"] {
         border-radius: 16px !important;
         border: 1px solid #e2e8f0 !important;
@@ -311,9 +311,9 @@ def go_to(page):
     st.session_state['nav_menu'] = page
     st.session_state['sb_radio'] = page
 
-# --- 侧边栏美化 ---
+# --- 侧边栏 ---
 with st.sidebar:
-    # 1. 顶部：用户身份卡片
+    # 1. 用户身份
     status_label = "👑 尊贵VIP" if IS_VIP else "🌑 普通用户"
     st.markdown(f"""
     <div class="sidebar-user-card">
@@ -337,7 +337,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 2. 导航菜单 (美化 Radio)
+    # 2. 导航菜单
     ops = ["🏠 首页", "📝 文案改写", "💡 爆款选题库", "🎨 海报生成", "🏷️ 账号起名", "👤 个人中心"]
     if IS_ADMIN: ops.append("🕵️‍♂️ 管理后台")
     
@@ -349,8 +349,8 @@ with st.sidebar:
 
     st.markdown("---")
     
-    # 3. 商业推广区 (美化卡片)
-    st.markdown("<div style='font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:10px;'>🔥 热门项目</div>", unsafe_allow_html=True)
+    # 3. 商业推广区 (变现矩阵)
+    st.markdown("<div style='font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:10px;'>🔥 热门变现项目</div>", unsafe_allow_html=True)
     st.markdown("""
     <div class="sidebar-project-card">
         <div class="sp-title">📹 素人 KOC 孵化</div>
@@ -360,19 +360,26 @@ with st.sidebar:
         <div class="sp-title">🎨 御灵 AI 动漫</div>
         <div class="sp-desc">小说转动漫 · 端原生流量 · 版权分销</div>
     </div>
+    <div class="sidebar-project-card" style="border-left-color: #10b981;">
+        <div class="sp-title">🌍 文娱出海</div>
+        <div class="sp-desc">短剧出海 · 工具拉新 · 资源变现</div>
+    </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-    render_hover_copy_box("W7774X", "咨询: W7774X")
+    st.markdown("<div style='height:15px'></div>", unsafe_allow_html=True)
+    
+    # 4. 变现咨询
+    render_hover_copy_box("W7774X", "💰 变现咨询: W7774X")
     st.markdown("<div style='height:5px'></div>", unsafe_allow_html=True)
-    render_hover_copy_box("TG777188", "合作: TG777188")
+    # 5. 技术合作 (辅助)
+    render_hover_copy_box("TG777188", "🛠️ 技术合作: TG777188")
     
     st.markdown("---")
     if st.button("🚪 退出登录", use_container_width=True, type="secondary"): del st.session_state['user_phone']; st.rerun()
 
 menu = st.session_state['nav_menu']
 
-# --- 首页 (完美功能) ---
+# --- 首页 (Embedded Button Design) ---
 def page_home():
     st.markdown("## 💠 抖音爆款工场 Pro")
     st.caption("专为素人 KOC 打造的 AI 提效神器 | 文案 · 选题 · 海报 · 变现")

@@ -1,47 +1,55 @@
+# views/account.py
 import streamlit as st
-import sqlite3
-import datetime
-import time
-from database import get_user_invite_info, get_user_vip_status, add_vip_days, get_conn, REWARD_DAYS_REFERRER
 from utils import render_copy_btn
+from database import get_user_invite_info, get_user_vip_status, add_feedback, get_user_feedbacks
 
 def view_account():
-    user = st.session_state.get('user_phone')
-    if not user: 
-        st.error("登录状态失效")
-        return
-
-    st.markdown("### 👤 个人中心")
+    st.markdown("## 👤 个人中心")
     
-    t1, t2 = st.tabs(["🎁 邀请有礼", "💳 账户状态"])
+    user = st.session_state['user_phone']
+    vip_status, msg = get_user_vip_status(user)
+    my_code, invite_count = get_user_invite_info(user)
     
-    with t1:
-        code, count = get_user_invite_info(user)
-        st.success(f"🎉 您的邀请码：{code}")
-        st.markdown(f"**已邀请人数：{count} 人**（每邀请1人，双方各得 {REWARD_DAYS_REFERRER} 天 VIP）")
-        render_copy_btn(code, "invite_code")
-        
-    with t2:
-        is_vip, msg = get_user_vip_status(user)
-        col1, col2 = st.columns(2)
-        col1.metric("当前账号", user)
-        col2.metric("会员状态", "VIP" if is_vip else "普通用户", delta=msg)
-        
-        st.markdown("---")
-        st.write("#### 激活卡密")
-        c_code = st.text_input("输入卡密", placeholder="VIP-XXXXXX")
-        if st.button("立即激活"):
-            conn = get_conn(); cur = conn.cursor()
-            cur.execute("SELECT * FROM access_codes WHERE code=?", (c_code,))
-            row = cur.fetchone()
-            cur.close()
+    # 1. 顶部状态卡
+    col1, col2 = st.columns(2)
+    with col1:
+        with st.container(border=True):
+            st.metric("会员状态", msg, delta="已激活" if vip_status else "去续费")
+    with col2:
+        with st.container(border=True):
+            st.metric("邀请人数", f"{invite_count} 人", delta="推广赚钱")
             
-            if row and row[4] == 'unused':
-                add_vip_days(user, row[1], "CDKEY")
-                conn = get_conn(); cur = conn.cursor()
-                cur.execute("UPDATE access_codes SET status='active', activated_at=?, bind_user=? WHERE code=?", (datetime.datetime.now(), user, c_code))
-                conn.commit(); conn.close()
-                st.success(f"✅ 激活成功！增加 {row[1]} 天")
-                time.sleep(1); st.rerun()
-            else:
-                st.error("❌ 卡密无效或已使用")
+    # 2. 推广功能 (Requirement 10)
+    with st.container(border=True):
+        st.markdown("#### 💸 推广赚钱")
+        st.write(f"您的专属邀请码：**{my_code}**")
+        invite_link = f"http://app-link.com/?invite={my_code}" # 模拟链接
+        st.text_input("专属推广链接", value=invite_link, disabled=True)
+        render_copy_btn(invite_link, "invite_link_copy")
+        
+    # 3. 反馈系统 (Requirement 10)
+    st.markdown("### 📬 意见反馈")
+    tab_write, tab_history = st.tabs(["✍️ 提交反馈", "📜 历史记录"])
+    
+    with tab_write:
+        with st.form("feedback_form"):
+            content = st.text_area("请输入您遇到的问题或建议", height=100)
+            if st.form_submit_button("提交反馈", type="primary"):
+                if content:
+                    add_feedback(user, content)
+                    st.success("提交成功！管理员回复后将在此处显示。")
+                else:
+                    st.warning("内容不能为空")
+                    
+    with tab_history:
+        feeds = get_user_feedbacks(user)
+        if feeds:
+            for f_content, f_reply, f_time, f_status in feeds:
+                with st.expander(f"[{str(f_time)[:10]}] {f_content[:20]}...", expanded=True):
+                    st.write(f"**我的反馈：** {f_content}")
+                    if f_reply:
+                        st.success(f"**管理员回复：** {f_reply}")
+                    else:
+                        st.info("⏳ 等待管理员回复...")
+        else:
+            st.caption("暂无反馈记录")

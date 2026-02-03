@@ -1,93 +1,58 @@
-/* * 🔐 [FINAL SUCCESS: VIEWPORT PHYSICAL LOCK] 
- * 核心原理：使用固定背景模拟卡片，强行将组件推送到目标坐标。
+/* * 🔐 [FINAL SOLUTION: NATIVE GRID ALIGNMENT] 
+ * 放弃小盒子模型，改用全屏分栏视觉。
  */
 
-/* 1. 彻底清除 Streamlit 所有的原生干扰 */
+/* 彻底隐藏所有干扰项 */
 header, [data-testid="stHeader"], [data-testid="stSidebar"], [data-testid="stToolbar"] { 
     display: none !important; 
 }
 
-/* 2. 背景：深邃暗色底色 */
+/* 页面背景：左侧 40% 蓝色，右侧 60% 深色，形成自然的视觉分栏 */
 .stApp {
-    background: #050a18 !important;
+    background: linear-gradient(to right, #1e3a8a 0%, #1e3a8a 40%, #050a18 40%, #050a18 100%) !important;
 }
 
-/* 3. 核心：强制锁死一个 850x520 的物理显示区域 */
+/* 居中核心容器 */
 div.block-container {
-    max-width: 850px !important;
-    height: 520px !important;
-    padding: 0 !important;
+    max-width: 1200px !important;
+    padding-top: 10% !important;
     margin: auto !important;
-    position: fixed !important;
-    top: 50% !important; 
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    background: white !important; /* 卡片白底 */
-    border-radius: 32px !important;
-    box-shadow: 0 40px 100px rgba(0,0,0,0.6) !important;
-    z-index: 100 !important;
-    overflow: visible !important; /* 允许组件在特定层级显示 */
 }
 
-/* 4. 在白卡片左侧强行盖上一块蓝色背景层 */
-div.block-container::before {
-    content: "";
-    position: absolute;
-    left: 0; top: 0;
-    width: 360px; /* 左侧蓝色区宽度 */
-    height: 100%;
-    background: linear-gradient(135deg, #2563eb, #1e3a8a);
-    z-index: 101;
-    border-top-left-radius: 32px;
-    border-bottom-left-radius: 32px;
-}
-
-/* 5. 品牌文字层：浮在蓝色背景层上方 */
-.brand-fixed-layer {
-    position: absolute;
-    left: 0; top: 0;
-    width: 360px;
-    height: 100%;
-    padding: 60px 45px;
+/* 品牌文字美化 */
+.brand-hero {
     color: white;
-    z-index: 102;
-    pointer-events: none; /* 穿透点击，防止干扰 */
+    padding: 20px;
 }
 
-/* 6. 核心修正：强行让所有原生组件“右移”避开蓝色区 */
-/* 通过物理内边距将所有表单元素挤到右侧白色区域 */
-[data-testid="stVerticalBlock"] > div {
-    margin-left: 360px !important; /* 核心：强制推移 */
-    padding: 10px 45px !important;
-    max-width: 490px !important;
+/* 右侧表单美化：给原生组件加一点半透明感 */
+[data-testid="stForm"] {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px !important;
+    padding: 40px !important;
 }
 
-/* 7. 输入框与按钮：专业化大气风格 */
-.stTextInput input {
-    height: 48px !important;
-    border-radius: 12px !important;
-    border: 1px solid #e2e8f0 !important;
-    background: #f8fafc !important;
-}
+.stTextInput label { color: rgba(255,255,255,0.7) !important; }
 
+/* 按钮大气设计 */
 div.stButton > button {
     width: 100% !important;
-    height: 52px !important;
-    background: #1e3a8a !important;
+    height: 50px !important;
+    background: #2563eb !important;
     color: white !important;
     border-radius: 12px !important;
     font-weight: 700 !important;
     border: none !important;
-    margin-top: 15px !important;
+    margin-top: 20px !important;
 }
 
-/* 8. 外部免责声明：放在页面最下方 */
-.footer-text-lock {
+/* 底部声明 */
+.footer-text {
     position: fixed;
-    bottom: 30px; 
+    bottom: 30px;
     width: 100%;
     text-align: center;
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 11px;
-    z-index: 999;
+    color: rgba(255,255,255,0.3);
+    font-size: 12px;
 }

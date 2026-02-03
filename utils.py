@@ -17,7 +17,7 @@ def generate_invite_code():
 # ==============================================================================
 
 def inject_css(page_id="auth"):
-    # 1. 全局重置 (仅隐藏 Streamlit 原生组件，不定义具体布局)
+    # 1. 全局重置
     base_css = """
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -57,42 +57,71 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🏠 首页独立样式 (HOME)
+    # 🏠 首页独立设计 (HOME) - 沉浸式
     # ----------------------------------------------------------------
     elif page_id == "home":
         st.markdown("""
         <style>
             .stApp { background-color: #f8fafc; }
-            /* 首页侧边栏 */
+            /* 侧边栏 */
             [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
             div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; }
             div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; }
             div[role="radiogroup"] label[aria-checked="true"] { background-color: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe; font-weight: 600 !important; }
             div[role="radiogroup"] > label > div:first-child { display: none !important; }
 
-            /* 首页容器与头图 */
+            /* 容器 */
             div.block-container { max-width: 1200px !important; padding: 0 40px 50px 40px !important; margin-top: 0 !important; }
-            .flowing-header {
-                background: linear-gradient(-45deg, #1e3a8a, #2563eb, #3b82f6, #0ea5e9); background-size: 400% 400%; animation: gradientBG 10s ease infinite;
-                border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
-                padding: 60px 40px 180px 40px; color: white; text-align: center;
-                margin: -70px -40px 0 -40px; box-shadow: 0 20px 50px rgba(37, 99, 235, 0.3); position: relative; z-index: 0;
-            }
-            @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
-            .header-title { font-size: 42px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-            .header-sub { font-size: 15px; opacity: 0.95; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 30px; backdrop-filter: blur(10px); display: inline-block; border: 1px solid rgba(255,255,255,0.2); }
             
-            /* 首页工作台 */
-            .creation-console {
-                background: white; border-radius: 24px; padding: 20px 40px 40px 40px;
-                box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; 
-                position: relative; z-index: 10; margin-top: -120px;
+            /* 头图 */
+            .home-hero-bg {
+                background: radial-gradient(circle at 50% 0%, #2563eb 0%, #1e40af 40%, #0f172a 100%);
+                height: 380px; margin: -60px -40px 0 -40px; padding-top: 80px;
+                text-align: center; color: white; position: relative; z-index: 0;
             }
-            
-            div.stButton button { width: 100%; border:none; background:transparent; color:transparent; height:100px; position:absolute; top:0; left:0; z-index:2; }
-            div.stButton button:hover { background:rgba(0,0,0,0.02); }
-            .custom-label { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 20px; border-left: 4px solid #3b82f6; padding-left: 10px; }
-            .ann-card { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 12px 15px; margin-bottom: 10px; display: flex; align-items: start; gap: 10px; font-size: 14px; color: #9a3412; }
+            .hero-main-text { font-size: 48px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 15px; text-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+            .hero-sub-text { font-size: 16px; color: rgba(255,255,255,0.8); font-weight: 400; letter-spacing: 0.5px; text-transform: uppercase; }
+
+            /* 悬浮中控台 */
+            .home-dashboard {
+                background: #ffffff; border-radius: 24px; padding: 40px 50px;
+                margin-top: -120px; position: relative; z-index: 10;
+                box-shadow: 0 25px 60px -15px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,1);
+            }
+
+            .section-header { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 25px; margin-top: 10px; display: flex; align-items: center; gap: 10px; }
+            .section-header::before { content: ""; display: block; width: 4px; height: 18px; background: #3b82f6; border-radius: 2px; }
+
+            .feature-card {
+                background: white; border: 1px solid #e2e8f0; border-radius: 16px;
+                padding: 25px 20px; text-align: center; height: 160px;
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;
+            }
+            .feature-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.15); border-color: #bfdbfe; }
+            .feat-icon { font-size: 32px; margin-bottom: 12px; }
+            .feat-title { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+            .feat-desc { font-size: 12px; color: #64748b; }
+
+            .project-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 25px; height: 100%; transition: all 0.3s; }
+            .project-card:hover { background: white; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border-color: #cbd5e1; }
+            .proj-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+            .proj-title { font-size: 16px; font-weight: 700; color: #334155; }
+            .proj-desc { font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 15px; min-height: 40px; }
+            .proj-tag { background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; display: inline-block; }
+
+            div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 5; }
+            div.stButton button:hover { background: transparent; }
+
+            .welfare-box {
+                background: linear-gradient(135deg, #10b981, #059669); color: white;
+                border-radius: 16px; padding: 25px; position: relative; overflow: hidden;
+                box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3); transition: transform 0.2s; cursor: pointer;
+            }
+            .welfare-box:active { transform: scale(0.98); }
+            .notice-list { background: #fff7ed; border: 1px solid #ffedd5; border-radius: 16px; padding: 20px; height: 100%; }
+            .notice-item { display: flex; gap: 10px; margin-bottom: 10px; font-size: 13px; align-items: center; border-bottom: 1px dashed #fed7aa; padding-bottom: 8px; }
+            .notice-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         </style>
         """, unsafe_allow_html=True)
 
@@ -103,31 +132,28 @@ def inject_css(page_id="auth"):
         st.markdown("""
         <style>
             .stApp { background-color: #f8fafc; }
-            /* 文案页侧边栏 */
             [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
             div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; }
             div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; }
             div[role="radiogroup"] label[aria-checked="true"] { background-color: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe; font-weight: 600 !important; }
             div[role="radiogroup"] > label > div:first-child { display: none !important; }
 
-            /* 文案页布局 */
             div.block-container { max-width: 1400px !important; padding: 0 40px 50px 40px !important; margin-top: 0 !important; }
-            .flowing-header {
+            .rewrite-header {
                 background: linear-gradient(-45deg, #1e3a8a, #2563eb, #3b82f6, #0ea5e9); background-size: 400% 400%; animation: gradientBG 10s ease infinite;
                 border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
                 padding: 60px 40px 180px 40px; color: white; text-align: center;
-                margin: -70px -40px 0 -40px; box-shadow: 0 20px 50px rgba(37, 99, 235, 0.3); position: relative; z-index: 0;
+                margin: -60px -40px 0 -40px; box-shadow: 0 20px 50px rgba(37, 99, 235, 0.3); position: relative; z-index: 0;
             }
             @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
             .header-title { font-size: 42px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             .header-sub { font-size: 15px; opacity: 0.95; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 30px; backdrop-filter: blur(10px); display: inline-block; border: 1px solid rgba(255,255,255,0.2); }
 
-            /* 文案页组件 */
             div.stButton button[kind="primary"], div.stButton button[kind="secondary"] { position: relative; z-index: 20; }
-            .creation-console {
+            .rewrite-console {
                 background: white; border-radius: 24px; padding: 10px 40px 40px 40px;
                 box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; 
-                position: relative; z-index: 10; margin-top: -120px;
+                position: relative; z-index: 10; margin-top: -100px;
             }
             .stTextArea > div { border: none !important; box-shadow: none !important; background: transparent !important; }
             .stTextArea > label { display: none !important; }
@@ -144,7 +170,7 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 💡 爆款选题页独立样式 (BRAINSTORM)
+    # 💡 爆款选题页独立样式 (BRAINSTORM) - 恢复
     # ----------------------------------------------------------------
     elif page_id == "brainstorm":
         st.markdown("""
@@ -166,7 +192,7 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🎨 海报生成页独立样式 (POSTER)
+    # 🎨 海报生成页独立样式 (POSTER) - 恢复
     # ----------------------------------------------------------------
     elif page_id == "poster":
         st.markdown("""
@@ -188,7 +214,7 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🏷️ 账号起名页独立样式 (NAMING)
+    # 🏷️ 账号起名页独立样式 (NAMING) - 恢复
     # ----------------------------------------------------------------
     elif page_id == "naming":
         st.markdown("""
@@ -210,7 +236,7 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 👤 个人中心页独立样式 (ACCOUNT)
+    # 👤 个人中心页独立样式 (ACCOUNT) - 恢复
     # ----------------------------------------------------------------
     elif page_id == "account":
         st.markdown("""
@@ -230,12 +256,13 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🕵️‍♂️ 管理后台页独立样式 (ADMIN)
+    # 🕵️‍♂️ 管理后台页独立样式 (ADMIN) - 恢复深色侧边栏
     # ----------------------------------------------------------------
     elif page_id == "admin":
         st.markdown("""
         <style>
             .stApp { background-color: #f1f5f9; }
+            /* 深色侧边栏 */
             [data-testid="stSidebar"] { background-color: #1e293b; border-right: 1px solid #334155; padding-top: 1rem; }
             [data-testid="stSidebar"] * { color: #e2e8f0 !important; }
             div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; }

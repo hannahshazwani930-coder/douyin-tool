@@ -14,12 +14,14 @@ def generate_invite_code():
 def inject_css(mode="app"):
     base_css = """
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         html, body, [class*="css"] { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
         header[data-testid="stHeader"] { visibility: hidden; height: 0; }
         #MainMenu { visibility: hidden; }
         [data-testid="stSidebarCollapsedControl"] { display: none; }
         [data-testid="InputInstructions"] { display: none !important; }
+        
+        /* 通用按钮样式 */
         div.stButton > button {
             border-radius: 8px; font-weight: 600; border: none;
             padding: 0.5rem 1rem; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
@@ -80,7 +82,50 @@ def inject_css(mode="app"):
         section[data-testid="stSidebar"] > div { padding-top: 20px; }
         div.block-container { padding-top: 2rem; max-width: 1150px; padding-bottom: 5rem; }
         
-        /* Banner Styles */
+        /* --- 首页融合背景大标题 --- */
+        .home-header-text {
+            text-align: center; padding: 40px 0 30px 0;
+            background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.1) 0%, rgba(248, 250, 252, 0) 70%);
+        }
+        .home-h1 { font-size: 42px; font-weight: 900; color: #0f172a; margin-bottom: 10px; letter-spacing: -1px; }
+        .home-sub { font-size: 18px; color: #64748b; font-weight: 400; }
+        
+        /* --- 功能分区大白卡 (切片) --- */
+        .section-card {
+            background: white; border-radius: 20px; padding: 30px;
+            border: 1px solid #e2e8f0; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.03);
+            margin-bottom: 30px;
+        }
+        .section-header { 
+            font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 20px; 
+            padding-left: 12px; border-left: 4px solid #3b82f6; display: flex; align-items: center;
+        }
+
+        /* --- 首页功能按钮卡片化 (Home Buttons) --- */
+        /* 强制修改首页前四个按钮的样式，使其像卡片 */
+        div[data-testid="column"] > div > div > div > div > div > button {
+            height: auto; min-height: 100px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: #f8fafc; border: 1px solid #e2e8f0;
+        }
+        div[data-testid="column"] > div > div > div > div > div > button:hover {
+            background: #eff6ff; border-color: #bfdbfe;
+        }
+        div[data-testid="column"] > div > div > div > div > div > button p {
+            font-size: 16px; font-weight: 700; color: #0f172a;
+        }
+
+        /* Project Card */
+        .project-card {
+            background: #f8fafc; border-radius: 12px; padding: 20px;
+            border: 1px solid #e2e8f0; transition: all 0.3s ease; height: 100%; display: flex; flex-direction: column;
+        }
+        .project-card:hover { transform: translateY(-3px); border-color: #93c5fd; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .proj-title { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: flex; align-items: center; }
+        .proj-desc { font-size: 12px; color: #64748b; line-height: 1.5; flex-grow: 1; }
+        .proj-tag { font-size: 11px; padding: 3px 8px; border-radius: 10px; background: white; border: 1px solid #e2e8f0; color: #475569; margin-top: 15px; width: fit-content; }
+        
+        /* Banner Styles (for internal pages) */
         .page-banner {
             background: linear-gradient(120deg, #2563eb, #1d4ed8);
             color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px;
@@ -88,29 +133,6 @@ def inject_css(mode="app"):
         }
         .banner-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
         .banner-desc { font-size: 15px; opacity: 0.9; line-height: 1.5; max-width: 800px; }
-
-        /* Section Header */
-        .section-header { font-size: 18px; font-weight: 700; color: #1e293b; margin: 30px 0 15px 0; border-left: 5px solid #3b82f6; padding-left: 12px; }
-
-        /* Project Card */
-        .project-card {
-            background: white; border-radius: 12px; padding: 20px;
-            border: 1px solid #e2e8f0; transition: all 0.3s ease; height: 100%; display: flex; flex-direction: column;
-        }
-        .project-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); border-color: #93c5fd; }
-        .proj-title { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: flex; align-items: center; }
-        .proj-desc { font-size: 12px; color: #64748b; line-height: 1.5; flex-grow: 1; }
-        .proj-tag { font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #f1f5f9; color: #475569; margin-top: 15px; width: fit-content; }
-        
-        /* Feature Nav Card (New) */
-        .feature-card-home {
-            background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px;
-            text-align: center; height: 100%; transition: 0.2s; display: flex; flex-direction: column; align-items: center;
-        }
-        .feature-card-home:hover { border-color: #bfdbfe; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-        .fc-icon { width: 48px; height: 48px; background: #eff6ff; color: #2563eb; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 15px; }
-        .fc-title { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 5px; }
-        .fc-desc { font-size: 12px; color: #64748b; margin-bottom: 15px; line-height: 1.4; flex-grow: 1; }
         
         /* Announcements */
         .ann-card { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 12px 15px; margin-bottom: 10px; display: flex; align-items: start; gap: 10px; font-size: 14px; color: #9a3412; }
@@ -122,13 +144,7 @@ def inject_css(mode="app"):
     else: st.markdown(app_css, unsafe_allow_html=True)
 
 def render_page_banner(title, desc):
-    """通用页面顶部大气切片"""
-    st.markdown(f"""
-    <div class="page-banner">
-        <div class="banner-title">{title}</div>
-        <div class="banner-desc">{desc}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f"""<div class="page-banner"><div class="banner-title">{title}</div><div class="banner-desc">{desc}</div></div>""", unsafe_allow_html=True)
 
 def render_sidebar_user_card(username, vip_info):
     status_bg = "#eff6ff" if "VIP" in vip_info or "管理员" in vip_info else "#f1f5f9"
@@ -145,22 +161,15 @@ def render_sidebar_user_card(username, vip_info):
     st.sidebar.markdown(html, unsafe_allow_html=True)
 
 def render_tech_support_btn(wx_id):
-    """侧边栏：技术合作按钮 (点击复制修复)"""
-    # 增加 unique ID 防止冲突
+    # 使用随机ID防止冲突
     btn_id = f"tech_btn_{random.randint(1000,9999)}"
     html = f"""
     <script>
     function copyTech_{btn_id}() {{
         navigator.clipboard.writeText('{wx_id}');
         const el = document.getElementById('{btn_id}');
-        el.innerText = '✅ 已复制';
-        el.style.color = '#059669';
-        el.style.borderColor = '#059669';
-        setTimeout(() => {{ 
-            el.innerText = '🤝 技术合作: {wx_id}'; 
-            el.style.color = '#334155';
-            el.style.borderColor = '#e2e8f0';
-        }}, 2000);
+        el.innerText = '✅ 已复制'; el.style.color = '#059669'; el.style.borderColor = '#059669';
+        setTimeout(() => {{ el.innerText = '🤝 技术合作: {wx_id}'; el.style.color = '#334155'; el.style.borderColor = '#e2e8f0'; }}, 2000);
     }}
     </script>
     <div id="{btn_id}" onclick="copyTech_{btn_id}()" 
@@ -188,10 +197,10 @@ def render_wechat_pill(label, wx_id):
     components.html(f"""<div style="display:flex;justify-content:space-between;align-items:center;background:white;border:1px solid #e2e8f0;border-radius:6px;padding:0 10px;height:34px;cursor:pointer;font-family:'Inter',sans-serif;font-size:12px;color:#334155;" onclick="navigator.clipboard.writeText('{wx_id}')"><span style="font-weight:600">{label}</span><span style="color:#059669;font-family:monospace;background:#ecfdf5;padding:2px 6px;border-radius:4px;">📋 {wx_id}</span></div>""", height=40)
 
 def render_cta_wechat(wx_id):
-    """首页：领取资料 (修复阴影被切)"""
+    """首页：领取资料 (增加 Margin 修复切边问题)"""
     html = f"""
     <style>
-    .cta-container {{ padding: 10px; }} /* Container padding prevents shadow clip */
+    .cta-container {{ padding: 10px; }}
     .cta-box {{
         background: linear-gradient(90deg, #059669, #10b981);
         color: white; border-radius: 12px; padding: 15px 25px;
@@ -219,14 +228,11 @@ def render_cta_wechat(wx_id):
     components.html(html, height=100)
 
 def render_home_project_card(icon, title, desc, tag):
-    return f"""<div class="project-card"><div class="proj-title"><span style="margin-right:8px;">{icon}</span>{title}</div><div class="proj-desc">{desc}</div><div class="proj-tag">{tag}</div></div>"""
-
-def render_feature_card_home(icon, title, desc):
-    """首页功能卡片 HTML 结构 (配合 Streamlit 按钮使用)"""
+    """纯 HTML 渲染的项目卡片"""
     return f"""
-    <div class="feature-card-home">
-        <div class="fc-icon">{icon}</div>
-        <div class="fc-title">{title}</div>
-        <div class="fc-desc">{desc}</div>
+    <div class="project-card">
+        <div class="proj-title"><span style="margin-right:8px;">{icon}</span>{title}</div>
+        <div class="proj-desc">{desc}</div>
+        <div class="proj-tag">{tag}</div>
     </div>
     """

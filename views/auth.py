@@ -3,29 +3,29 @@ import streamlit as st
 from database import login_user, register_user
 
 def view_auth():
-    # --- 1. 深度穿透 CSS：消除色差，统一视觉基准 ---
+    # --- 1. 极致纯净 CSS：去掉背景色，对齐样式 ---
     st.markdown("""
 <style>
     /* 彻底屏蔽英文提示语 */
     [data-testid="stFormInstructions"] { display: none !important; }
     
-    /* 1. 样式高度对齐：Tab 标签和 Placeholder 统一为 14px */
+    /* 1. 样式对齐：Tab 标签字号锁定 14px */
     button[data-baseweb="tab"] div {
         font-size: 14px !important;
         color: #64748B !important;
     }
 
-    /* 2. 核心：给整个输入框外壳上色，解决“小眼睛”背景断层问题 */
-    /* 我们锁定包含 input 和 按钮的共同父容器 */
+    /* 2. 核心：去掉所有背景色，统一使用纯白底色 */
+    /* 锁定输入框外壳，解决“小眼睛”背景断层 */
     [data-testid="stTextInput"] div[data-baseweb="input"],
     [data-testid="stPasswordInput"] div[data-baseweb="input"] {
-        background-color: #F9FAFB !important; /* 统一的极淡底色 */
-        border: 1px solid #F1F5F9 !important; /* 极淡边框线 */
-        border-radius: 8px !important;
-        transition: all 0.2s;
+        background-color: #FFFFFF !important; /* 纯白底色，去掉之前的浅灰色 */
+        border: 1px solid #E2E8F0 !important; /* 极细浅色边框 */
+        border-radius: 6px !important;
+        box-shadow: none !important;
     }
 
-    /* 3. 穿透处理：让内部所有组件背景透明，透出父容器底色 */
+    /* 3. 内部透传：确保输入区和按钮都是透明的，直接透出底层的纯白 */
     [data-testid="stTextInput"] input, 
     [data-testid="stPasswordInput"] input,
     [data-testid="stPasswordInput"] button {
@@ -33,17 +33,17 @@ def view_auth():
         border: none !important;
         color: #1E3A8A !important;
         font-size: 14px !important;
-        box-shadow: none !important;
+        height: 40px !important;
     }
 
-    /* Placeholder 颜色与字号保持 100% 一致 */
+    /* Placeholder 字号颜色 100% 对齐 */
     [data-testid="stTextInput"] input::placeholder,
     [data-testid="stPasswordInput"] input::placeholder {
         font-size: 14px !important;
-        color: #CBD5E1 !important;
+        color: #94A3B8 !important;
     }
 
-    /* 4. 提交按钮文字强制找回 */
+    /* 4. 按钮文字保障 */
     button[kind="primaryFormSubmit"] [data-testid="stMarkdownContainer"] p {
         visibility: visible !important;
         display: block !important;
@@ -52,22 +52,22 @@ def view_auth():
         font-size: 14px !important;
     }
 
-    /* 5. 净化全局界面 */
+    /* 净化顶部 */
     header, [data-testid="stHeader"] { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
     st.write("\n" * 2)
 
-    # --- 2. 布局逻辑：[1.4, 2.2, 1.4] 紧凑精致布局 ---
+    # --- 2. 比例控制：保持紧凑 ---
     _, card_container, _ = st.columns([1.4, 2.2, 1.4])
 
     with card_container:
         with st.container(border=True):
-            col_left, col_right = st.columns([1, 1.5], gap="large")
+            col_l, col_r = st.columns([1, 1.5], gap="large")
 
-            with col_left:
-                # --- 左侧：品牌展示 ---
+            with col_l:
+                # --- 左侧：品牌文案 ---
                 st.write("\n")
                 st.markdown("### 💠 爆款工场")
                 st.caption("AI 驱动创作中枢")
@@ -80,12 +80,12 @@ def view_auth():
                 st.write("\n")
                 st.success("已助力 10k+ 出圈")
 
-            with col_right:
+            with col_r:
                 # --- 右侧：登录/注册交互 ---
                 t1, t2 = st.tabs(["安全登录", "快速注册"])
                 
                 with t1:
-                    with st.form("f_login_pro_v9", border=False):
+                    with st.form("f_login_clean_v10", border=False):
                         u = st.text_input("A", placeholder="手机号 / 邮箱", label_visibility="collapsed", key="v_u")
                         p = st.text_input("P", type="password", placeholder="请输入密码", label_visibility="collapsed", key="v_p")
                         if st.form_submit_button("立 即 登 录", use_container_width=True):
@@ -97,17 +97,17 @@ def view_auth():
                                 else: st.error(msg)
 
                 with t2:
-                    with st.form("f_reg_pro_v9", border=False):
+                    with st.form("f_reg_clean_v10", border=False):
                         ru = st.text_input("RA", placeholder="手机号 / 邮箱", label_visibility="collapsed", key="v_ru")
-                        # 注册部分：遵照要求，采用上下对齐排版
-                        rp = st.text_input("RP1", type="password", placeholder="请设置登录密码", label_visibility="collapsed", key="v_rp1")
-                        rp2 = st.text_input("RP2", type="password", placeholder="请再次确认密码", label_visibility="collapsed", key="v_rp2")
+                        # 注册：保持稳重的垂直排版
+                        rp = st.text_input("RP", type="password", placeholder="请设置登录密码", label_visibility="collapsed", key="v_rp")
+                        rp2 = st.text_input("RP2", type="password", placeholder="确认密码", label_visibility="collapsed", key="v_rp2")
                         ri = st.text_input("RI", value="888888", label_visibility="collapsed", key="v_ri")
-                        if st.form_submit_button("免 费 注 册", use_container_width=True):
+                        if st.form_submit_button("注 册 账 号", use_container_width=True):
                             if rp != rp2: st.error("两次密码输入不一致")
                             else:
                                 res, msg = register_user(ru, rp, ri)
-                                if res: st.success("注册成功！请切换登录")
+                                if res: st.success("成功！请登录")
 
     # --- 3. 底部剧中声明 ---
     st.write("\n" * 4)

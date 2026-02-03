@@ -62,7 +62,7 @@ st.markdown("""
     div.stButton > button[kind="primary"] { 
         background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
         border: none; color: white !important; 
-        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2); /* 默认阴影变淡 */
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
     }
     div.stButton > button[kind="primary"]:hover { 
         transform: translateY(-2px); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
@@ -368,6 +368,7 @@ def page_rewrite():
 
 def page_poster():
     st.markdown("## 🎨 海报生成 (专业版)")
+    # 🔥 终极美化 Banner 🔥
     st.markdown("""<div class="poster-hero-container"><div class="hero-icon-wrapper">🚀</div><div class="hero-text-content"><h2 class="hero-title">算力全面升级！好莱坞级光影引擎</h2><p class="hero-desc">为了提供极致的渲染效果，海报功能已迁移至性能更强的独立工作站。</p></div></div>""", unsafe_allow_html=True)
     
     # 🔥 双卡片：强制增加 iframe 高度和 padding 以防止边框被切 🔥

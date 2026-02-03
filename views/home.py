@@ -1,30 +1,36 @@
 # views/home.py
 import streamlit as st
-from utils import render_cta_wechat, render_home_project_card, render_feature_nav_card
+from utils import render_page_banner, render_feature_card_home, render_home_project_card, render_cta_wechat
 from database import get_active_announcements
 
 def view_home():
-    st.markdown("### 👋 欢迎使用抖音爆款工场 Pro")
+    # 1. 顶部大气切片
+    render_page_banner("抖音爆款工场 Pro", "全流程 AI 创作工作台，赋能内容生产，连接商业变现。")
     
-    # 1. 功能展示区 (Requirement 4)
-    st.markdown("<div style='margin-bottom:10px; font-weight:600; color:#64748b;'>🚀 核心功能</div>", unsafe_allow_html=True)
+    # 2. 核心功能区 (切片 + 跳转)
+    st.markdown('<div class="section-header">🚀 核心功能</div>', unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
-    with c1: 
-        st.markdown(render_feature_nav_card("📝", "文案改写"), unsafe_allow_html=True)
-    with c2:
-        st.markdown(render_feature_nav_card("💡", "爆款选题"), unsafe_allow_html=True)
-    with c3:
-        st.markdown(render_feature_nav_card("🎨", "海报生成"), unsafe_allow_html=True)
-    with c4:
-        st.markdown(render_feature_nav_card("🏷️", "账号起名"), unsafe_allow_html=True)
-        
-    st.markdown("---")
     
-    # 2. 热门变现项目
-    st.markdown("<div style='margin-bottom:15px; font-weight:600; color:#64748b;'>🔥 热门变现项目</div>", unsafe_allow_html=True)
+    # 定义功能数据
+    features = [
+        ("📝", "文案改写", "深度去重，爆款逻辑重写"),
+        ("💡", "爆款选题", "挖掘全网最热流量话题"),
+        ("🎨", "海报生成", "一键生成专业级封面图"),
+        ("🏷️", "账号起名", "玄学+营销学高能起名"),
+    ]
+    
+    # 渲染卡片和按钮
+    for i, (icon, title, desc) in enumerate(features):
+        with [c1, c2, c3, c4][i]:
+            st.markdown(render_feature_card_home(icon, title, desc), unsafe_allow_html=True)
+            if st.button(f"立即使用", key=f"home_btn_{i}", use_container_width=True):
+                st.session_state['nav_menu_selection'] = title # 设置跳转目标
+                st.rerun() # 刷新页面触发跳转
+    
+    # 3. 热门变现项目 (修正文案)
+    st.markdown('<div class="section-header">🔥 热门变现项目</div>', unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
     
-    # Requirement 3: 修正御灵AI介绍
     with col1:
         st.markdown(render_home_project_card(
             "🤖", "御灵 AI 协同",
@@ -46,15 +52,23 @@ def view_home():
             "TikTok / 跨境电商"
         ), unsafe_allow_html=True)
         
-    # 3. 领取资料 (Requirement 5)
-    render_cta_wechat("W7774X")
+    # 4. 资料领取 & 公告 (分区切片)
+    c_left, c_right = st.columns([1.5, 1])
     
-    # 4. 公告区 (Requirement 5)
-    st.markdown("<div style='margin-top:30px; margin-bottom:10px; font-weight:600; color:#64748b;'>📢 系统公告</div>", unsafe_allow_html=True)
-    anns = get_active_announcements()
-    if anns:
-        for ann in anns:
-            content, time = ann
-            st.info(f"**[{str(time)[:10]}]** {content}")
-    else:
-        st.caption("暂无最新公告")
+    with c_left:
+        st.markdown('<div class="section-header">🎁 内部福利</div>', unsafe_allow_html=True)
+        render_cta_wechat("W7774X")
+        
+    with c_right:
+        st.markdown('<div class="section-header">📢 系统公告</div>', unsafe_allow_html=True)
+        anns = get_active_announcements()
+        if anns:
+            for content, time in anns:
+                st.markdown(f"""
+                <div class="ann-card">
+                    <span>📅 {str(time)[:10]}</span>
+                    <span>{content}</span>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.info("暂无最新公告")

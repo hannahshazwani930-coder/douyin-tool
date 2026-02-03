@@ -12,7 +12,7 @@ def hash_password(password):
 def generate_invite_code():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
-# --- 核心样式注入 ---
+# --- 全局样式注入 (严格隔离 + 深度修复) ---
 def inject_css(mode="app"):
     # 1. 基础通用
     base_css = """
@@ -28,7 +28,8 @@ def inject_css(mode="app"):
     st.markdown(base_css, unsafe_allow_html=True)
 
     # ============================================================
-    # 🔐 登录页样式 (修复输入框双框 & 显示不全)
+    # 🔒 登录页样式 (LOCKED: 不要改动)
+    # 修复内容：输入框高度、双边框去除、眼睛图标遮挡修复
     # ============================================================
     if mode == "auth":
         st.markdown("""
@@ -49,7 +50,7 @@ def inject_css(mode="app"):
                 padding: 60px 50px !important;
                 max-width: 1100px !important;
                 margin: auto;
-                position: absolute;
+                position: absolute; /* 绝对居中 */
                 top: 50%; left: 50%;
                 transform: translate(-50%, -50%);
                 overflow: hidden;
@@ -67,46 +68,38 @@ def inject_css(mode="app"):
             .hero-tags { display: flex; gap: 10px; }
             .tag-pill { background: #eff6ff; color: #2563eb; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
 
-            /* --- 👇👇👇 核心修复：输入框样式 (Fixed Inputs) 👇👇👇 --- */
+            /* --- 👇 登录页输入框终极修复 (Fix Double Border) 👇 --- */
             
-            /* A. 设置外层容器 (Container)：负责边框、背景色、圆角 */
-            /* 作用：这是整个输入框的“壳”，无论里面是文字还是密码，都由它控制外观 */
+            /* 外层壳：负责灰色背景和边框 */
             .stTextInput div[data-baseweb="input"] {
                 background-color: #f8fafc !important;
                 border: 1px solid #cbd5e1 !important;
                 border-radius: 8px !important;
-                min-height: 48px !important; /* 强制高度，防止显示不全 */
-                height: 48px !important;
-                padding: 0px !important; /* 清除内边距，交给内部控制 */
-                box-shadow: none !important;
+                height: 48px !important; /* 强制高度，解决显示不全 */
+                padding: 0 !important;
             }
             
-            /* B. 设置内部输入区 (Input)：负责文字输入 */
-            /* 作用：去掉它自己的边框和背景，让它“透明”地躺在壳里，这样就不会有双框了 */
+            /* 内层输入：透明背景，去边框 */
             .stTextInput input {
                 background-color: transparent !important;
-                border: none !important; /* 去除内部边框，解决双框问题 */
+                border: none !important;
                 color: #1e293b !important;
-                height: 100% !important; /* 撑满高度 */
-                min-height: 48px !important;
-                padding: 0 15px !important; /* 文字左右留白 */
-                font-size: 15px !important;
+                height: 48px !important;
+                padding: 0 15px !important;
             }
             
-            /* C. 聚焦状态：改变外壳的颜色 */
+            /* 聚焦高亮 */
             .stTextInput div[data-baseweb="input"]:focus-within {
                 border-color: #3b82f6 !important;
                 background-color: #ffffff !important;
                 box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
             }
             
-            /* D. 修复密码框右侧图标背景 */
-            /* 作用：确保眼睛图标的背景也是透明的，不会出现白色方块遮挡 */
+            /* 修复密码框眼睛图标背景 */
             .stTextInput div[data-baseweb="input"] > div {
                 background-color: transparent !important;
             }
-            
-            /* --- 👆👆👆 修复结束 👆👆👆 --- */
+            /* --- 👆 修复结束 👆 --- */
             
             /* 5. 按钮 */
             div.stButton > button {
@@ -126,7 +119,7 @@ def inject_css(mode="app"):
         """, unsafe_allow_html=True)
 
     # ============================================================
-    # 💠 系统内页样式 (APP MODE) - 保持原样，绝不修改
+    # 💠 系统内页样式 (APP MODE) - 您的完美流光版
     # ============================================================
     elif mode == "app":
         st.markdown("""
@@ -195,7 +188,7 @@ def inject_css(mode="app"):
         </style>
         """, unsafe_allow_html=True)
 
-# --- 组件函数 ---
+# --- 组件函数 (全部保留，防止报错) ---
 def render_sidebar_user_card(username, vip_info):
     status_bg = "#eff6ff" if "VIP" in vip_info or "管理员" in vip_info else "#f1f5f9"
     st.sidebar.markdown(f"""<div style="background: {status_bg}; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 20px;"><div style="display:flex; align-items:center; margin-bottom: 8px;"><div style="width: 32px; height: 32px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 10px; border: 1px solid #e2e8f0;">👤</div><div style="font-weight: 700; color: #0f172a; font-size: 14px; overflow: hidden; text-overflow: ellipsis;">{username}</div></div><div style="background: white; padding: 6px 10px; border-radius: 6px; font-size: 12px; color: #2563eb; font-weight: 600; border: 1px solid #e2e8f0; text-align: center;">{vip_info}</div></div>""", unsafe_allow_html=True)

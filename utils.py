@@ -17,18 +17,22 @@ def generate_invite_code():
 # ==============================================================================
 
 def inject_css(page_id="auth"):
-    # 1. 全局基础 (隐藏 Streamlit 原生组件)
+    # 1. 全局基础 (字体修复 + 隐藏原生组件)
     base_css = """
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        html, body, [class*="css"] { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
         
-        /* 彻底隐藏 Streamlit 顶栏 */
-        header[data-testid="stHeader"] { display: none !important; height: 0px !important; visibility: hidden !important; }
+        /* 🔴 字体栈修复：强制指定 Emoji 字体，解决乱码方块问题 */
+        html, body, [class*="css"] { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        }
+        
+        /* 隐藏 Streamlit 原生组件 */
+        header[data-testid="stHeader"] { display: none !important; height: 0 !important; visibility: hidden !important; }
         #MainMenu { display: none !important; }
         [data-testid="stSidebarCollapsedControl"] { display: none !important; }
         
-        /* 侧边栏基础 */
+        /* 侧边栏通用美化 */
         [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
         div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; transition: all 0.2s; }
         div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; transform: translateX(4px); }
@@ -65,22 +69,29 @@ def inject_css(page_id="auth"):
         </style>
         """, unsafe_allow_html=True)
 
-    # ----------------------------------------------------------------
-    # 🏠 [NEW] 首页独立设计 - 悬浮/暗影/交互
-    # ----------------------------------------------------------------
+    # ============================================================
+    # 🏠 [NEW] 首页独立设计 - 修复版
+    # ============================================================
     elif page_id == "home":
         st.markdown("""
         <style>
             .stApp { background-color: #f8fafc; }
-            /* 1. 容器清零 */
-            div.block-container { max-width: 1280px !important; padding: 0 40px 50px 40px !important; margin-top: 0px !important; }
+            
+            /* 1. 白框核弹：强制去除顶部所有间距 */
+            div.block-container { 
+                max-width: 1280px !important; 
+                padding: 0 40px 50px 40px !important; 
+                margin-top: -65px !important; /* 🔴 暴力上移，消灭顶栏空白 */
+            }
 
             /* 2. 沉浸式头图 */
             .flowing-header {
                 background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%);
                 border-bottom-left-radius: 48px; border-bottom-right-radius: 48px;
-                padding: 70px 40px 180px 40px; text-align: center; color: white;
-                margin: -60px -40px 0 -40px; box-shadow: 0 20px 60px -20px rgba(37, 99, 235, 0.5); 
+                padding: 100px 40px 180px 40px; /* 顶部加厚以抵消上移 */
+                text-align: center; color: white;
+                margin: 0 -40px 0 -40px; 
+                box-shadow: 0 20px 60px -20px rgba(37, 99, 235, 0.5); 
                 position: relative; z-index: 0;
             }
             .header-title { font-size: 46px; font-weight: 900; letter-spacing: -1.5px; margin-bottom: 12px; text-shadow: 0 10px 30px rgba(0,0,0,0.2); }
@@ -115,44 +126,45 @@ def inject_css(page_id="auth"):
             .feat-title { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
             .feat-desc { font-size: 13px; color: #64748b; line-height: 1.4; }
 
-            /* 6. 系统公告悬浮条 */
+            /* 6. 系统公告 (静态专业版) */
             .news-container {
                 margin-top: 30px; margin-bottom: 30px;
-                background: linear-gradient(90deg, #fff7ed, #ffedd5);
-                border: 1px solid #fed7aa; border-radius: 12px;
-                height: 46px; display: flex; align-items: center; padding: 0 20px;
-                box-shadow: 0 4px 15px -3px rgba(249, 115, 22, 0.15);
-                overflow: hidden; position: relative;
+                background: white; border: 1px solid #e2e8f0; border-radius: 12px;
+                padding: 12px 20px; display: flex; align-items: center; gap: 15px;
+                box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
             }
-            .news-icon { font-size: 20px; margin-right: 15px; flex-shrink: 0; animation: bellShake 3s infinite; }
-            @keyframes bellShake { 0%,100% {transform:rotate(0);} 10%,30%,50%,70%,90% {transform:rotate(5deg);} 20%,40%,60%,80% {transform:rotate(-5deg);} }
-            .news-scroller { white-space: nowrap; animation: scrollText 30s linear infinite; display: inline-block; font-size: 14px; color: #9a3412; font-weight: 500; }
-            @keyframes scrollText { 0% {transform: translateX(100%);} 100% {transform: translateX(-100%);} }
+            .news-badge { 
+                background: #fff7ed; color: #ea580c; font-size: 12px; font-weight: 700; 
+                padding: 4px 10px; border-radius: 6px; border: 1px solid #ffedd5; flex-shrink: 0;
+            }
+            .news-content { font-size: 14px; color: #475569; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-            /* 7. 变现任务卡片 (Monetize Card) */
+            /* 7. 变现任务卡片 (Monetize Card) - 修复乱码 */
             .monetize-card {
                 background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px;
                 padding: 25px; height: 100%; position: relative;
                 transition: all 0.3s;
             }
-            .monetize-card:hover { border-color: #cbd5e1; box-shadow: 0 15px 35px -5px rgba(0,0,0,0.08); }
+            .monetize-card:hover { border-color: #cbd5e1; box-shadow: 0 15px 35px -5px rgba(0,0,0,0.08); transform: translateY(-3px); }
             .mon-head { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+            /* 字体栈确保 emoji 显示 */
+            .mon-icon { font-size: 28px; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif; }
             .mon-title { font-size: 16px; font-weight: 700; color: #0f172a; }
-            .mon-desc { font-size: 13px; color: #64748b; line-height: 1.6; margin-bottom: 25px; min-height: 42px; }
+            .mon-desc { font-size: 13px; color: #64748b; line-height: 1.6; margin-bottom: 35px; min-height: 42px; }
             
-            /* 微信领取徽章 (Interactive Badge) */
+            /* 微信领取徽章 (样式同之前的 tag) */
             .wechat-badge {
                 position: absolute; bottom: 20px; right: 20px;
-                background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;
-                padding: 6px 14px; border-radius: 30px;
-                font-size: 12px; font-weight: 600; font-family: 'Courier New', monospace;
+                background: #f8fafc; color: #475569; border: 1px solid #e2e8f0;
+                padding: 5px 12px; border-radius: 10px;
+                font-size: 12px; font-weight: 600; 
                 cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
-                z-index: 50; /* 确保在最上层 */
+                z-index: 50;
             }
-            .wechat-badge:hover { background: #059669; color: white; border-color: #059669; box-shadow: 0 5px 15px -3px rgba(16, 185, 129, 0.4); transform: translateY(-2px); }
+            .wechat-badge:hover { background: #ecfdf5; color: #059669; border-color: #10b981; }
             .wechat-badge:active { transform: scale(0.95); }
 
-            /* 隐形跳转按钮 (针对功能区) */
+            /* 隐形跳转按钮 */
             div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 5; }
             div.stButton button:hover { background: transparent; }
         </style>
@@ -196,7 +208,7 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 选题/海报/起名/个人中心 (General) - 绝对不动
+    # 🔒 [LOCKED] 其他页面 (General) - 绝对不动
     # ----------------------------------------------------------------
     elif page_id == "general":
         st.markdown("""
@@ -212,7 +224,7 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 管理后台 (Admin) - 绝对不动 (深色侧边栏)
+    # 🔒 [LOCKED] 管理后台 (Admin) - 绝对不动
     # ----------------------------------------------------------------
     elif page_id == "admin":
         st.markdown("""

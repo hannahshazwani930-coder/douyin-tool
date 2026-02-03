@@ -29,7 +29,7 @@ REWARD_DAYS_NEW_USER = 3
 REWARD_DAYS_REFERRER = 3  
 DB_FILE = 'saas_data_final.db'
 
-# --- 数据库初始化 (修复 SyntaxError) ---
+# --- 数据库初始化 ---
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -39,21 +39,10 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS feedbacks (id INTEGER PRIMARY KEY AUTOINCREMENT, user_phone TEXT, content TEXT, reply TEXT, create_time TIMESTAMP, status TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)''')
     
-    # 兼容性更新字段 (标准写法)
-    try:
-        c.execute("ALTER TABLE users ADD COLUMN own_invite_code TEXT")
-    except:
-        pass
-        
-    try:
-        c.execute("ALTER TABLE users ADD COLUMN invited_by TEXT")
-    except:
-        pass
-        
-    try:
-        c.execute("ALTER TABLE users ADD COLUMN invite_count INTEGER DEFAULT 0")
-    except:
-        pass
+    # 兼容性更新字段
+    try: c.execute("ALTER TABLE users ADD COLUMN own_invite_code TEXT"); except: pass
+    try: c.execute("ALTER TABLE users ADD COLUMN invited_by TEXT"); except: pass
+    try: c.execute("ALTER TABLE users ADD COLUMN invite_count INTEGER DEFAULT 0"); except: pass
     
     # 初始化管理员
     c.execute("SELECT phone FROM users WHERE phone=?", (ADMIN_ACCOUNT,))
@@ -88,9 +77,9 @@ def inject_css(mode="app"):
         }
         div.stButton > button:hover { transform: translateY(-2px); box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
         
-        /* 输入框美化 - 解决看不清字的问题 */
+        /* 输入框美化 */
         .stTextInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] {
-            color: #1e293b !important; /* 强制深色字体 */
+            color: #1e293b !important;
             background-color: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 8px !important;
@@ -102,50 +91,41 @@ def inject_css(mode="app"):
     </style>
     """
     
-    # 登录页专用 - 极光背景 + 玻璃拟态卡片
+    # 登录页专用
     auth_css = """
     <style>
         .stApp {
             background: linear-gradient(-45deg, #0f172a, #334155, #1e293b, #0f172a);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
+            background-size: 400% 400%; animation: gradientBG 15s ease infinite;
         }
         @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
         
         /* 劫持 Streamlit Form 作为登录卡片 */
         [data-testid="stForm"] {
             background-color: rgba(255, 255, 255, 0.95);
-            padding: 40px;
-            border-radius: 24px;
+            padding: 40px; border-radius: 24px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255,255,255,0.2);
         }
         
-        /* 左侧文字 */
         .lp-header { font-size: 48px; font-weight: 900; color: white; letter-spacing: -1.5px; text-shadow: 0 10px 20px rgba(0,0,0,0.3); margin-bottom: 10px; }
         .lp-sub { font-size: 18px; color: #cbd5e1; margin-bottom: 40px; font-weight: 400; line-height: 1.6; }
         .lp-item { color: #e2e8f0; font-size: 15px; margin-bottom: 15px; display: flex; align-items: center; }
         .lp-icon { background: rgba(255,255,255,0.1); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 15px; }
         
-        /* Tab 样式 */
         .stTabs [data-baseweb="tab-list"] { gap: 10px; }
         .stTabs [data-baseweb="tab"] { background-color: transparent; color: #64748b; font-weight: 600; }
         .stTabs [aria-selected="true"] { color: #2563eb !important; border-bottom-color: #2563eb !important; }
     </style>
     """
     
-    # 系统内页专用 - 极简 SaaS 白
+    # 系统内页专用
     app_css = """
     <style>
         .stApp { background-color: #f8fafc; }
-        
-        /* 侧边栏优化 */
         [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; }
-        
-        /* 内容容器 */
         div.block-container { padding-top: 2rem; max-width: 1200px; }
         
-        /* 公告栏 */
         .announcement-box {
             background: linear-gradient(90deg, #eff6ff, #ffffff);
             border: 1px solid #bfdbfe; color: #1e40af;
@@ -155,7 +135,6 @@ def inject_css(mode="app"):
         }
         .ann-icon { margin-right: 10px; font-size: 16px; }
         
-        /* 统计卡片 / 功能卡片 */
         div[data-testid="stVerticalBlockBorderWrapper"] {
             background: white; border-radius: 16px; border: 1px solid #e2e8f0;
             padding: 20px; transition: transform 0.2s;
@@ -168,54 +147,38 @@ def inject_css(mode="app"):
     """
     
     st.markdown(base_css, unsafe_allow_html=True)
-    if mode == "auth": 
-        st.markdown(auth_css, unsafe_allow_html=True)
-    else: 
-        st.markdown(app_css, unsafe_allow_html=True)
+    if mode == "auth": st.markdown(auth_css, unsafe_allow_html=True)
+    else: st.markdown(app_css, unsafe_allow_html=True)
 
 # ==========================================
 # 2. 逻辑层 (Logic Layer)
 # ==========================================
 
-# 辅助函数
-def hash_password(password): 
-    return hashlib.sha256(password.encode()).hexdigest()
-
-def get_remote_ip(): 
-    return "unknown_ip"
-
-def generate_invite_code(): 
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+def hash_password(password): return hashlib.sha256(password.encode()).hexdigest()
+def generate_invite_code(): return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
 # 数据库操作
 def get_setting(key):
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
+    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     c.execute("SELECT value FROM settings WHERE key=?", (key,))
-    row = c.fetchone()
-    conn.close()
+    row = c.fetchone(); conn.close()
     return row[0] if row else ""
 
 def update_setting(key, value):
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
+    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     c.execute("REPLACE INTO settings (key, value) VALUES (?, ?)", (key, value))
-    conn.commit()
-    conn.close()
+    conn.commit(); conn.close()
 
 def login_user(account, password):
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
+    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     c.execute("SELECT password_hash FROM users WHERE phone=?", (account,))
-    row = c.fetchone()
-    conn.close()
+    row = c.fetchone(); conn.close()
     if row and row[0] == hash_password(password):
         return True, "登录成功"
     return False, "账号或密码错误"
 
 def register_user(account, password, invite_code_used):
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
+    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     try:
         new_own_code = generate_invite_code()
         while True:
@@ -245,44 +208,31 @@ def register_user(account, password, invite_code_used):
     except Exception as e: 
         return False, f"注册失败: {str(e)}"
     finally:
-        try:
-            conn.close()
-        except:
-            pass
+        try: conn.close()
+        except: pass
 
 def add_vip_days(account, days, source="system"):
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
+    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     c.execute("SELECT expire_at FROM access_codes WHERE bind_user=? AND status='active'", (account,))
     rows = c.fetchall()
     now = datetime.datetime.now()
     if rows:
         max_expire = max([datetime.datetime.strptime(str(r[0]).split('.')[0], '%Y-%m-%d %H:%M:%S') for r in rows])
         start_time = max_expire if max_expire > now else now
-    else: 
-        start_time = now
-        
+    else: start_time = now
     expire_at = start_time + datetime.timedelta(days=days)
     new_code = f"GIFT-{source}-{str(uuid.uuid4())[:6].upper()}"
     c.execute("INSERT INTO access_codes (code, duration_days, activated_at, expire_at, status, create_time, bind_user) VALUES (?, ?, ?, ?, ?, ?, ?)",
               (new_code, days, now, expire_at, 'active', now, account))
-    conn.commit()
-    conn.close()
+    conn.commit(); conn.close()
 
 def get_user_vip_status(phone):
-    if phone == ADMIN_ACCOUNT: 
-        return True, "👑 超级管理员"
-        
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
+    if phone == ADMIN_ACCOUNT: return True, "👑 超级管理员"
+    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     now = datetime.datetime.now()
     c.execute("SELECT expire_at FROM access_codes WHERE bind_user=? AND status='active'", (phone,))
-    rows = c.fetchall()
-    conn.close()
-    
-    if not rows: 
-        return False, "未开通会员"
-        
+    rows = c.fetchall(); conn.close()
+    if not rows: return False, "未开通会员"
     max_expire = max([datetime.datetime.strptime(str(r[0]).split('.')[0], '%Y-%m-%d %H:%M:%S') for r in rows])
     if max_expire > now:
         days_left = (max_expire - now).days
@@ -290,13 +240,11 @@ def get_user_vip_status(phone):
     return False, "会员已过期"
 
 def get_user_invite_info(phone):
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
+    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     try:
         c.execute("SELECT own_invite_code, invite_count FROM users WHERE phone=?", (phone,))
         row = c.fetchone()
-    except: 
-        row = None
+    except: row = None
     conn.close()
     if row: return row[0], row[1]
     return "...", 0
@@ -306,7 +254,6 @@ def get_user_invite_info(phone):
 # ==========================================
 
 def render_copy_btn(text, key_suffix):
-    # 使用HTML/JS实现一键复制，不依赖Streamlit重载
     safe_text = text.replace("`", "\`").replace("'", "\\'")
     html = f"""
     <script>
@@ -332,10 +279,8 @@ def render_wechat_pill(label, wx_id):
     """, height=45)
 
 def render_announcement():
-    # 首页公告栏
     ann_text = get_setting("announcement")
-    if not ann_text: 
-        ann_text = "🎉 欢迎使用抖音爆款工场 Pro，系统已升级至 V2.0 稳定版！"
+    if not ann_text: ann_text = "🎉 欢迎使用抖音爆款工场 Pro，系统已升级至 V2.0 稳定版！"
     st.markdown(f"""
     <div class="announcement-box">
         <span class="ann-icon">📢</span>
@@ -370,7 +315,6 @@ def view_auth():
                 st.markdown(f"<div class='lp-item'><div class='lp-icon'>{icon}</div>{text}</div>", unsafe_allow_html=True)
         
         with col_form:
-            # 这里的 Tabs 和 Form 会被 CSS 包装成卡片样式
             t1, t2 = st.tabs(["🔐 登录账号", "📝 注册新号"])
             
             with t1:
@@ -398,7 +342,6 @@ def view_auth():
                         if not r_u or not r_p or not r_c:
                             st.warning("请填写完整信息")
                         else:
-                            # 验证邀请码
                             valid = False
                             if r_c == GLOBAL_INVITE_CODE: valid = True
                             else:
@@ -417,14 +360,11 @@ def view_auth():
                                 else: st.error(m)
                             else: st.error("❌ 邀请码无效，请联系客服获取")
 
-    # 底部版权
     st.markdown("<div style='position:fixed; bottom:20px; width:100%; text-align:center; color:rgba(255,255,255,0.4); font-size:12px;'>© 2026 抖音爆款工场 Pro | 鄂ICP备2024XXXXXX号-1</div>", unsafe_allow_html=True)
 
 def view_home():
-    # 渲染公告栏
     render_announcement()
     
-    # Hero Section
     st.markdown("""
     <div style="text-align:center; padding: 40px 20px; background:white; border-radius:20px; border:1px solid #e2e8f0; margin-bottom:30px; box-shadow:0 10px 30px -10px rgba(0,0,0,0.05);">
         <h1 style="color:#1e293b; font-size:36px; margin-bottom:10px;">抖音爆款工场 Pro</h1>
@@ -432,7 +372,6 @@ def view_home():
     </div>
     """, unsafe_allow_html=True)
     
-    # 功能卡片
     c1, c2, c3, c4 = st.columns(4)
     
     def home_card(col, emoji, title, desc, target):
@@ -458,19 +397,14 @@ def view_rewrite():
     st.markdown("### 📝 爆款文案改写")
     st.caption("基于 DeepSeek V3 模型，智能清洗重组文案结构")
     
-    # API 初始化
     api_key = st.secrets.get("DEEPSEEK_API_KEY", "")
     client = None
     if api_key:
-        try: 
-            client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
-        except: 
-            pass
+        try: client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+        except: pass
     
-    if not client:
-        st.warning("⚠️ 未配置 API Key，系统将运行在演示模式（不返回真实结果）")
+    if not client: st.warning("⚠️ 未配置 API Key，系统将运行在演示模式（不返回真实结果）")
 
-    # 逻辑函数
     def process_text(text):
         if not client: return "【演示模式】请在后台配置 API Key 后使用。\n\n模拟结果：\n这是改写后的爆款文案..."
         if len(text) < 5: return "❌ 文案太短"
@@ -487,8 +421,7 @@ def view_rewrite():
             inputs = [st.session_state.get(f"in_{i}", "") for i in range(1,6)]
             valid_inputs = [(i+1, txt) for i, txt in enumerate(inputs) if txt.strip()]
             
-            if not valid_inputs:
-                st.toast("请至少输入一条文案")
+            if not valid_inputs: st.toast("请至少输入一条文案")
             else:
                 with st.status("正在极速改写中...", expanded=True):
                     with ThreadPoolExecutor(max_workers=5) as executor:
@@ -498,7 +431,6 @@ def view_rewrite():
                             st.session_state[f"out_{idx}"] = future.result()
                     st.rerun()
 
-    # 工作台
     if 'results' not in st.session_state: st.session_state['results'] = {}
     
     for i in range(1, 6):
@@ -511,15 +443,13 @@ def view_rewrite():
                 res = st.session_state.get(f"out_{i}", "")
                 if res:
                     st.text_area(f"结果 #{i}", value=res, height=150, key=f"area_out_{i}", label_visibility="collapsed")
-                    render_copy_button_html(res, f"cp_{i}")
+                    render_copy_btn(res, f"cp_{i}")
                 else:
                     st.markdown("<div style='height:150px; display:flex; align-items:center; justify-content:center; color:#cbd5e1; border:1px dashed #e2e8f0; border-radius:8px;'>等待生成...</div>", unsafe_allow_html=True)
 
 def view_poster():
     st.markdown("### 🎨 海报生成 (专业版)")
     st.info("💡 因算力需求较大，海报生成功能已迁移至独立 GPU 集群。")
-    
-    # 漂亮的引导卡片
     st.markdown("""
     <div style="background:linear-gradient(135deg, #4f46e5, #7c3aed); padding:30px; border-radius:16px; color:white; display:flex; justify-content:space-between; align-items:center;">
         <div>
@@ -529,7 +459,6 @@ def view_poster():
         <div style="font-size:40px;">🚀</div>
     </div>
     """, unsafe_allow_html=True)
-    
     st.write("")
     c1, c2 = st.columns(2)
     with c1:
@@ -541,7 +470,6 @@ def view_poster():
 
 def view_brainstorm():
     st.markdown("### 💡 爆款选题灵感库")
-    
     topic = st.text_input("输入你的赛道/关键词", placeholder="例如：美妆、职场、副业、育儿...")
     if st.button("🧠 开始头脑风暴", type="primary"):
         if not topic: st.warning("请输入关键词")
@@ -556,12 +484,38 @@ def view_brainstorm():
                         prompt = f"我是做【{topic}】赛道的。请生成10个颠覆认知的爆款选题，格式：标题+钩子。要求：反直觉、引发焦虑或好奇。"
                         res = client.chat.completions.create(model="deepseek-chat", messages=[{"role":"user", "content":prompt}], temperature=1.5)
                         st.session_state['brain_res'] = res.choices[0].message.content
-                except Exception as e:
-                    st.error(str(e))
+                except Exception as e: st.error(str(e))
     
     if 'brain_res' in st.session_state:
         st.markdown("#### 灵感结果")
         st.text_area("结果", value=st.session_state['brain_res'], height=400)
+        render_copy_btn(st.session_state['brain_res'], "brain_res_copy")
+
+# --- 新增：修复了缺失的 view_naming 函数 ---
+def view_naming():
+    st.markdown("### 🏷️ 账号/IP 起名大师")
+    st.caption("AI 结合玄学与算法，为你定制最吸粉的账号 ID")
+    
+    c1, c2 = st.columns(2)
+    with c1: niche = st.selectbox("🎯 赛道", ["短剧", "小说", "口播", "情感", "带货", "Vlog"])
+    with c2: style = st.selectbox("🎨 风格", ["高冷", "搞笑", "文艺", "粗暴", "反差", "玄学"])
+    keywords = st.text_input("🔑 关键词 (选填)", placeholder="例如：暴富、逆袭、清醒...")
+    
+    if st.button("🎲 生成名字", type="primary", use_container_width=True):
+        api_key = st.secrets.get("DEEPSEEK_API_KEY", "")
+        if not api_key: st.error("请配置 API Key")
+        else:
+            client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+            prompt = f"为【{niche}】赛道生成10个{style}风格账号名，含关键词：{keywords}。格式：1. 名字+解释。"
+            try:
+                with st.spinner("生成中..."):
+                    res = client.chat.completions.create(model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.5)
+                    st.session_state['naming_result'] = res.choices[0].message.content
+            except Exception as e: st.error(str(e))
+            
+    if 'naming_result' in st.session_state:
+        st.text_area("结果", value=st.session_state['naming_result'], height=400)
+        render_copy_btn(st.session_state['naming_result'], "naming_res_copy")
 
 def view_account():
     user = st.session_state.get('user_phone')
@@ -589,22 +543,18 @@ def view_account():
         st.write("#### 激活卡密")
         c_code = st.text_input("输入卡密", placeholder="VIP-XXXXXX")
         if st.button("立即激活"):
-            conn = sqlite3.connect(DB_FILE)
-            cur = conn.cursor()
+            conn = sqlite3.connect(DB_FILE); cur = conn.cursor()
             cur.execute("SELECT * FROM access_codes WHERE code=?", (c_code,))
             row = cur.fetchone()
             cur.close()
             
             if row and row[4] == 'unused':
                 add_vip_days(user, row[1], "CDKEY")
-                conn = sqlite3.connect(DB_FILE)
-                cur = conn.cursor()
+                conn = sqlite3.connect(DB_FILE); cur = conn.cursor()
                 cur.execute("UPDATE access_codes SET status='active', activated_at=?, bind_user=? WHERE code=?", (datetime.datetime.now(), user, c_code))
-                conn.commit()
-                conn.close()
+                conn.commit(); conn.close()
                 st.success(f"✅ 激活成功！增加 {row[1]} 天")
-                time.sleep(1)
-                st.rerun()
+                time.sleep(1); st.rerun()
             else:
                 st.error("❌ 卡密无效或已使用")
 
@@ -626,15 +576,13 @@ def view_admin():
         days = st.number_input("天数", value=30)
         count = st.number_input("数量", value=10)
         if st.button("生成卡密"):
-            conn = sqlite3.connect(DB_FILE)
-            c = conn.cursor()
+            conn = sqlite3.connect(DB_FILE); c = conn.cursor()
             new_codes = []
             for _ in range(count):
                 code = f"VIP-{uuid.uuid4().hex[:8].upper()}"
                 c.execute("INSERT INTO access_codes (code, duration_days, status, create_time) VALUES (?, ?, ?, ?)", (code, days, 'unused', datetime.datetime.now()))
                 new_codes.append([code, days])
-            conn.commit()
-            conn.close()
+            conn.commit(); conn.close()
             st.success(f"已生成 {count} 个卡密")
             st.dataframe(pd.DataFrame(new_codes, columns=["卡密", "天数"]))
 
@@ -645,12 +593,11 @@ def main():
     if 'user_phone' not in st.session_state:
         view_auth()
     else:
-        inject_css("app") # 注入系统内页样式
+        inject_css("app")
         
         with st.sidebar:
             st.markdown(f"**👤 用户：{st.session_state['user_phone']}**")
             
-            # 导航菜单
             ops = ["🏠 首页", "📝 文案改写", "💡 爆款选题", "🎨 海报生成", "🏷️ 账号起名", "👤 个人中心"]
             if st.session_state['user_phone'] == ADMIN_ACCOUNT:
                 ops.append("🕵️‍♂️ 管理后台")
@@ -664,16 +611,14 @@ def main():
                 del st.session_state['user_phone']
                 st.rerun()
 
-        # 路由
         if nav == "🏠 首页": view_home()
         elif nav == "📝 文案改写": view_rewrite()
         elif nav == "💡 爆款选题": view_brainstorm()
         elif nav == "🎨 海报生成": view_poster()
-        elif nav == "🏷️ 账号起名": view_naming()
+        elif nav == "🏷️ 账号起名": view_naming() # 现在这个函数存在了
         elif nav == "👤 个人中心": view_account()
         elif nav == "🕵️‍♂️ 管理后台": view_admin()
         
-        # 底部 Footer
         st.markdown("<div style='margin-top:50px; text-align:center; color:#cbd5e1; font-size:12px;'>© 2026 抖音爆款工场 Pro System</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":

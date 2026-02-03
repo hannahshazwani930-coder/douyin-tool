@@ -41,10 +41,10 @@ def init_db():
 
 init_db()
 
-# --- CSS 样式 (v4.7 终极美化) ---
+# --- CSS 样式 (v4.8 终极修正) ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     .stApp { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
     
     /* 容器 */
@@ -55,82 +55,104 @@ st.markdown("""
     div.stButton > button[kind="primary"] { 
         background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
         border: none; color: white !important; 
-        box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.4);
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
     }
     div.stButton > button[kind="primary"]:hover { 
-        transform: translateY(-3px); box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.5);
+        transform: translateY(-2px); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
     }
     
-    /* 🔥 海报页面终极美化 CSS 🔥 */
-    /* 顶部通栏 Banner */
-    .poster-hero-banner {
-        background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
-        padding: 30px;
-        border-radius: 16px;
-        color: #1e3a8a;
+    /* 🔥 海报页面：双卡片极致对齐与美化 🔥 */
+    .action-card-container {
         display: flex;
+        gap: 20px;
+        width: 100%;
+    }
+    
+    /* 左侧：复制卡片 */
+    .copy-card-box {
+        background: #ffffff;
+        border: 2px dashed #cbd5e1;
+        border-radius: 16px;
+        height: 120px; /* 强制固定高度 */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
         align-items: center;
-        margin-bottom: 35px;
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
+        cursor: pointer;
+        transition: all 0.3s ease;
         position: relative;
-        overflow: hidden;
     }
-    .poster-hero-banner::after {
-        content: '🎨'; font-size: 120px; position: absolute; right: -20px; bottom: -30px; opacity: 0.15; transform: rotate(-15deg);
+    .copy-card-box:hover {
+        border-color: #6366f1;
+        background-color: #f5f3ff;
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.05);
     }
-    .hero-icon-box {
-        width: 60px; height: 60px; background: rgba(255,255,255,0.9); border-radius: 12px;
-        display: flex; align-items: center; justify-content: center; font-size: 32px; margin-right: 20px;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    .copy-label { font-size: 13px; color: #64748b; font-weight: 500; margin-bottom: 5px; }
+    .copy-code { font-size: 28px; font-weight: 800; color: #4f46e5; letter-spacing: 1px; font-family: monospace; }
+    .copy-hint { font-size: 12px; color: #94a3b8; margin-top: 5px; opacity: 0; transition: opacity 0.2s; }
+    .copy-card-box:hover .copy-hint { opacity: 1; color: #6366f1; }
+    
+    /* 右侧：跳转按钮 (修复色彩与对齐) */
+    .jump-card-btn {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); /* 高饱和蓝紫渐变 */
+        border-radius: 16px;
+        height: 120px; /* 强制与左侧等高 */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-decoration: none !important;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 25px rgba(124, 58, 237, 0.3);
+        border: 1px solid rgba(255,255,255,0.1);
     }
-    .hero-content h2 { margin: 0; font-weight: 800; color: #1e3a8a; font-size: 22px; }
-    .hero-content p { margin: 8px 0 0; color: #475569; font-weight: 500; }
+    .jump-card-btn:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(124, 58, 237, 0.5);
+        filter: brightness(1.1); /* 悬浮稍微变亮 */
+    }
+    .jump-main-text {
+        color: #ffffff !important; /* 强制纯白 */
+        font-size: 24px;
+        font-weight: 800;
+        margin-bottom: 4px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.2); /* 增加文字阴影提高可读性 */
+    }
+    .jump-sub-text {
+        color: rgba(255,255,255,0.9) !important; /* 稍微透明的白色 */
+        font-size: 14px;
+        font-weight: 500;
+    }
 
-    /* 邀请码卡片 */
-    .invite-card {
-        background: #fff; border: 2px solid #e2e8f0; border-radius: 16px; padding: 25px;
-        text-align: center; transition: all 0.3s; height: 100%;
-        display: flex; flex-direction: column; justify-content: center;
+    /* 🔥 教程步骤美化 🔥 */
+    .step-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 18px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: flex-start;
+        transition: transform 0.2s;
     }
-    .invite-card:hover { border-color: #a78bfa; box-shadow: 0 15px 35px rgba(139, 92, 246, 0.1); transform: translateY(-5px); }
-    .invite-code-big { font-size: 36px; font-weight: 800; color: #7c3aed; letter-spacing: 2px; margin: 15px 0; font-family: monospace; }
-    
-    /* 跳转按钮卡片 & 脉冲动画 */
-    .redirect-card-box {
-        background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
-        border-radius: 16px; padding: 3px; /* 用于边框渐变 */
-        box-shadow: 0 15px 35px rgba(124, 58, 237, 0.35);
-        transition: all 0.3s; height: 100%;
-        animation: pulse-purple 2s infinite;
+    .step-card:hover {
+        border-color: #bfdbfe;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.05);
+        transform: translateX(5px);
     }
-    .redirect-card-box:hover { transform: translateY(-5px); box-shadow: 0 20px 45px rgba(124, 58, 237, 0.45); }
-    @keyframes pulse-purple {
-        0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); }
-        70% { box-shadow: 0 0 0 15px rgba(139, 92, 246, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+    .step-icon {
+        background: #eff6ff;
+        color: #2563eb;
+        width: 32px; height: 32px;
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: bold;
+        margin-right: 15px;
+        flex-shrink: 0;
     }
-    
-    /* 步骤卡片美化 */
-    .step-card-styled {
-        background: #fff; border: 1px solid #f1f5f9; border-radius: 14px; padding: 20px;
-        margin-bottom: 15px; display: flex; align-items: flex-start; transition: all 0.3s ease;
-        border-left: 4px solid transparent;
-    }
-    .step-card-styled:hover { border-color: #e2e8f0; border-left-color: #3b82f6; box-shadow: 0 10px 30px rgba(0,0,0,0.04); background: #f8fafc; }
-    .step-num-badge {
-        width: 36px; height: 36px; background: linear-gradient(135deg, #3b82f6, #2563eb);
-        color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        font-weight: 700; font-size: 16px; margin-right: 18px; flex-shrink: 0;
-        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
-    }
-    .step-content h4 { margin: 0 0 6px; color: #1e293b; font-weight: 700; font-size: 16px; }
-    .step-content p { margin: 0; color: #64748b; font-size: 14px; line-height: 1.5; }
-    
-    /* 重点指令区 */
-    .command-highlight-box {
-        background: #fff7ed; border: 2px dashed #fdba74; border-radius: 12px; padding: 20px;
-        display: flex; align-items: center; margin-top: 25px;
-    }
+    .step-content h4 { margin: 0 0 4px; font-size: 15px; color: #1e293b; font-weight: 700; }
+    .step-content p { margin: 0; font-size: 13px; color: #64748b; }
 
     /* 首页卡片 */
     .home-card-box { 
@@ -417,22 +439,38 @@ def page_rewrite():
 
 def page_poster():
     st.markdown("## 🎨 海报生成 (专业版)")
-    # 🔥 终极美化 Banner 🔥
+    # 终极美化 Banner
     st.markdown("""<div style="background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%); padding: 30px; border-radius: 16px; color: #1e3a8a; display: flex; align-items: center; margin-bottom: 35px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3); position: relative; overflow: hidden;"><div style="width: 60px; height: 60px; background: rgba(255,255,255,0.9); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 32px; margin-right: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">🚀</div><div><h2 style="margin: 0; font-weight: 800; color: #1e3a8a; font-size: 22px;">算力全面升级！</h2><p style="margin: 8px 0 0; color: #475569; font-weight: 500;">为了提供好莱坞级的光影效果，海报功能已迁移至性能更强的独立站。</p></div></div>""", unsafe_allow_html=True)
     
-    c1, c2 = st.columns([1, 1.5], gap="large")
-    with c1:
-        with st.container(border=True):
-            st.markdown("##### 1. 复制专属邀请码")
-            st.caption("注册时填写，获取额外算力")
-            render_hover_copy_box("5yzMbpxn", "点击复制邀请码")
-            st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-    with c2:
-        # 🔥 终极美化跳转按钮 🔥
-        st.markdown("""<a href="https://aixtdz.com/" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; min-height: 120px; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white !important; border-radius: 16px; text-decoration: none; font-weight: 800; font-size: 24px; box-shadow: 0 15px 35px rgba(124, 58, 237, 0.35); transition: all 0.3s; text-align: center;">🚀 立即前往 小提大作<br><span style="font-size:14px; font-weight:500; opacity:0.9;">开启专业改图之旅 →</span></a>""", unsafe_allow_html=True)
-
+    # 终极美化双卡片
+    st.markdown("""
+    <div class="action-card-container">
+        <div class="copy-card-box" onclick="copyText(this)" style="flex:1;">
+            <div class="copy-label">👇 第一步：点击复制邀请码</div>
+            <div class="copy-code">5yzMbpxn</div>
+            <div class="copy-hint" id="status-code">点击立即复制</div>
+        </div>
+        <a href="https://aixtdz.com/" target="_blank" class="jump-card-btn" style="flex:1.5;">
+            <div class="jump-main-text">🚀 前往小提大作</div>
+            <div class="jump-sub-text">第二步：点击跳转，开启创作</div>
+        </a>
+    </div>
+    
+    <script>
+    function copyText(e){
+        navigator.clipboard.writeText('5yzMbpxn').then(()=>{
+            const hint = e.querySelector('#status-code');
+            hint.innerText = '✅ 复制成功！';
+            hint.style.opacity = '1';
+            hint.style.color = '#10b981';
+            setTimeout(()=>{ hint.innerText = '点击立即复制'; hint.style.opacity = '0'; hint.style.color = '#94a3b8'; }, 2000);
+        });
+    }
+    </script>
+    """, unsafe_allow_html=True)
+    
+    st.write("")
     st.markdown("#### 📖 新手保姆级教程")
-    # 🔥 终极美化教程步骤 🔥
     steps = [
         ("注册登录", "点击上方大按钮前往，注册时记得填写邀请码。"),
         ("创建画布", "登录后，在首页点击 <b>“创建自由画布”</b>。"),
@@ -440,9 +478,9 @@ def page_poster():
         ("一键改图", "点击 <b>右侧边框</b>，复制下方指令输入，等待奇迹！")
     ]
     for idx, (title, desc) in enumerate(steps, 1):
-        st.markdown(f"""<div style="background: #fff; border: 1px solid #f1f5f9; border-radius: 14px; padding: 20px; margin-bottom: 15px; display: flex; align-items: flex-start; transition: all 0.3s ease; border-left: 4px solid transparent;"><div style="width: 36px; height: 36px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; margin-right: 18px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">{idx}</div><div><h4 style="margin: 0 0 6px; color: #1e293b; font-weight: 700; font-size: 16px;">{title}</h4><p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.5;">{desc}</p></div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="step-card"><div class="step-icon">{idx}</div><div class="step-content"><h4>{title}</h4><p>{desc}</p></div></div>""", unsafe_allow_html=True)
 
-    st.markdown("""<div style="background: #fff7ed; border: 2px dashed #fdba74; border-radius: 12px; padding: 20px; display: flex; align-items: center; margin-top: 25px;"><span style="font-size: 24px; margin-right: 15px;">🔥</span><div><div style="font-weight: bold; color: #c2410c; margin-bottom: 5px;">改图万能指令 (点右侧复制)</div><div style="font-family: monospace; background: #ffedd5; padding: 8px 12px; border-radius: 6px; color: #9a3412;">将原图剧名：原剧名 改为：[你的新剧名]</div></div><div style="margin-left: auto;"></div></div>""", unsafe_allow_html=True)
+    st.markdown("""<div style="background: #fff7ed; border: 2px dashed #fdba74; border-radius: 12px; padding: 20px; display: flex; align-items: center; margin-top: 25px;"><span style="font-size: 24px; margin-right: 15px;">🔥</span><div><div style="font-weight: bold; color: #c2410c; margin-bottom: 5px;">改图万能指令 (点右侧复制)</div><div style="font-family: monospace; background: #ffedd5; padding: 8px 12px; border-radius: 6px; color: #9a3412;">将原图剧名：原剧名 改为：[你的新剧名]</div></div></div>""", unsafe_allow_html=True)
     render_copy_button_html("将原图剧名：原剧名\n改为：[你的新剧名]", "cmd_copy")
 
 def page_brainstorm():
@@ -451,6 +489,7 @@ def page_brainstorm():
     c1, c2 = st.columns([3, 1])
     with c1: topic = st.text_input("🔍 输入你的赛道/关键词", placeholder="例如：职场、美妆、减肥、副业...")
     with c2: st.write(""); st.write(""); generate_btn = st.button("🧠 帮我想选题", type="primary", use_container_width=True)
+    
     if generate_btn and topic:
         prompt = f"我是做【{topic}】领域的。现在文案枯竭，请帮我生成 10 个绝对会火的爆款选题。要求：1. 必须反直觉，打破认知。2. 必须直击痛点，引发焦虑或强烈好奇。3. 格式：1. 标题：xxxx | 钩子：xxxx"
         try:
@@ -458,6 +497,7 @@ def page_brainstorm():
                 res = client.chat.completions.create(model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.5)
                 st.session_state['brainstorm_result'] = res.choices[0].message.content
         except Exception as e: st.error(str(e))
+        
     if 'brainstorm_result' in st.session_state:
         res = st.session_state['brainstorm_result']
         st.text_area("灵感列表", value=res, height=400, label_visibility="collapsed")
@@ -470,6 +510,7 @@ def page_naming():
     with c1: niche = st.selectbox("🎯 赛道", ["短剧", "小说", "口播", "情感", "带货"])
     with c2: style = st.selectbox("🎨 风格", ["高冷", "搞笑", "文艺", "粗暴", "反差"])
     keywords = st.text_input("🔑 关键词 (选填)")
+    
     if st.button("🎲 生成名字", type="primary", use_container_width=True):
         prompt = f"为【{niche}】赛道生成10个{style}风格账号名，含关键词：{keywords}。格式：1. 名字+解释。"
         try:
@@ -477,6 +518,7 @@ def page_naming():
                 res = client.chat.completions.create(model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.5)
                 st.session_state['naming_result'] = res.choices[0].message.content
         except Exception as e: st.error(str(e))
+        
     if 'naming_result' in st.session_state:
         res = st.session_state['naming_result']
         st.text_area("结果", value=res, height=400, label_visibility="collapsed")

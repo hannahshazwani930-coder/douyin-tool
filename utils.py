@@ -23,11 +23,10 @@ def inject_css(page_id="auth"):
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         html, body, [class*="css"] { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
         
-        /* 隐藏原生头部 */
+        /* 隐藏原生组件 */
         header[data-testid="stHeader"] { display: none !important; height: 0 !important; visibility: hidden !important; }
-        [data-testid="stToolbar"] { display: none !important; }
-        [data-testid="stDecoration"] { display: none !important; }
         #MainMenu { display: none !important; }
+        [data-testid="stSidebarCollapsedControl"] { display: none !important; }
         
         /* 侧边栏 */
         [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
@@ -40,7 +39,7 @@ def inject_css(page_id="auth"):
     st.markdown(base_css, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 登录页
+    # 🔒 [LOCKED] 登录页 (Auth) - 绝对不动
     # ----------------------------------------------------------------
     if page_id == "auth":
         st.markdown("""
@@ -67,103 +66,108 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ============================================================
-    # 🏠 [NEW] 首页 - 垂直压缩修复版
+    # 🏠 [NEW] 首页独立设计 - 悬浮岛式 (Floating Island)
     # ============================================================
     elif page_id == "home":
         st.markdown("""
         <style>
             .stApp { background-color: #f8fafc; }
             
-            /* 1. 容器清零 */
-            div[data-testid="block-container"] { 
+            /* 1. 容器：不再尝试去填满顶部，而是留出优雅的间距 */
+            div.block-container { 
                 max-width: 1200px !important; 
-                padding-top: 0px !important;
-                padding-left: 40px !important;
-                padding-right: 40px !important;
-                margin-top: 0px !important;
+                padding: 1rem 40px 50px 40px !important; /* 顶部留白，不再强行置顶 */
             }
-            
-            /* 🔴 2. 消除组件垂直间距 (关键修复) */
-            /* 这行代码会强制让头图和下方的白色面板紧紧贴在一起，消灭缝隙 */
-            div[data-testid="stVerticalBlock"] { gap: 0 !important; }
-            
-            /* 3. 悬浮岛头图 */
+
+            /* 2. 悬浮岛头图 (Card Header) - 独立卡片，不与顶部粘连 */
             .home-header-card {
                 background: linear-gradient(120deg, #2563eb, #1d4ed8);
-                border-radius: 20px; padding: 50px 40px; text-align: center; color: white;
+                border-radius: 20px;
+                padding: 50px 40px;
+                text-align: center; color: white;
                 box-shadow: 0 15px 40px -10px rgba(37, 99, 235, 0.4); 
-                margin-top: 20px;
-                /* 🔴 增加底部负边距，让下面的元素被吸上来 */
-                margin-bottom: -30px; 
-                position: relative; overflow: hidden; z-index: 1;
+                margin-bottom: 30px;
+                position: relative;
+                overflow: hidden;
             }
+            /* 增加一点极光纹理 */
             .home-header-card::before {
                 content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
                 background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
                 animation: rotateLight 20s linear infinite;
             }
             @keyframes rotateLight { from {transform: rotate(0deg);} to {transform: rotate(360deg);} }
-            .header-title-v3 { font-size: 36px; font-weight: 800; margin-bottom: 10px; position: relative; z-index: 2; }
-            .header-sub-v3 { font-size: 15px; opacity: 0.95; font-weight: 400; position: relative; z-index: 2; }
+            
+            .header-title { font-size: 36px; font-weight: 800; margin-bottom: 10px; position: relative; z-index: 2; }
+            .header-sub { font-size: 15px; opacity: 0.95; font-weight: 400; position: relative; z-index: 2; }
 
-            /* 4. 白色控制台 (核心功能区容器) */
-            .creation-console {
-                background: white; border-radius: 24px; 
-                padding: 40px; 
-                /* 🔴 向上提拉，覆盖可能存在的白条，并制造层级感 */
-                margin-top: 0px; 
-                position: relative; z-index: 2; /* 层级高于头图，确保盖住 */
-                box-shadow: 0 -10px 40px -10px rgba(0,0,0,0.05); /* 顶部阴影 */
+            /* 3. 栏目标题 */
+            .section-label { 
+                font-size: 18px; font-weight: 800; color: #1e293b; 
+                margin-bottom: 15px; display: flex; align-items: center; gap: 8px; 
             }
+            .section-label::before { content: ""; display: block; width: 4px; height: 18px; background: #3b82f6; border-radius: 2px; }
 
-            /* 核心功能 */
-            .feature-box-v3 {
+            /* 4. 核心功能卡片 */
+            .feature-card-pro {
                 background: white; border: 1px solid #e2e8f0; border-radius: 16px;
                 padding: 25px 20px; text-align: center; height: 160px;
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
                 transition: all 0.3s ease; position: relative; overflow: hidden;
             }
-            .feature-box-v3:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); border-color: #bfdbfe; }
-            .feat-icon-v3 { font-size: 32px; margin-bottom: 12px; } 
-            .feat-title-v3 { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
-            .feat-desc-v3 { font-size: 12px; color: #64748b; line-height: 1.4; }
+            .feature-card-pro:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08);
+                border-color: #bfdbfe;
+            }
+            .feat-icon { font-size: 32px; margin-bottom: 12px; } /* 🔴 移除 font-family 强制，恢复默认 */
+            .feat-title { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
+            .feat-desc { font-size: 12px; color: #64748b; line-height: 1.4; }
 
-            /* 公告 */
-            .news-box-v3 {
+            /* 5. 系统公告 (静态悬浮条) */
+            .news-container {
                 background: white; border: 1px solid #fed7aa; border-radius: 12px;
                 padding: 12px 15px; display: flex; align-items: center; gap: 15px;
-                box-shadow: 0 4px 10px -2px rgba(249, 115, 22, 0.1); margin-bottom: 30px;
+                box-shadow: 0 4px 10px -2px rgba(249, 115, 22, 0.1);
+                margin-bottom: 30px;
             }
-            .news-tag-v3 { background: #fff7ed; color: #ea580c; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 4px; border: 1px solid #ffedd5; flex-shrink: 0; }
-            .news-text-v3 { font-size: 14px; color: #334155; font-weight: 500; }
+            .news-badge { 
+                background: #fff7ed; color: #ea580c; font-size: 11px; font-weight: 800; 
+                padding: 3px 8px; border-radius: 4px; border: 1px solid #ffedd5; flex-shrink: 0;
+            }
+            .news-content { font-size: 14px; color: #334155; font-weight: 500; }
 
-            /* 标题 */
-            .section-title-v3 { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-            .section-title-v3::before { content: ""; display: block; width: 4px; height: 18px; background: #3b82f6; border-radius: 2px; }
-            div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 10; }
+            /* 6. 变现任务卡片 (Monetize Card) */
+            .monetize-card {
+                background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px;
+                padding: 20px; height: 100%; position: relative;
+                transition: all 0.3s;
+            }
+            .monetize-card:hover { border-color: #cbd5e1; box-shadow: 0 15px 35px -5px rgba(0,0,0,0.06); transform: translateY(-3px); }
+            .mon-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+            .mon-icon { font-size: 24px; } /* 🔴 移除 font-family 强制 */
+            .mon-title { font-size: 15px; font-weight: 700; color: #0f172a; }
+            .mon-desc { font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 30px; min-height: 40px; }
+            
+            /* 微信领取徽章 */
+            .wechat-badge {
+                position: absolute; bottom: 15px; right: 15px;
+                background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;
+                padding: 4px 10px; border-radius: 8px;
+                font-size: 11px; font-weight: 600; 
+                cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px;
+                z-index: 50;
+            }
+            .wechat-badge:hover { background: #166534; color: white; border-color: #166534; }
+            
+            /* 隐形按钮 */
+            div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 5; }
             div.stButton button:hover { background: transparent; }
-
-            /* 变现项目 V7 (无乱码纯净版) */
-            .proj-card-v7 {
-                background: white; border-radius: 16px; border: 1px solid #e2e8f0;
-                padding: 24px; height: 100%; display: flex; flex-direction: column;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            .proj-card-v7:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(0,0,0,0.08); border-color: #3b82f6; }
-            .pure-head { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
-            .pure-icon { font-size: 24px; }
-            .pure-title { font-size: 16px; font-weight: 700; color: #0f172a; }
-            .pure-desc { font-size: 13px; color: #64748b; line-height: 1.6; flex-grow: 1; margin-bottom: 20px; }
-            .pure-footer {
-                margin-top: auto; padding-top: 15px; border-top: 1px dashed #e2e8f0;
-                color: #64748b; font-size: 12px; display: flex; align-items: center; gap: 6px; font-family: monospace;
-            }
-            .footer-icon { font-size: 14px; }
         </style>
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 文案改写页
+    # 🔒 [LOCKED] 文案改写页 (Rewrite) - 绝对不动
     # ----------------------------------------------------------------
     elif page_id == "rewrite":
         st.markdown("""
@@ -200,7 +204,7 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 其他页面
+    # 🔒 [LOCKED] 其他页面 (General) - 绝对不动
     # ----------------------------------------------------------------
     elif page_id == "general":
         st.markdown("""
@@ -216,7 +220,7 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 管理后台
+    # 🔒 [LOCKED] 管理后台 (Admin) - 绝对不动
     # ----------------------------------------------------------------
     elif page_id == "admin":
         st.markdown("""
@@ -255,24 +259,15 @@ def render_cta_wechat(wx_id):
     html = f"""<div style="padding:10px;"><div style="background:linear-gradient(90deg,#059669,#10b981);color:white;border-radius:12px;padding:15px 25px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 5px 15px rgba(16,185,129,0.4);font-family:'Inter',sans-serif;" onclick="navigator.clipboard.writeText('{wx_id}');alert('微信号 {wx_id} 已复制！')"><div style="display:flex;align-items:center;"><div style="font-size:24px;margin-right:15px;">🎁</div><div><span style="font-size:16px;font-weight:700;display:block;">领取内部资料 & 项目白皮书</span><span style="font-size:13px;opacity:0.9;">添加微信，备注【资料】</span></div></div><div style="background:rgba(255,255,255,0.2);padding:5px 12px;border-radius:20px;font-size:13px;font-weight:600;font-family:monospace;">📋 {wx_id}</div></div></div>"""
     components.html(html, height=100)
 
-def render_home_project_card(icon, title, desc, tag): return ""
-def render_page_banner(title, desc): st.markdown(f"""<div class="page-banner"><div class="banner-title">{title}</div><div class="banner-desc">{desc}</div></div>""", unsafe_allow_html=True)
-def render_conversion_tip(): st.markdown("""<div class="conversion-tip"><span>💰</span><span><b>商业化建议：</b> 已自动植入私域钩子，预计提升 30% 导流效率。</span></div>""", unsafe_allow_html=True)
-def render_feature_card_home(icon, title, desc): return ""
+def render_home_project_card(icon, title, desc, tag):
+    return f"""<div style="background:white;border-radius:12px;padding:20px;border:1px solid #e2e8f0;height:100%;display:flex;flex-direction:column;"><div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:8px;"><span style="margin-right:8px;">{icon}</span>{title}</div><div style="font-size:12px;color:#64748b;line-height:1.5;flex-grow:1;">{desc}</div><div style="font-size:11px;padding:3px 8px;border-radius:10px;background:#f8fafc;color:#475569;margin-top:15px;width:fit-content;border:1px solid #e2e8f0;">{tag}</div></div>"""
 
-# 🔴 纯 HTML 渲染卡片 (无乱码，无交互，纯展示)
-def render_pure_html_card(icon, title, desc, wx_id):
-    html = f"""
-    <div class="proj-card-v7">
-        <div class="pure-head">
-            <span class="pure-icon">{icon}</span>
-            <span class="pure-title">{title}</span>
-        </div>
-        <div class="pure-desc">{desc}</div>
-        <div class="pure-footer">
-            <span class="footer-icon">📋</span>
-            <span>资料领取: {wx_id}</span>
-        </div>
-    </div>
-    """
-    st.markdown(html, unsafe_allow_html=True)
+def render_page_banner(title, desc):
+    st.markdown(f"""<div class="page-banner"><div class="banner-title">{title}</div><div class="banner-desc">{desc}</div></div>""", unsafe_allow_html=True)
+
+def render_conversion_tip():
+    st.markdown("""<div class="conversion-tip"><span>💰</span><span><b>商业化建议：</b> 已自动植入私域钩子，预计提升 30% 导流效率。</span></div>""", unsafe_allow_html=True)
+
+def render_feature_card_home(icon, title, desc):
+    return f"""<div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:15px;text-align:center;height:100px;display:flex;flex-direction:column;justify-content:center;align-items:center;"><div style="font-size:24px;margin-bottom:5px;">{icon}</div><div style="font-weight:700;color:#0f172a;">{title}</div></div>"""
+

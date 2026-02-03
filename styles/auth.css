@@ -1,39 +1,58 @@
-/* styles/auth.css */
-header, [data-testid="stHeader"] { visibility: hidden; }
+/* * 🔐 [ULTRA-PRO PRODUCTION - STABLE VERSION] 
+ * 放弃 position:absolute，拥抱 Flex 布局
+ */
 
-/* 页面深色背景 */
+/* 1. 隐藏所有原生工具条，营造沉浸感 */
+header, [data-testid="stHeader"], [data-testid="stToolbar"] { visibility: hidden !important; }
+
+/* 2. 背景：深邃暗蓝 */
 .stApp {
     background: #050a18 !important;
 }
 
-/* 蓝色品牌盒子样式 */
-.brand-box {
-    background: linear-gradient(135deg, #2563eb, #1e3a8a);
-    padding: 40px 30px;
-    border-radius: 24px;
-    height: 100%;
-    color: white;
-}
-
-/* 所有的 Tab 标签美化 */
-button[data-baseweb="tab"] {
-    color: rgba(255,255,255,0.6) !important;
-}
-button[aria-selected="true"] {
-    color: white !important;
-}
-
-/* 输入框和表单美化 */
+/* 3. 登录卡片美化：给原生 form 加上白色底色和阴影 */
 [data-testid="stForm"] {
-    background: white;
-    padding: 30px !important;
-    border-radius: 24px;
+    background: white !important;
+    padding: 40px !important;
+    border-radius: 28px !important;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.6) !important;
     border: none !important;
 }
 
-/* 按钮大气蓝 */
+/* 4. 品牌区盒子样式 */
+.brand-box-pro {
+    background: linear-gradient(135deg, #2563eb, #1e3a8a);
+    padding: 50px 40px;
+    border-radius: 28px;
+    color: white;
+    height: 100%;
+    min-height: 480px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* 5. 原生 Tabs 美化 */
+button[data-baseweb="tab"] {
+    color: rgba(255,255,255,0.6) !important;
+    font-size: 16px !important;
+}
+button[aria-selected="true"] {
+    color: white !important;
+    font-weight: bold !important;
+}
+
+/* 6. 输入框大气化 */
+.stTextInput input {
+    height: 50px !important;
+    border-radius: 12px !important;
+    background: #f8fafc !important;
+}
+
+/* 7. 登录按钮大气化 */
 button[kind="primaryFormSubmit"] {
     background: #1e3a8a !important;
-    height: 45px;
-    border-radius: 10px !important;
+    height: 52px !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
 }

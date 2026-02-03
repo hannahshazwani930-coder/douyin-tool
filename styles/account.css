@@ -1,0 +1,38 @@
+/* * 🔐 [LOCKED: ACCOUNT PAGE STYLES] 
+ * 权限：只读锁定。严禁修改个人中心面板的视觉参数。
+ */
+
+.account-container {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 20px;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 20px;
+}
+
+.vip-badge {
+    background: #fff7ed;
+    color: #ea580c;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid #ffedd5;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #f8fafc;
+    font-size: 14px;
+}

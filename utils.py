@@ -22,12 +22,10 @@ def inject_css(page_id="auth"):
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         html, body, [class*="css"] { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-        /* 彻底隐藏 Streamlit 原生 Header 占位 */
-        header[data-testid="stHeader"] { display: none !important; height: 0 !important; visibility: hidden !important; }
+        header[data-testid="stHeader"] { display: none !important; }
         #MainMenu { display: none !important; }
         [data-testid="stSidebarCollapsedControl"] { display: none; }
         
-        /* 侧边栏 */
         [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
         div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; }
         div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; }
@@ -43,35 +41,20 @@ def inject_css(page_id="auth"):
     if page_id == "auth":
         st.markdown("""
         <style>
-            .stApp {
-                background: linear-gradient(-45deg, #020617, #0f172a, #1e3a8a, #172554);
-                background-size: 400% 400%; animation: authGradient 15s ease infinite;
-            }
+            .stApp { background: linear-gradient(-45deg, #020617, #0f172a, #1e3a8a, #172554); background-size: 400% 400%; animation: authGradient 15s ease infinite; }
             @keyframes authGradient { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
-
-            div.block-container {
-                background-color: rgba(255, 255, 255, 0.98); border-radius: 24px;
-                box-shadow: 0 30px 80px rgba(0,0,0,0.6);
-                padding: 60px 50px !important; max-width: 1100px !important;
-                margin: auto; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); overflow: hidden;
-            }
+            div.block-container { background-color: rgba(255, 255, 255, 0.98); border-radius: 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.6); padding: 60px 50px !important; max-width: 1100px !important; margin: auto; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); overflow: hidden; }
             .auth-left-decor { border-right: 1px solid #f1f5f9; padding-right: 40px; height: 100%; display: flex; flex-direction: column; justify-content: center; }
             .hero-title { font-size: 42px; font-weight: 800; color: #0f172a; line-height: 1.2; margin-bottom: 20px; letter-spacing: -1px; }
             .hero-sub { font-size: 16px; color: #64748b; line-height: 1.6; margin-bottom: 30px; }
             .hero-tags { display: flex; gap: 10px; }
             .tag-pill { background: #eff6ff; color: #2563eb; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-
-            .stTextInput div[data-baseweb="input"] {
-                background-color: #f8fafc !important; border: 1px solid #cbd5e1 !important;
-                border-radius: 8px !important; height: 48px !important; padding: 0 !important;
-            }
+            .stTextInput div[data-baseweb="input"] { background-color: #f8fafc !important; border: 1px solid #cbd5e1 !important; border-radius: 8px !important; height: 48px !important; padding: 0 !important; }
             .stTextInput input { background-color: transparent !important; border: none !important; color: #1e293b !important; height: 48px !important; padding: 0 15px !important; }
             .stTextInput div[data-baseweb="input"]:focus-within { border-color: #3b82f6 !important; background-color: #ffffff !important; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important; }
             .stTextInput div[data-baseweb="input"] > div { background-color: transparent !important; }
-
             div.stButton > button { width: 100%; height: 48px; background: linear-gradient(90deg, #2563eb, #3b82f6); color: white; border: none; border-radius: 8px; font-weight: 600; }
             div.stButton > button:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(37,99,235,0.3); }
-            
             .stTabs [data-baseweb="tab-list"] { gap: 20px; border-bottom: 1px solid #f1f5f9 !important; margin-bottom: 25px; }
             .stTabs [data-baseweb="tab"] { height: 45px; color: #64748b; font-weight: 600; }
             .stTabs [aria-selected="true"] { color: #2563eb !important; border-bottom: 3px solid #2563eb !important; }
@@ -80,123 +63,82 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🏠 [独立] 首页样式 - 负边距暴力覆盖
+    # 🏠 [独立] 首页样式 - 去除白框
     # ----------------------------------------------------------------
     elif page_id == "home":
         st.markdown("""
         <style>
             .stApp { background-color: #f8fafc; }
-            
-            /* 1. 强制去除容器顶部间距 */
-            div.block-container { 
-                max-width: 1200px !important; 
-                padding: 0 40px 50px 40px !important;
-                margin-top: 0 !important;
-            }
-
-            /* 2. Header：底部加高，准备被覆盖 */
+            div.block-container { max-width: 1200px !important; padding: 0 40px 50px 40px !important; margin-top: 0 !important; }
             .flowing-header {
-                background: linear-gradient(-45deg, #1e3a8a, #2563eb, #3b82f6, #0ea5e9);
-                background-size: 400% 400%; animation: gradientBG 10s ease infinite;
+                background: linear-gradient(-45deg, #1e3a8a, #2563eb, #3b82f6, #0ea5e9); background-size: 400% 400%; animation: gradientBG 10s ease infinite;
                 border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
-                
-                /* 关键：底部留出 120px 的空间 */
-                padding: 60px 40px 120px 40px; 
-                color: white; text-align: center;
-                margin-left: -40px; margin-right: -40px;
-                margin-top: -60px; /* 抵消掉 block-container 可能残留的顶部边距 */
-                
+                padding: 50px 40px 140px 40px; color: white; text-align: center;
+                margin: -60px -40px -120px -40px; /* 负边距调整 */
                 box-shadow: 0 20px 50px rgba(37, 99, 235, 0.3); position: relative; z-index: 0;
             }
             @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
             .header-title { font-size: 42px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             .header-sub { font-size: 15px; opacity: 0.95; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 30px; backdrop-filter: blur(10px); display: inline-block; border: 1px solid rgba(255,255,255,0.2); }
 
-            /* 3. 白色控制台：强力向上吸附 */
+            /* 🔴 核心修复：去除顶部内边距，消除白框 */
             .creation-console {
-                background: white; border-radius: 24px; padding: 40px;
-                box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); 
-                border: 1px solid #e2e8f0; 
-                position: relative; z-index: 10; 
-                
-                /* 🔴 核心：负边距上移，直接压住 Header 底部 */
-                margin-top: -60px; 
+                background: white; border-radius: 24px; 
+                padding: 10px 40px 40px 40px; /* 顶部仅留10px */
+                box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; 
+                position: relative; z-index: 10; margin-top: -60px;
             }
             
-            /* 隐形按钮 */
             div.stButton button { width: 100%; border:none; background:transparent; color:transparent; height:100px; position:absolute; top:0; left:0; z-index:2; }
             div.stButton button:hover { background:rgba(0,0,0,0.02); }
-            
             .custom-label { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 20px; border-left: 4px solid #3b82f6; padding-left: 10px; }
             .ann-card { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 12px 15px; margin-bottom: 10px; display: flex; align-items: start; gap: 10px; font-size: 14px; color: #9a3412; }
         </style>
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 📝 [独立] 文案改写页样式 - 负边距暴力覆盖
+    # 📝 [独立] 文案改写页样式 - 去除白框 & 纯白输入
     # ----------------------------------------------------------------
     elif page_id == "rewrite":
         st.markdown("""
         <style>
             .stApp { background-color: #f8fafc; }
-            div.block-container { 
-                max-width: 1400px !important; 
-                padding: 0 40px 50px 40px !important; 
-                margin-top: 0 !important;
-            }
+            div.block-container { max-width: 1400px !important; padding: 0 40px 50px 40px !important; margin-top: 0 !important; }
 
-            /* Header */
             .flowing-header {
-                background: linear-gradient(-45deg, #1e3a8a, #2563eb, #3b82f6, #0ea5e9);
-                background-size: 400% 400%; animation: gradientBG 10s ease infinite;
+                background: linear-gradient(-45deg, #1e3a8a, #2563eb, #3b82f6, #0ea5e9); background-size: 400% 400%; animation: gradientBG 10s ease infinite;
                 border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
-                
-                /* 预留 140px 高度给悬浮按钮 */
-                padding: 60px 40px 140px 40px;
-                color: white; text-align: center;
-                margin-left: -40px; margin-right: -40px;
-                margin-top: -60px;
-                
+                padding: 60px 40px 140px 40px; color: white; text-align: center;
+                margin: -60px -40px -100px -40px;
                 box-shadow: 0 20px 50px rgba(37, 99, 235, 0.3); position: relative; z-index: 0;
             }
             @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
             .header-title { font-size: 42px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             .header-sub { font-size: 15px; opacity: 0.95; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 30px; backdrop-filter: blur(10px); display: inline-block; border: 1px solid rgba(255,255,255,0.2); }
 
-            /* 悬浮切换按钮 (位于 Header 和 Console 之间) */
-            div.stButton button[kind="primary"], div.stButton button[kind="secondary"] {
-                position: relative; z-index: 20; /* 保证按钮在最上层 */
-            }
+            div.stButton button[kind="primary"], div.stButton button[kind="secondary"] { position: relative; z-index: 20; }
 
-            /* 控制台：向上吸附 */
+            /* 🔴 核心修复：去除顶部内边距 */
             .creation-console {
-                background: white; border-radius: 24px; padding: 40px;
-                box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); 
-                border: 1px solid #e2e8f0; 
-                position: relative; z-index: 10; 
-                
-                /* 🔴 核心：负边距上移，压住 Header 底部空隙 */
-                margin-top: -50px; 
+                background: white; border-radius: 24px; 
+                padding: 10px 40px 40px 40px; /* 顶部仅留10px，消除大白框 */
+                box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; 
+                position: relative; z-index: 10; margin-top: -50px; 
             }
 
-            /* 文案页输入框 */
+            /* 🔴 核心修复：输入框纯白背景 */
             .stTextArea > div { border: none !important; box-shadow: none !important; background: transparent !important; }
             .stTextArea > label { display: none !important; }
             .stTextArea textarea {
-                background-color: #ffffff !important; border: 2px solid #e2e8f0 !important;
+                background-color: #ffffff !important; /* 纯白 */
+                border: 2px solid #e2e8f0 !important;
                 border-radius: 12px; padding: 15px; font-size: 15px; line-height: 1.6; color: #334155;
             }
             .stTextArea textarea:focus { border-color: #3b82f6 !important; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important; }
 
             .custom-label { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: block; }
             div[data-baseweb="select"] > div { height: 48px !important; border-radius: 10px !important; background-color: #f8fafc; }
-            
-            div.stButton button[kind="primary"] {
-                width: 100%; height: 48px !important; border: none !important;
-                background: linear-gradient(90deg, #2563eb, #3b82f6) !important;
-                color: white !important; border-radius: 10px !important; font-size: 16px !important;
-                box-shadow: 0 8px 20px -5px rgba(37, 99, 235, 0.4) !important;
-            }
+            div.stButton button[kind="primary"] { width: 100%; height: 48px !important; border: none !important; background: linear-gradient(90deg, #2563eb, #3b82f6) !important; color: white !important; border-radius: 10px !important; font-size: 16px !important; box-shadow: 0 8px 20px -5px rgba(37, 99, 235, 0.4) !important; }
             div.stButton button[kind="primary"]:hover { transform: translateY(-2px); }
             div.stButton button[kind="secondary"] { height: 48px !important; border: 1px solid #e2e8f0 !important; background: white !important; color: #64748b !important; font-weight: 600 !important; }
             .info-box { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 0 20px; border-radius: 10px; font-size: 15px; display: flex; align-items: center; gap: 10px; height: 48px; }
@@ -205,18 +147,14 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 📄 [独立] 通用页
+    # 📄 [独立] 通用页面样式
     # ----------------------------------------------------------------
     elif page_id == "general":
         st.markdown("""
         <style>
             .stApp { background-color: #f8fafc; }
             div.block-container { max-width: 1200px !important; padding: 2rem 40px 50px 40px !important; }
-            .page-banner {
-                background: linear-gradient(120deg, #2563eb, #1d4ed8);
-                color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px;
-                box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
-            }
+            .page-banner { background: linear-gradient(120deg, #2563eb, #1d4ed8); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4); }
             .banner-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
             .banner-desc { font-size: 15px; opacity: 0.9; line-height: 1.5; }
             div[data-testid="stVerticalBlock"] > div { background: transparent; }

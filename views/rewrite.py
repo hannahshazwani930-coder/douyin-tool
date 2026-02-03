@@ -3,9 +3,11 @@ import streamlit as st
 import time
 import requests
 from concurrent.futures import ThreadPoolExecutor
-from utils import render_copy_btn, render_conversion_tip, inject_css
+# 注意：这里我们不再导入 inject_css，因为它由 main.py 统一管理
+from utils import render_copy_btn, render_conversion_tip
 from config import DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL
 
+# --- DeepSeek 调用逻辑 ---
 def call_deepseek_rewrite(content, style_prompt):
     if not DEEPSEEK_API_KEY or "sk-" not in DEEPSEEK_API_KEY:
         return "❌ 配置错误：请在 config.py 中填入正确的 DEEPSEEK_API_KEY"
@@ -18,10 +20,12 @@ def call_deepseek_rewrite(content, style_prompt):
         else: return f"❌ API 报错: {response.status_code} - {response.text}"
     except Exception as e: return f"❌ 网络错误: {str(e)}"
 
+# --- 主视图 ---
 def view_rewrite():
-    inject_css() 
+    # 🔴 关键修改：删除了 inject_css()
+    # 样式已由 main.py 中的 inject_css("rewrite") 提前加载，这里无需重复操作
     
-    # 1. 悬浮流光 Header (动效)
+    # 1. 悬浮流光 Header
     st.markdown("""
     <div class="flowing-header">
         <div class="header-title">✨ 文案改写 Pro</div>
@@ -34,12 +38,10 @@ def view_rewrite():
     if 'rw_single_res' not in st.session_state: st.session_state.rw_single_res = ""
     if 'rw_batch_res' not in st.session_state: st.session_state.rw_batch_res = [""] * 5
 
-    # 2. 悬浮切换按钮 (独立于白卡之上，更显大气)
-    # 使用 columns 居中
+    # 2. 悬浮切换按钮
     c_l, c_m1, c_m2, c_r = st.columns([2, 1.2, 1.2, 2])
     
     with c_m1:
-        # 选中时用 Primary (渐变蓝)，未选中 Secondary (白底灰字)
         type_s = "primary" if st.session_state.rewrite_mode == "single" else "secondary"
         if st.button("⚡ 单条精修", key="sw_single", type=type_s, use_container_width=True):
             st.session_state.rewrite_mode = "single"
@@ -51,7 +53,7 @@ def view_rewrite():
             st.session_state.rewrite_mode = "matrix"
             st.rerun()
 
-    # 3. 一体化创作控制台 (所有内容镶嵌其中)
+    # 3. 一体化创作控制台
     st.markdown('<div class="creation-console">', unsafe_allow_html=True)
 
     # === 模式 A: 单条精修 ===
@@ -60,18 +62,15 @@ def view_rewrite():
         
         with c_left:
             st.markdown('<div class="custom-label" style="text-align:left">📝 原始内容</div>', unsafe_allow_html=True)
-            # 这里的输入框现在没有叠影，背景为淡灰
             content = st.text_area("in", height=400, placeholder="在此粘贴文案...", label_visibility="collapsed")
             
             st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
             
-            # 底部绝对对齐
             cc1, cc2 = st.columns([1, 1])
             with cc1:
                 st.markdown('<div class="custom-label" style="text-align:left; margin-bottom:5px;">风格偏好</div>', unsafe_allow_html=True)
                 style = st.selectbox("style_s", ["标准去重", "爆款悬疑", "情感共鸣", "硬核干货", "幽默反转"], label_visibility="collapsed")
             with cc2:
-                # 这是一个空白占位，强制把按钮向下推，与 Selectbox 底部对齐
                 st.markdown('<div class="custom-label" style="opacity:0">&nbsp;</div>', unsafe_allow_html=True)
                 run_single = st.button("✨ 立即改写", type="primary", use_container_width=True)
                 
@@ -99,25 +98,19 @@ def view_rewrite():
 
     # === 模式 B: 5路矩阵 ===
     else:
-        # 顶部对齐：左侧文字 vs 右侧按钮
         top_c1, top_c2 = st.columns([3, 1])
-        
         with top_c1:
-             # 使用 Flex 布局的 info-box 实现垂直居中
              st.markdown("""
              <div class="info-box">
                 <span style="font-size:20px;">💡</span>
                 <span style="font-weight:600;">矩阵效率模式：开启 5 个并发线程，独立处理，互不干扰。</span>
              </div>
              """, unsafe_allow_html=True)
-             
         with top_c2:
-            # 按钮高度已强制 CSS 为 48px，与 info-box 一致
             run_batch = st.button("🚀 并行启动", type="primary", use_container_width=True)
             
         st.markdown("<div style='height:30px'></div>", unsafe_allow_html=True)
         
-        # 5列输入
         cols = st.columns(5, gap="small")
         inputs = []
         for i, col in enumerate(cols):
@@ -126,7 +119,6 @@ def view_rewrite():
                 val = st.text_area(f"in_{i}", height=150, key=f"bi_{i}_v6", placeholder="输入...", label_visibility="collapsed")
                 inputs.append(val)
         
-        # 逻辑
         if run_batch:
             valid = [(i, t) for i, t in enumerate(inputs) if t.strip()]
             if valid:
@@ -140,7 +132,6 @@ def view_rewrite():
         
         st.markdown("<div style='height:20px; border-bottom:1px solid #f1f5f9; margin-bottom:20px;'></div>", unsafe_allow_html=True)
         
-        # 输出区
         res_cols = st.columns(5, gap="small")
         for i, col in enumerate(res_cols):
             with col:
@@ -151,4 +142,4 @@ def view_rewrite():
                 else:
                     st.markdown("<div style='height:245px; background:#f8fafc; border-radius:12px; border:1px dashed #e2e8f0; display:flex; align-items:center; justify-content:center; color:#cbd5e1;'>空闲</div>", unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True) # End creation-console
+    st.markdown('</div>', unsafe_allow_html=True)

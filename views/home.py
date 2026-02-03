@@ -73,12 +73,13 @@ def view_home():
                 </div>
                 <div class="mon-desc">{desc}</div>
                 
-                <div class="wechat-badge" onclick="navigator.clipboard.writeText('W7774X'); alert('✅ 微信 W7774X 已复制！\\n请添加微信并备注【资料】领取内部白皮书。')">
-                    <span style="font-size:14px; color:#10b981;">💬</span>
-                    <span>W7774X</span>
-                </div>
+                <div class="wechat-badge" onclick="navigator.clipboard.writeText('W7774X'); alert('✅ 微信 W7774X 已复制！&#10;请添加微信并备注【资料】领取内部白皮书。')">
+    <span style="font-size:14px; color:#10b981;">💬</span>
+    <span>W7774X</span>
+</div>
             </div>
             """, unsafe_allow_html=True)
 
     st.markdown("<div style='height:40px'></div>", unsafe_allow_html=True)
+
 

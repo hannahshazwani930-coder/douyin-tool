@@ -17,16 +17,18 @@ def generate_invite_code():
 # ==============================================================================
 
 def inject_css(page_id="auth"):
-    # 1. 全局基础
+    # 1. 全局基础 (隐藏原生Header)
     base_css = """
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         html, body, [class*="css"] { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
         
+        /* 隐藏 Streamlit 顶栏 */
         header[data-testid="stHeader"] { display: none !important; height: 0 !important; visibility: hidden !important; }
         #MainMenu { display: none !important; }
         [data-testid="stSidebarCollapsedControl"] { display: none !important; }
         
+        /* 侧边栏 */
         [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
         div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; }
         div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; }
@@ -64,60 +66,68 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ============================================================
-    # 🏠 [LOCKED] 首页悬浮岛 V3 (保留头图和核心功能样式)
+    # 🏠 [NEW] 首页 V4 - 强制去白框 + 独立组件
     # ============================================================
     elif page_id == "home":
         st.markdown("""
         <style>
             .stApp { background-color: #f8fafc; }
-            div.block-container { max-width: 1200px !important; padding: 1rem 40px 50px 40px !important; }
+            
+            /* 1. 白框核弹 V4：针对 data-testid 直接清零 */
+            div[data-testid="block-container"] { 
+                max-width: 1200px !important; 
+                padding-top: 0px !important; /* 强制归零 */
+                padding-left: 40px !important;
+                padding-right: 40px !important;
+                margin-top: 20px !important; /* 顶部留出自然间距，不贴边 */
+            }
+            
+            /* 顶部占位符清理 */
+            div[data-testid="stVerticalBlock"] > div:first-child {
+                padding-top: 0px !important;
+                margin-top: 0px !important;
+            }
 
-            /* 1. 悬浮岛头图 */
-            .home-header-card {
+            /* 2. 悬浮岛头图 V4 */
+            .header-card-v4 {
                 background: linear-gradient(120deg, #2563eb, #1d4ed8);
                 border-radius: 20px; padding: 50px 40px; text-align: center; color: white;
-                box-shadow: 0 15px 40px -10px rgba(37, 99, 235, 0.4); 
-                margin-bottom: 30px; position: relative; overflow: hidden;
+                box-shadow: 0 20px 50px -10px rgba(37, 99, 235, 0.4); 
+                margin-bottom: 40px; position: relative; overflow: hidden;
             }
-            .home-header-card::before {
-                content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-                background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
-                animation: rotateLight 20s linear infinite;
-            }
-            @keyframes rotateLight { from {transform: rotate(0deg);} to {transform: rotate(360deg);} }
-            .header-title-v3 { font-size: 36px; font-weight: 800; margin-bottom: 10px; position: relative; z-index: 2; }
-            .header-sub-v3 { font-size: 15px; opacity: 0.95; font-weight: 400; position: relative; z-index: 2; }
+            .header-title-v4 { font-size: 36px; font-weight: 800; margin-bottom: 10px; position: relative; z-index: 2; }
+            .header-sub-v4 { font-size: 15px; opacity: 0.95; font-weight: 400; position: relative; z-index: 2; }
 
-            /* 2. 核心功能区 (保留您满意的悬浮效果) */
-            .feature-box-v3 {
+            /* 3. 核心功能区 V4 */
+            .feature-box-v4 {
                 background: white; border: 1px solid #e2e8f0; border-radius: 16px;
                 padding: 25px 20px; text-align: center; height: 160px;
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
                 transition: all 0.3s ease; position: relative; overflow: hidden;
             }
-            .feature-box-v3:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); border-color: #bfdbfe; }
-            .feat-icon-v3 { font-size: 32px; margin-bottom: 12px; } 
-            .feat-title-v3 { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
-            .feat-desc-v3 { font-size: 12px; color: #64748b; line-height: 1.4; }
+            .feature-box-v4:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); border-color: #bfdbfe; }
+            .feat-icon-v4 { font-size: 32px; margin-bottom: 12px; } 
+            .feat-title-v4 { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
+            .feat-desc-v4 { font-size: 12px; color: #64748b; line-height: 1.4; }
 
-            /* 3. 系统公告 (静态) */
-            .news-box-v3 {
+            /* 4. 公告 V4 */
+            .news-box-v4 {
                 background: white; border: 1px solid #fed7aa; border-radius: 12px;
                 padding: 12px 15px; display: flex; align-items: center; gap: 15px;
                 box-shadow: 0 4px 10px -2px rgba(249, 115, 22, 0.1); margin-bottom: 30px;
             }
-            .news-tag-v3 { background: #fff7ed; color: #ea580c; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 4px; border: 1px solid #ffedd5; flex-shrink: 0; }
-            .news-text-v3 { font-size: 14px; color: #334155; font-weight: 500; }
+            .news-tag-v4 { background: #fff7ed; color: #ea580c; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 4px; border: 1px solid #ffedd5; flex-shrink: 0; }
+            .news-text-v4 { font-size: 14px; color: #334155; font-weight: 500; }
 
             /* 通用标题 */
-            .section-title-v3 { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-            .section-title-v3::before { content: ""; display: block; width: 4px; height: 18px; background: #3b82f6; border-radius: 2px; }
+            .section-title-v4 { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+            .section-title-v4::before { content: ""; display: block; width: 4px; height: 18px; background: #3b82f6; border-radius: 2px; }
 
             /* 隐形跳转按钮 (核心功能区专用) */
             div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 10; }
             div.stButton button:hover { background: transparent; }
             
-            /* 中控台去白框 (Padding Top 10px) */
+            /* 中控台 (去白框辅助) */
             .creation-console {
                 background: white; border-radius: 24px;
                 padding: 10px 40px 40px 40px; 
@@ -199,7 +209,7 @@ def inject_css(page_id="auth"):
         </style>
         """, unsafe_allow_html=True)
 
-# --- 组件函数 ---
+# --- 组件函数 (保持原样) ---
 def render_sidebar_user_card(username, vip_info):
     status_bg = "#eff6ff" if "VIP" in vip_info or "管理员" in vip_info else "#f1f5f9"
     st.sidebar.markdown(f"""<div style="background: {status_bg}; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 20px;"><div style="display:flex; align-items:center; margin-bottom: 8px;"><div style="width: 32px; height: 32px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 10px; border: 1px solid #e2e8f0;">👤</div><div style="font-weight: 700; color: #0f172a; font-size: 14px; overflow: hidden; text-overflow: ellipsis;">{username}</div></div><div style="background: white; padding: 6px 10px; border-radius: 6px; font-size: 12px; color: #2563eb; font-weight: 600; border: 1px solid #e2e8f0; text-align: center;">{vip_info}</div></div>""", unsafe_allow_html=True)
@@ -219,23 +229,19 @@ def render_cta_wechat(wx_id):
     html = f"""<div style="padding:10px;"><div style="background:linear-gradient(90deg,#059669,#10b981);color:white;border-radius:12px;padding:15px 25px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 5px 15px rgba(16,185,129,0.4);font-family:'Inter',sans-serif;" onclick="navigator.clipboard.writeText('{wx_id}');alert('微信号 {wx_id} 已复制！')"><div style="display:flex;align-items:center;"><div style="font-size:24px;margin-right:15px;">🎁</div><div><span style="font-size:16px;font-weight:700;display:block;">领取内部资料 & 项目白皮书</span><span style="font-size:13px;opacity:0.9;">添加微信，备注【资料】</span></div></div><div style="background:rgba(255,255,255,0.2);padding:5px 12px;border-radius:20px;font-size:13px;font-weight:600;font-family:monospace;">📋 {wx_id}</div></div></div>"""
     components.html(html, height=100)
 
-def render_home_project_card(icon, title, desc, tag):
-    return f"""<div style="background:white;border-radius:12px;padding:20px;border:1px solid #e2e8f0;height:100%;display:flex;flex-direction:column;"><div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:8px;"><span style="margin-right:8px;">{icon}</span>{title}</div><div style="font-size:12px;color:#64748b;line-height:1.5;flex-grow:1;">{desc}</div><div style="font-size:11px;padding:3px 8px;border-radius:10px;background:#f8fafc;color:#475569;margin-top:15px;width:fit-content;border:1px solid #e2e8f0;">{tag}</div></div>"""
+def render_home_project_card(icon, title, desc, tag): return ""
+def render_page_banner(title, desc): st.markdown(f"""<div class="page-banner"><div class="banner-title">{title}</div><div class="banner-desc">{desc}</div></div>""", unsafe_allow_html=True)
+def render_conversion_tip(): st.markdown("""<div class="conversion-tip"><span>💰</span><span><b>商业化建议：</b> 已自动植入私域钩子，预计提升 30% 导流效率。</span></div>""", unsafe_allow_html=True)
+def render_feature_card_home(icon, title, desc): return ""
 
-def render_page_banner(title, desc):
-    st.markdown(f"""<div class="page-banner"><div class="banner-title">{title}</div><div class="banner-desc">{desc}</div></div>""", unsafe_allow_html=True)
-
-def render_conversion_tip():
-    st.markdown("""<div class="conversion-tip"><span>💰</span><span><b>商业化建议：</b> 已自动植入私域钩子，预计提升 30% 导流效率。</span></div>""", unsafe_allow_html=True)
-
-def render_feature_card_home(icon, title, desc):
-    return f"""<div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:15px;text-align:center;height:100px;display:flex;flex-direction:column;justify-content:center;align-items:center;"><div style="font-size:24px;margin-bottom:5px;">{icon}</div><div style="font-weight:700;color:#0f172a;">{title}</div></div>"""
-
-# 🔴 核心：一体化全卡片组件 (All-in-One Component)
+# 🔴 全卡片一体化组件 (All-in-One Component)
 def render_all_in_one_card(icon, title, desc, wx_id):
+    """
+    渲染一个包含图标、标题、描述和底部复制按钮的完整 HTML 卡片。
+    使用 iframe 隔离，确保无乱码。
+    """
     safe_text = wx_id.replace("'", "\\'")
     
-    # 完整的 HTML 卡片结构
     html = f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -258,7 +264,7 @@ def render_all_in_one_card(icon, title, desc, wx_id):
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            height: 270px; /* 固定高度，确保对齐 */
+            height: 280px; /* 略微增加高度，确保内容不拥挤 */
             transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
@@ -266,42 +272,43 @@ def render_all_in_one_card(icon, title, desc, wx_id):
         }}
         
         .card-container:hover {{
-            border-color: #cbd5e1;
-            box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08);
-            transform: translateY(-3px);
+            border-color: #bfdbfe;
+            box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.1);
+            transform: translateY(-4px);
         }}
         
         .card-content {{
-            padding: 25px;
+            padding: 25px 25px 15px 25px;
         }}
         
         .header {{
             display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
         }}
         
-        .icon {{ font-size: 24px; }}
-        .title {{ font-size: 15px; font-weight: 700; color: #0f172a; }}
-        .desc {{ font-size: 13px; color: #64748b; line-height: 1.5; }}
+        .icon {{ font-size: 26px; }}
+        .title {{ font-size: 16px; font-weight: 700; color: #0f172a; margin: 0; }}
+        .desc {{ font-size: 13px; color: #64748b; line-height: 1.5; margin: 0; }}
         
         .action-btn {{
-            background-color: #ecfdf5;
-            color: #059669;
+            background-color: #f0fdf4; /* 浅绿背景 */
+            color: #15803d; /* 深绿文字 */
             width: 100%;
-            padding: 12px 0;
+            padding: 14px 0;
             text-align: center;
             font-size: 13px; font-weight: 600;
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid #bbf7d0;
             transition: all 0.2s;
             display: flex; align-items: center; justify-content: center; gap: 6px;
         }}
         
-        /* 鼠标悬停整个卡片时的效果 */
+        /* 鼠标悬停时的按钮变色 */
         .card-container:hover .action-btn {{
-            background-color: #10b981;
+            background-color: #16a34a;
             color: white;
-            border-color: #10b981;
+            border-color: #16a34a;
         }}
         
+        .action-btn:active {{ background-color: #15803d; }}
     </style>
     </head>
     <body>
@@ -326,12 +333,14 @@ def render_all_in_one_card(icon, title, desc, wx_id):
                     const btn = document.getElementById('btn-text');
                     const originalHTML = btn.innerHTML;
                     
-                    btn.innerHTML = '✅ 已复制！';
-                    btn.style.backgroundColor = '#059669'; // 深绿反馈
+                    btn.innerHTML = '✅ 已复制！请去微信添加';
+                    btn.style.backgroundColor = '#16a34a';
                     btn.style.color = 'white';
                     
                     setTimeout(() => {{
                         btn.innerHTML = originalHTML;
+                        // 恢复 hover 状态下的样式或默认样式，这里靠 CSS hover 自动处理
+                        // 为了防止鼠标移出后样式卡住，重置为空，让 CSS 接管
                         btn.style.backgroundColor = ''; 
                         btn.style.color = '';
                     }}, 2000);
@@ -343,5 +352,5 @@ def render_all_in_one_card(icon, title, desc, wx_id):
     </body>
     </html>
     """
-    # 渲染 iframe，高度需稍大于 CSS height 以防滚动条
-    components.html(html, height=280)
+    # 渲染 iframe，高度需稍大于 CSS height
+    components.html(html, height=290)

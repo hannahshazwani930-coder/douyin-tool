@@ -2,149 +2,257 @@
 import streamlit as st
 import time
 import requests
-import json
 from concurrent.futures import ThreadPoolExecutor
-from utils import render_copy_btn, render_page_banner
+from utils import render_copy_btn
 from config import DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL
 
-# --- DeepSeek 调用函数 ---
-def call_deepseek_rewrite(content, prompt_type="standard"):
-    """
-    调用 DeepSeek API 进行文案改写
-    prompt_type: standard (标准去重) / creative (创意爆款)
-    """
+# --- 局部 CSS：解锁宽幅 & 编辑器样式 ---
+def load_editor_css():
+    st.markdown("""
+    <style>
+        /* 1. 强制解锁页面最大宽度，打造沉浸式工作台 */
+        div.block-container {
+            max-width: 98% !important;
+            padding-top: 2rem !important;
+            padding-left: 2rem !important;
+            padding-right: 2rem !important;
+        }
+
+        /* 2. 编辑器风格的文本域 */
+        .stTextArea textarea {
+            font-size: 16px;
+            line-height: 1.6;
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            transition: all 0.3s ease;
+        }
+        .stTextArea textarea:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        /* 右侧结果区背景微调，以此区分输入和输出 */
+        div[data-testid="column"]:nth-child(2) .stTextArea textarea {
+            background-color: #f8fafc; /* 极淡的灰蓝色 */
+            border-color: #cbd5e1;
+        }
+
+        /* 3. 顶部 Header 美化 */
+        .rewrite-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 20px; padding-bottom: 20px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .rewrite-title { font-size: 24px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; }
+        .rewrite-tag { background: #eff6ff; color: #2563eb; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+
+        /* 4. 风格选择器美化 */
+        div[role="radiogroup"] { background: white; padding: 5px; border-radius: 10px; border: 1px solid #e2e8f0; display: inline-flex; }
+        
+        /* 5. 按钮增强 */
+        .big-action-btn button {
+            width: 100%; height: 50px; font-size: 16px !important;
+            background: linear-gradient(90deg, #2563eb, #3b82f6) !important;
+            color: white !important; border: none !important;
+            box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4) !important;
+        }
+        .big-action-btn button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.5) !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+# --- DeepSeek 核心调用 ---
+def call_deepseek_rewrite(content, style_prompt):
+    """真实调用 DeepSeek API"""
     if not DEEPSEEK_API_KEY or "sk-" not in DEEPSEEK_API_KEY:
-        return "❌ 错误：请在 config.py 中配置正确的 DEEPSEEK_API_KEY"
+        return "❌ 配置错误：请在 config.py 中填入正确的 DEEPSEEK_API_KEY"
 
     headers = {
         "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
         "Content-Type": "application/json"
     }
     
-    # 定义提示词
-    system_prompt = "你是一个拥有10年经验的爆款文案专家。请对用户提供的文案进行深度改写。要求：1.保留核心意思但重构表达；2.语言更具网感、情绪价值；3.进行全网去重处理；4.输出结果不要包含'好的'、'改写如下'等废话，直接输出文案内容。"
+    # 构建专业 Prompt
+    system_prompt = f"""
+    你是由抖音爆款工场开发的顶级文案专家。请对用户输入的文案进行【{style_prompt}】方向的改写。
+    核心要求：
+    1. 深度去重：改变句式结构，但保留核心逻辑。
+    2. 情绪价值：语言要更具网感、穿透力，引发用户共鸣。
+    3. 格式优化：适当分段，使用emoji增加视觉跳跃感。
+    4. 直接输出：不要包含“好的”、“改写如下”等前缀。
+    """
     
-    if prompt_type == "creative":
-        system_prompt += " 风格要求：幽默、反转、多巴胺情绪，适合抖音/小红书调性。"
-        
     data = {
         "model": "deepseek-chat",
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": content}
         ],
-        "temperature": 1.3, # 提高创造性
+        "temperature": 1.3, # 高创造性
         "stream": False
     }
 
     try:
         response = requests.post(f"{DEEPSEEK_BASE_URL}/chat/completions", headers=headers, json=data, timeout=60)
         if response.status_code == 200:
-            result = response.json()
-            return result['choices'][0]['message']['content']
+            return response.json()['choices'][0]['message']['content']
         else:
-            return f"❌ API 请求失败: {response.status_code} - {response.text}"
+            return f"❌ API 报错: {response.status_code} - {response.text}"
     except Exception as e:
-        return f"❌ 网络错误: {str(e)}"
+        return f"❌ 网络请求超时或错误: {str(e)}"
 
-# --- 视图主逻辑 ---
+# --- 主视图 ---
 def view_rewrite():
-    render_page_banner("文案改写 Pro", "DeepSeek 深度赋能，支持单条精修与 5 路矩阵并行生成。")
+    # 1. 注入宽幅 CSS
+    load_editor_css()
     
-    # 初始化 session_state
-    if 'rewrite_single_res' not in st.session_state:
-        st.session_state.rewrite_single_res = ""
-    if 'rewrite_batch_res' not in st.session_state:
-        st.session_state.rewrite_batch_res = [""] * 5
-
-    tab_single, tab_batch = st.tabs(["⚡ 单条精修模式", "🚀 5路并行模式 (矩阵)"])
+    # 2. 顶部导航栏
+    st.markdown("""
+    <div class="rewrite-header">
+        <div class="rewrite-title">
+            <span>📝 文案改写 Pro</span>
+            <span class="rewrite-tag">DeepSeek V3 驱动</span>
+        </div>
+        <div style="color: #64748b; font-size: 14px;">
+            🚀 你的全能 AI 创作助手
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # === 单条模式 ===
-    with tab_single:
-        with st.container(border=True):
-            content = st.text_area("输入文案", height=150, placeholder="粘贴需要改写的文案...")
-            
-            # 增加风格选择
-            style_mode = st.radio("改写风格", ["标准去重 (稳重)", "爆款创意 (高热度)"], horizontal=True)
-            p_type = "standard" if style_mode == "标准去重 (稳重)" else "creative"
+    # 3. 初始化状态
+    if 'rw_single_input' not in st.session_state: st.session_state.rw_single_input = ""
+    if 'rw_single_res' not in st.session_state: st.session_state.rw_single_res = ""
+    if 'rw_batch_res' not in st.session_state: st.session_state.rw_batch_res = [""] * 5
 
-            if st.button("开始改写 (单条)", type="primary", use_container_width=True):
-                if content:
-                    with st.status("DeepSeek 正在思考中...", expanded=True) as status:
-                        st.write("🔌 连接 API 接口...")
-                        # 真实调用
-                        res = call_deepseek_rewrite(content, p_type)
-                        
-                        if "❌" not in res:
-                            st.write("✨ 生成完毕！")
-                            status.update(label="✅ 改写成功", state="complete", expanded=False)
-                        else:
-                            status.update(label="⛔ 出错了", state="error", expanded=True)
-                    
-                    st.session_state.rewrite_single_res = res
-                else:
-                    st.warning("请先输入文案")
-            
-            # 显示结果
-            if st.session_state.rewrite_single_res:
-                st.text_area("改写结果", value=st.session_state.rewrite_single_res, height=250)
-                render_copy_btn(st.session_state.rewrite_single_res, "single_copy_btn")
+    # 4. 模式切换 Tab
+    mode = st.radio("工作模式", ["⚡ 单条精修 (双屏对照)", "🚀 5路并行 (矩阵生成)"], horizontal=True, label_visibility="collapsed")
+    
+    st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
-    # === 并行模式 (真·多线程) ===
-    with tab_batch:
-        st.info("💡 矩阵模式：系统将开启 5 个并发线程，同时请求 DeepSeek API，互不干扰，效率倍增。")
+    # ==========================================
+    # 模式 A: 单条精修 (左右分栏，超级编辑器体验)
+    # ==========================================
+    if "单条" in mode:
+        # 布局：左侧输入(45%) - 中间操作(10%) - 右侧输出(45%)
+        c_input, c_btn, c_output = st.columns([4, 1, 4], gap="medium")
         
+        with c_input:
+            st.markdown("#### 📄 原始内容")
+            input_text = st.text_area("Source", height=500, placeholder="在此粘贴文案，支持长文本...", key="single_in_area", label_visibility="collapsed")
+        
+        with c_btn:
+            # 垂直居中的操作区
+            st.markdown("<div style='height: 150px;'></div>", unsafe_allow_html=True)
+            
+            st.markdown("##### 🎨 风格")
+            style = st.selectbox("Style", ["标准去重", "爆款悬疑", "情感共鸣", "硬核干货", "幽默反转"], label_visibility="collapsed")
+            
+            st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+            
+            # 大按钮
+            st.markdown('<div class="big-action-btn">', unsafe_allow_html=True)
+            if st.button("开始\n改写", use_container_width=True):
+                if input_text:
+                    st.session_state.rw_single_res = "" # 清空旧结果
+                    with c_output:
+                        with st.status("DeepSeek 深度思考中...", expanded=True) as status:
+                            st.write("🧠 语义解构...")
+                            time.sleep(0.5)
+                            st.write("🌪️ 风格重塑...")
+                            res = call_deepseek_rewrite(input_text, style)
+                            status.update(label="✅ 完成", state="complete", expanded=False)
+                        st.session_state.rw_single_res = res
+                else:
+                    st.toast("⚠️ 请先输入文案内容")
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        with c_output:
+            st.markdown("#### ✨ 改写结果")
+            if st.session_state.rw_single_res:
+                st.text_area("Result", value=st.session_state.rw_single_res, height=500, key="single_out_area", label_visibility="collapsed")
+                # 底部工具栏
+                col_copy, col_space = st.columns([1, 3])
+                with col_copy:
+                    render_copy_btn(st.session_state.rw_single_res, "copy_single_final")
+            else:
+                st.markdown("""
+                <div style="height:500px; background:#f8fafc; border:2px dashed #e2e8f0; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#94a3b8; flex-direction:column;">
+                    <div style="font-size:40px; margin-bottom:10px;">🤖</div>
+                    <div>AI 改写结果将显示在这里</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+    # ==========================================
+    # 模式 B: 5路并行 (矩阵生成，宽幅平铺)
+    # ==========================================
+    else:
+        st.info("💡 矩阵模式：5 个 AI 线程将同时工作，适合批量生产短视频脚本、小红书文案。")
+        
+        # 顶部操作栏
+        c_opt_1, c_opt_2 = st.columns([4, 1])
+        with c_opt_1:
+            pass 
+        with c_opt_2:
+            st.markdown('<div class="big-action-btn">', unsafe_allow_html=True)
+            start_batch = st.button("🚀 并行启动", use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        # 5列布局
+        cols = st.columns(5, gap="small")
         inputs = []
-        cols = st.columns(5)
+        
+        # 渲染输入区
         for i, col in enumerate(cols):
             with col:
-                st.markdown(f"**任务 {i+1}**")
-                val = st.text_area(f"文案 {i+1}", height=120, key=f"batch_in_{i}", label_visibility="collapsed")
+                st.markdown(f"**任务通道 {i+1}**")
+                val = st.text_area(f"文案 {i+1}", height=200, key=f"b_in_{i}", placeholder="输入文案...", label_visibility="collapsed")
                 inputs.append(val)
         
-        if st.button("🚀 立即并行改写", type="primary", use_container_width=True):
+        # 执行逻辑
+        if start_batch:
             valid_tasks = [(i, text) for i, text in enumerate(inputs) if text.strip()]
-            
             if valid_tasks:
-                status_text = st.empty()
-                status_text.info(f"正在启动 {len(valid_tasks)} 个 AI 线程并行处理...")
+                status_bar = st.status(f"正在并行处理 {len(valid_tasks)} 个任务...", expanded=True)
                 
-                # 使用线程池并发请求
                 with ThreadPoolExecutor(max_workers=5) as executor:
-                    # 提交所有任务
-                    future_to_index = {
-                        executor.submit(call_deepseek_rewrite, text, "standard"): i 
+                    future_to_idx = {
+                        executor.submit(call_deepseek_rewrite, text, "标准去重"): i 
                         for i, text in valid_tasks
                     }
                     
-                    # 获取结果
-                    for future in future_to_index:
-                        idx = future_to_index[future]
+                    completed = 0
+                    for future in future_to_idx:
+                        idx = future_to_idx[future]
                         try:
-                            result = future.result()
-                            st.session_state.rewrite_batch_res[idx] = result
-                        except Exception as exc:
-                            st.session_state.rewrite_batch_res[idx] = f"❌ 执行出错: {exc}"
+                            res = future.result()
+                            st.session_state.rw_batch_res[idx] = res
+                            completed += 1
+                        except Exception as e:
+                            st.session_state.rw_batch_res[idx] = f"❌ Error: {str(e)}"
                 
-                status_text.success("✅ 所有任务处理完毕！")
+                status_bar.update(label="✅ 所有通道处理完毕", state="complete", expanded=False)
             else:
-                st.warning("请至少输入一条文案")
+                st.warning("请至少在任意一个通道输入文案")
 
-        # 展示 5 路结果
-        if any(st.session_state.rewrite_batch_res):
-            st.markdown("---")
-            st.markdown("#### 🎯 矩阵生成结果")
-            res_cols = st.columns(5)
-            for i, col in enumerate(res_cols):
-                with col:
-                    if st.session_state.rewrite_batch_res[i]:
-                        # 判断是否出错，显示不同颜色
-                        if "❌" in st.session_state.rewrite_batch_res[i]:
-                             st.error(f"任务 {i+1} 失败")
-                        else:
-                             st.success(f"任务 {i+1} 完成")
-                        
-                        st.text_area(f"结果 {i+1}", value=st.session_state.rewrite_batch_res[i], height=200)
-                        render_copy_btn(st.session_state.rewrite_batch_res[i], f"batch_res_{i}")
+        st.markdown("---")
+        
+        # 渲染结果区 (对应上面的5列)
+        res_cols = st.columns(5, gap="small")
+        for i, col in enumerate(res_cols):
+            with col:
+                if st.session_state.rw_batch_res[i]:
+                    if "❌" in st.session_state.rw_batch_res[i]:
+                        st.error("生成失败")
                     else:
-                        st.caption(f"任务 {i+1} 空闲")
+                        st.success("✅ 完成")
+                    
+                    st.text_area(f"结果 {i+1}", value=st.session_state.rw_batch_res[i], height=300, label_visibility="collapsed")
+                    render_copy_btn(st.session_state.rw_batch_res[i], f"copy_b_{i}")
+                else:
+                    st.markdown("""
+                    <div style="height:300px; background:#f1f5f9; border-radius:8px; border:1px dashed #cbd5e1;"></div>
+                    """, unsafe_allow_html=True)

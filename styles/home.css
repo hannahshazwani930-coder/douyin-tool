@@ -1,0 +1,125 @@
+/* * 🔐 [LOCKED: HOME PAGE STYLES] 
+ * 版本: 1.0.2 (独立锁定版)
+ * 权限控制：只读。未经许可，禁止修改首页的核心视觉框架。
+ */
+
+/* 1. 页面基础背景 */
+.stApp {
+    background-color: #f8fafc !important;
+}
+
+/* 2. 隐藏冗余元素与间距调整 */
+div.block-container {
+    max-width: 1200px !important;
+    padding: 2rem 40px 50px 40px !important;
+}
+
+/* 3. 悬浮岛式大横幅 (Hero Card) */
+.home-header-card {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    border-radius: 24px;
+    padding: 60px 45px;
+    text-align: left;
+    color: white;
+    box-shadow: 0 20px 50px -15px rgba(37, 99, 235, 0.4);
+    margin-bottom: 40px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 装饰性水印图标 */
+.home-header-card::after {
+    content: "💠";
+    position: absolute;
+    right: -20px;
+    bottom: -40px;
+    font-size: 240px;
+    opacity: 0.08;
+    transform: rotate(-15deg);
+    pointer-events: none;
+}
+
+.header-title {
+    font-size: 42px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    letter-spacing: -1.5px;
+}
+
+.header-sub {
+    font-size: 18px;
+    opacity: 0.9;
+    font-weight: 400;
+    line-height: 1.6;
+    max-width: 700px;
+}
+
+/* 4. 栏目指示器 */
+.section-label {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 35px 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.section-label::before {
+    content: "";
+    width: 5px;
+    height: 22px;
+    background: #3b82f6;
+    border-radius: 10px;
+}
+
+/* 5. 独立功能卡片 (Feature Card) */
+.feature-card-pro {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 30px;
+    height: 100%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    cursor: default;
+}
+
+.feature-card-pro:hover {
+    transform: translateY(-8px);
+    border-color: #3b82f6;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+}
+
+.feat-icon {
+    font-size: 44px;
+    margin-bottom: 20px;
+}
+
+.feat-title {
+    font-size: 19px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 10px;
+}
+
+.feat-desc {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.7;
+}
+
+/* 6. 系统通知条 */
+.system-notice {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1d4ed8;
+    padding: 14px 24px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 30px;
+}

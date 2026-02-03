@@ -63,8 +63,14 @@ def main():
             load_isolated_css("brainstorm")
             from views.brainstorm import view_brainstorm
             view_brainstorm()
+         
+        elif nav == "🎨 海报生成":
+            load_isolated_css("poster")
+            from views.poster import view_poster
+            view_poster()   
             
         # ... 其他页面按此逻辑添加 ...
 
 if __name__ == "__main__":
     main()
+

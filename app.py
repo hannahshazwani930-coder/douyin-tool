@@ -35,43 +35,102 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS access_codes (code TEXT PRIMARY KEY, duration_days INTEGER, activated_at TIMESTAMP, expire_at TIMESTAMP, status TEXT, create_time TIMESTAMP, bind_user TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS feedbacks (id INTEGER PRIMARY KEY AUTOINCREMENT, user_phone TEXT, content TEXT, reply TEXT, create_time TIMESTAMP, status TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)''')
-    
-    # 强制预设管理员
     admin_pwd_hash = hashlib.sha256(ADMIN_INIT_PASSWORD.encode()).hexdigest()
     c.execute("REPLACE INTO users (phone, password_hash, register_time) VALUES (?, ?, ?)", (ADMIN_PHONE, admin_pwd_hash, datetime.datetime.now()))
     conn.commit(); conn.close()
 
 init_db()
 
-# --- CSS 样式 (极致美化) ---
+# --- CSS 样式 (v4.7 终极美化) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     .stApp { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
     
     /* 容器 */
-    div.block-container { max-width: 90% !important; background-color: #ffffff; padding: 3rem !important; border-radius: 16px; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); margin-bottom: 50px; }
+    div.block-container { max-width: 90% !important; background-color: #ffffff; padding: 3rem !important; border-radius: 24px; box-shadow: 0 20px 60px -20px rgba(0,0,0,0.1); margin-bottom: 50px; }
     
     /* 按钮全局优化 */
-    div.stButton > button { border-radius: 8px; font-weight: 600; height: 45px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); width: 100%; }
-    
-    /* 主按钮 (Primary) - 首页及核心功能 */
+    div.stButton > button { border-radius: 10px; font-weight: 600; height: 48px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); width: 100%; font-size: 15px; }
     div.stButton > button[kind="primary"] { 
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); 
-        border: none; 
-        color: white !important; 
-        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1), 0 2px 4px -1px rgba(37, 99, 235, 0.06);
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
+        border: none; color: white !important; 
+        box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.4);
     }
     div.stButton > button[kind="primary"]:hover { 
-        transform: translateY(-2px); 
-        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3), 0 4px 6px -2px rgba(37, 99, 235, 0.1);
-        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); /* 悬浮变色更深 */
+        transform: translateY(-3px); box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.5);
     }
-    div.stButton > button[kind="primary"]:active { transform: translateY(0); }
     
-    /* 次级按钮 */
-    div.stButton > button[kind="secondary"] { background-color: #f1f5f9; color: #475569; border: 1px solid transparent; }
-    div.stButton > button[kind="secondary"]:hover { background-color: #e2e8f0; color: #1e293b; border-color: #cbd5e1; }
+    /* 🔥 海报页面终极美化 CSS 🔥 */
+    /* 顶部通栏 Banner */
+    .poster-hero-banner {
+        background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
+        padding: 30px;
+        border-radius: 16px;
+        color: #1e3a8a;
+        display: flex;
+        align-items: center;
+        margin-bottom: 35px;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    .poster-hero-banner::after {
+        content: '🎨'; font-size: 120px; position: absolute; right: -20px; bottom: -30px; opacity: 0.15; transform: rotate(-15deg);
+    }
+    .hero-icon-box {
+        width: 60px; height: 60px; background: rgba(255,255,255,0.9); border-radius: 12px;
+        display: flex; align-items: center; justify-content: center; font-size: 32px; margin-right: 20px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    }
+    .hero-content h2 { margin: 0; font-weight: 800; color: #1e3a8a; font-size: 22px; }
+    .hero-content p { margin: 8px 0 0; color: #475569; font-weight: 500; }
+
+    /* 邀请码卡片 */
+    .invite-card {
+        background: #fff; border: 2px solid #e2e8f0; border-radius: 16px; padding: 25px;
+        text-align: center; transition: all 0.3s; height: 100%;
+        display: flex; flex-direction: column; justify-content: center;
+    }
+    .invite-card:hover { border-color: #a78bfa; box-shadow: 0 15px 35px rgba(139, 92, 246, 0.1); transform: translateY(-5px); }
+    .invite-code-big { font-size: 36px; font-weight: 800; color: #7c3aed; letter-spacing: 2px; margin: 15px 0; font-family: monospace; }
+    
+    /* 跳转按钮卡片 & 脉冲动画 */
+    .redirect-card-box {
+        background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+        border-radius: 16px; padding: 3px; /* 用于边框渐变 */
+        box-shadow: 0 15px 35px rgba(124, 58, 237, 0.35);
+        transition: all 0.3s; height: 100%;
+        animation: pulse-purple 2s infinite;
+    }
+    .redirect-card-box:hover { transform: translateY(-5px); box-shadow: 0 20px 45px rgba(124, 58, 237, 0.45); }
+    @keyframes pulse-purple {
+        0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); }
+        70% { box-shadow: 0 0 0 15px rgba(139, 92, 246, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+    }
+    
+    /* 步骤卡片美化 */
+    .step-card-styled {
+        background: #fff; border: 1px solid #f1f5f9; border-radius: 14px; padding: 20px;
+        margin-bottom: 15px; display: flex; align-items: flex-start; transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+    .step-card-styled:hover { border-color: #e2e8f0; border-left-color: #3b82f6; box-shadow: 0 10px 30px rgba(0,0,0,0.04); background: #f8fafc; }
+    .step-num-badge {
+        width: 36px; height: 36px; background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 16px; margin-right: 18px; flex-shrink: 0;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+    }
+    .step-content h4 { margin: 0 0 6px; color: #1e293b; font-weight: 700; font-size: 16px; }
+    .step-content p { margin: 0; color: #64748b; font-size: 14px; line-height: 1.5; }
+    
+    /* 重点指令区 */
+    .command-highlight-box {
+        background: #fff7ed; border: 2px dashed #fdba74; border-radius: 12px; padding: 20px;
+        display: flex; align-items: center; margin-top: 25px;
+    }
 
     /* 首页卡片 */
     .home-card-box { 
@@ -83,17 +142,14 @@ st.markdown("""
     .home-card-title { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
     .home-card-sub { font-size: 12px; color: #94a3b8; font-weight: 400; }
     
-    /* 侧边栏 */
+    /* 侧边栏/通用 */
     .project-box { background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
     .project-title { font-weight: bold; color: #0369a1; font-size: 14px; }
     .project-desc { font-size: 11px; color: #64748b; margin-top: 4px; line-height: 1.4; }
-    
-    /* 底部/认证 */
     .footer-legal { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 12px; }
     .footer-links a { color: #64748b; text-decoration: none; margin: 0 10px; transition: color 0.2s; }
     .auth-title { text-align: center; font-weight: 800; font-size: 24px; color: #1e293b; margin-bottom: 20px; }
     .login-spacer { height: 5vh; }
-    
     .info-box-aligned { height: 45px !important; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1e40af; display: flex; align-items: center; padding: 0 16px; font-size: 14px; font-weight: 500; width: 100%; box-sizing: border-box; }
     .empty-state-box { height: 200px; background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc); background-size: 20px 20px; border: 2px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 500; flex-direction: column; gap: 10px; }
 </style>
@@ -361,14 +417,33 @@ def page_rewrite():
 
 def page_poster():
     st.markdown("## 🎨 海报生成 (专业版)")
-    st.info("💡 算力升级：已接入 **小提大作** 独立站，请前往该站操作。")
-    with st.container(border=True):
-        c1, c2 = st.columns([1, 1.5], gap="large")
-        with c1: st.markdown("##### 1. 复制专属邀请码"); render_hover_copy_box("5yzMbpxn", "点击复制")
-        with c2: st.markdown("##### 2. 前往生成"); st.markdown("""<a href="https://aixtdz.com/" target="_blank" class="redirect-btn">🚀 跳转小提大作</a>""", unsafe_allow_html=True)
-    st.markdown("#### 📖 操作教程")
-    st.markdown("""<div class="tutorial-box"><div class="tutorial-step"><div class="step-num">1</div><div>注册登录后，点击 <b>“创建自由画布”</b></div></div><div class="tutorial-step"><div class="step-num">2</div><div>根据提示 <b>双击</b> 或者 <b>右键点击</b> 空白处，选择 <b>“图生图”</b></div></div><div class="tutorial-step"><div class="step-num">3</div><div>点击组件上的 <b>“+”</b> 号，上传你需要修改的 <b>原剧海报</b></div></div><div class="tutorial-step"><div class="step-num">4</div><div>点击 <b>右边边框</b>，在下方输入指令（点击右上角复制）：</div></div></div>""", unsafe_allow_html=True)
-    st.code("将原图剧名：原剧名\n改为：[你的新剧名]", language="text")
+    # 🔥 终极美化 Banner 🔥
+    st.markdown("""<div style="background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%); padding: 30px; border-radius: 16px; color: #1e3a8a; display: flex; align-items: center; margin-bottom: 35px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3); position: relative; overflow: hidden;"><div style="width: 60px; height: 60px; background: rgba(255,255,255,0.9); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 32px; margin-right: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">🚀</div><div><h2 style="margin: 0; font-weight: 800; color: #1e3a8a; font-size: 22px;">算力全面升级！</h2><p style="margin: 8px 0 0; color: #475569; font-weight: 500;">为了提供好莱坞级的光影效果，海报功能已迁移至性能更强的独立站。</p></div></div>""", unsafe_allow_html=True)
+    
+    c1, c2 = st.columns([1, 1.5], gap="large")
+    with c1:
+        with st.container(border=True):
+            st.markdown("##### 1. 复制专属邀请码")
+            st.caption("注册时填写，获取额外算力")
+            render_hover_copy_box("5yzMbpxn", "点击复制邀请码")
+            st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+    with c2:
+        # 🔥 终极美化跳转按钮 🔥
+        st.markdown("""<a href="https://aixtdz.com/" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; min-height: 120px; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white !important; border-radius: 16px; text-decoration: none; font-weight: 800; font-size: 24px; box-shadow: 0 15px 35px rgba(124, 58, 237, 0.35); transition: all 0.3s; text-align: center;">🚀 立即前往 小提大作<br><span style="font-size:14px; font-weight:500; opacity:0.9;">开启专业改图之旅 →</span></a>""", unsafe_allow_html=True)
+
+    st.markdown("#### 📖 新手保姆级教程")
+    # 🔥 终极美化教程步骤 🔥
+    steps = [
+        ("注册登录", "点击上方大按钮前往，注册时记得填写邀请码。"),
+        ("创建画布", "登录后，在首页点击 <b>“创建自由画布”</b>。"),
+        ("上传原图", "在画布中，点击组件栏的 <b>“+”</b> 号，上传剧照。"),
+        ("一键改图", "点击 <b>右侧边框</b>，复制下方指令输入，等待奇迹！")
+    ]
+    for idx, (title, desc) in enumerate(steps, 1):
+        st.markdown(f"""<div style="background: #fff; border: 1px solid #f1f5f9; border-radius: 14px; padding: 20px; margin-bottom: 15px; display: flex; align-items: flex-start; transition: all 0.3s ease; border-left: 4px solid transparent;"><div style="width: 36px; height: 36px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; margin-right: 18px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">{idx}</div><div><h4 style="margin: 0 0 6px; color: #1e293b; font-weight: 700; font-size: 16px;">{title}</h4><p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.5;">{desc}</p></div></div>""", unsafe_allow_html=True)
+
+    st.markdown("""<div style="background: #fff7ed; border: 2px dashed #fdba74; border-radius: 12px; padding: 20px; display: flex; align-items: center; margin-top: 25px;"><span style="font-size: 24px; margin-right: 15px;">🔥</span><div><div style="font-weight: bold; color: #c2410c; margin-bottom: 5px;">改图万能指令 (点右侧复制)</div><div style="font-family: monospace; background: #ffedd5; padding: 8px 12px; border-radius: 6px; color: #9a3412;">将原图剧名：原剧名 改为：[你的新剧名]</div></div><div style="margin-left: auto;"></div></div>""", unsafe_allow_html=True)
+    render_copy_button_html("将原图剧名：原剧名\n改为：[你的新剧名]", "cmd_copy")
 
 def page_brainstorm():
     st.markdown("## 💡 爆款选题灵感库"); st.markdown("---")
@@ -396,7 +471,7 @@ def page_naming():
     with c2: style = st.selectbox("🎨 风格", ["高冷", "搞笑", "文艺", "粗暴", "反差"])
     keywords = st.text_input("🔑 关键词 (选填)")
     if st.button("🎲 生成名字", type="primary", use_container_width=True):
-        prompt = f"为【{niche}】赛道生成10个{style}风格账号名，含关键词：{keywords}。格式：名字+解释。"
+        prompt = f"为【{niche}】赛道生成10个{style}风格账号名，含关键词：{keywords}。格式：1. 名字+解释。"
         try:
             with st.spinner("生成中..."):
                 res = client.chat.completions.create(model="deepseek-chat", messages=[{"role": "user", "content": prompt}], temperature=1.5)

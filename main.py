@@ -18,15 +18,12 @@ st.set_page_config(page_title="抖音爆款工场 Pro", layout="wide", page_icon
 init_db()
 
 # ==========================================
-# 🔐 登录 / 注册
+# 🔐 登录页
 # ==========================================
 def login_page():
-    # 🔴 加载登录专用CSS (page_id="auth")
     inject_css(page_id="auth")
     
-    # 在卡片内部创建左右分栏
     col_left, col_right = st.columns([1.2, 1], gap="large")
-    
     with col_left:
         st.markdown('<div class="auth-left-decor">', unsafe_allow_html=True)
         st.markdown("""
@@ -39,7 +36,6 @@ def login_page():
     with col_right:
         st.markdown("<div style='padding-top:10px'></div>", unsafe_allow_html=True)
         tab_login, tab_register = st.tabs(["账号登录", "注册新号"])
-        
         with tab_login:
             st.write("")
             with st.form("login_form"):
@@ -47,20 +43,12 @@ def login_page():
                 password = st.text_input("密码", type="password", placeholder="请输入密码")
                 st.markdown("<div style='height:25px'></div>", unsafe_allow_html=True)
                 submit_login = st.form_submit_button("立即登录", use_container_width=True)
-                
                 if submit_login:
-                    if not username or not password:
-                        st.warning("⚠️ 请输入账号和密码")
+                    if not username or not password: st.warning("⚠️ 请输入账号和密码")
                     else:
                         success, msg = login_user(username, password)
-                        if success:
-                            st.success("✅ 登录成功")
-                            st.session_state['user_phone'] = username
-                            time.sleep(0.5)
-                            st.rerun()
-                        else:
-                            st.error(f"⛔ {msg}")
-
+                        if success: st.success("✅ 登录成功"); st.session_state['user_phone'] = username; time.sleep(0.5); st.rerun()
+                        else: st.error(f"⛔ {msg}")
         with tab_register:
             st.write("")
             with st.form("register_form"):
@@ -70,7 +58,6 @@ def login_page():
                 invite_input = st.text_input("邀请码", placeholder="邀请码 (默认888888)")
                 st.markdown("<div style='height:25px'></div>", unsafe_allow_html=True)
                 submit_reg = st.form_submit_button("创建账号", use_container_width=True)
-                
                 if submit_reg:
                     final_invite_code = invite_input.strip() if invite_input.strip() else "888888"
                     if not new_user: st.warning("⚠️ 请输入账号")
@@ -91,7 +78,6 @@ def main():
         current_user = st.session_state['user_phone']
         is_vip, msg = get_user_vip_status(current_user)
         
-        # 侧边栏 (通用)
         with st.sidebar:
             st.markdown("""<div style="display:flex; align-items:center; gap:8px; margin-bottom: 15px;"><div style="background:#2563eb; width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:16px;">P</div><div style="font-weight:700; font-size:16px; color:#0f172a;">爆款工场 Pro</div></div>""", unsafe_allow_html=True)
             render_sidebar_user_card(current_user, msg)
@@ -114,7 +100,7 @@ def main():
                 del st.session_state['user_phone']
                 st.rerun()
 
-        # 路由分发 (根据 page_id 加载独立 CSS)
+        # 🔴 每一个页面都拥有独立的 CSS ID
         if nav == "🏠 首页":
             inject_css("home")
             view_home()
@@ -122,19 +108,19 @@ def main():
             inject_css("rewrite")
             view_rewrite()
         elif nav == "💡 爆款选题":
-            inject_css("general")
+            inject_css("brainstorm") # 独立 ID
             view_brainstorm()
         elif nav == "🎨 海报生成":
-            inject_css("general")
+            inject_css("poster") # 独立 ID
             view_poster()
         elif nav == "🏷️ 账号起名":
-            inject_css("general")
+            inject_css("naming") # 独立 ID
             view_naming()
         elif nav == "👤 个人中心":
-            inject_css("general")
+            inject_css("account") # 独立 ID
             view_account()
         elif nav == "🕵️‍♂️ 管理后台":
-            inject_css("general")
+            inject_css("admin") # 独立 ID
             view_admin()
 
 if __name__ == "__main__":

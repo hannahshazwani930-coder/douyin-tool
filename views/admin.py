@@ -1,65 +1,68 @@
 # views/admin.py
 import streamlit as st
 import pandas as pd
-from database import get_stats, get_all_feedbacks_admin, reply_feedback, create_announcement, delete_announcement, get_active_announcements, get_conn
+from database import get_stats, get_all_feedbacks_admin, reply_feedback, create_announcement, delete_announcement, get_active_announcements, generate_bulk_cards, update_setting, get_setting, get_conn
+from utils import render_page_banner
 
 def view_admin():
-    st.markdown("## 🕵️‍♂️ 管理员后台")
+    render_page_banner("管理后台", "系统监控、用户管理、卡密分发中心。")
     
-    # 1. 核心数据 (Requirement 11: 注册统计)
     uc, vc = get_stats()
-    c1, c2, c3 = st.columns(3)
+    c1, c2 = st.columns(2)
     c1.metric("总注册用户", uc)
-    c2.metric("有效VIP用户", vc)
-    c3.metric("今日新增", "+2") # 模拟数据
+    c2.metric("激活VIP用户", vc)
     
-    tab_stats, tab_ann, tab_feed, tab_code = st.tabs(["📊 数据概览", "📢 公告管理", "💬 反馈回复", "🔑 卡密管理"])
+    tab_card, tab_set, tab_ann, tab_feed = st.tabs(["🔑 卡密管理", "⚙️ 系统设置", "📢 公告", "💬 反馈"])
     
-    with tab_stats:
-        st.write("用户增长趋势 (模拟数据)")
-        st.line_chart({"date": ["10-01", "10-02", "10-03"], "users": [10, 25, 42]})
+    # 1. 卡密管理 (Requirement 9)
+    with tab_card:
+        st.markdown("#### 批量生成卡密")
+        with st.form("gen_card"):
+            days = st.selectbox("时长 (天)", [1, 7, 30, 90, 365])
+            amount = st.number_input("数量", min_value=1, max_value=100, value=10)
+            if st.form_submit_button("生成"):
+                codes = generate_bulk_cards(amount, days)
+                st.success(f"成功生成 {amount} 个 {days}天卡密")
+                st.code("\n".join(codes))
         
-    with tab_ann:
-        st.markdown("#### 发布新公告")
-        new_ann = st.text_input("公告内容")
-        if st.button("发布公告"):
-            if new_ann:
-                create_announcement(new_ann)
-                st.success("发布成功！")
-                st.rerun()
-        
-        st.markdown("#### 正在展示的公告")
-        anns = get_active_announcements()
-        for ann_content, ann_time in anns:
-            c_a, c_b = st.columns([4, 1])
-            c_a.info(f"[{str(ann_time)[:10]}] {ann_content}")
-            if c_b.button("删除", key=f"del_{ann_content}"):
-                delete_announcement(ann_content)
-                st.rerun()
-                
-    with tab_feed:
-        st.markdown("#### 用户反馈列表")
-        feeds = get_all_feedbacks_admin()
-        df = pd.DataFrame(feeds, columns=["ID", "用户", "内容", "回复", "时间", "状态"])
-        
-        # 简单的回复界面
-        for index, row in df.iterrows():
-            with st.expander(f"【{row['状态']}】{row['用户']}: {row['内容'][:10]}..."):
-                st.write(f"**完整内容：** {row['内容']}")
-                if row['回复']:
-                    st.success(f"已回复: {row['回复']}")
-                    new_reply = st.text_input("修改回复", key=f"re_input_{row['ID']}")
-                else:
-                    new_reply = st.text_input("输入回复", key=f"re_input_{row['ID']}")
-                
-                if st.button("发送回复", key=f"btn_re_{row['ID']}"):
-                    reply_feedback(row['ID'], new_reply)
-                    st.success("已发送")
-                    st.rerun()
-
-    with tab_code:
-        st.markdown("#### 卡密使用情况")
+        st.markdown("#### 卡密状态")
         conn = get_conn()
-        df_codes = pd.read_sql("SELECT code, duration_days, status, bind_user, activated_at FROM access_codes ORDER BY create_time DESC LIMIT 50", conn)
+        df = pd.read_sql("SELECT code, duration_days, status, bind_user, activated_at FROM access_codes ORDER BY create_time DESC LIMIT 50", conn)
         conn.close()
-        st.dataframe(df_codes, use_container_width=True)
+        st.dataframe(df, use_container_width=True)
+
+    # 2. 系统设置 (Requirement 9)
+    with tab_set:
+        st.markdown("#### 购买链接设置")
+        curr_url = get_setting("buy_card_url")
+        new_url = st.text_input("卡密购买网址 (发卡网)", value=curr_url)
+        if st.button("保存设置"):
+            update_setting("buy_card_url", new_url)
+            st.success("已保存")
+
+    # 3. 公告
+    with tab_ann:
+        n_ann = st.text_input("新公告内容")
+        if st.button("发布"):
+            create_announcement(n_ann)
+            st.rerun()
+        anns = get_active_announcements()
+        for c, t in anns:
+            c1, c2 = st.columns([4,1])
+            c1.info(f"{t}: {c}")
+            if c2.button("删除", key=c):
+                delete_announcement(c)
+                st.rerun()
+
+    # 4. 反馈
+    with tab_feed:
+        feeds = get_all_feedbacks_admin()
+        for fid, phone, content, reply, time, status in feeds:
+            with st.expander(f"{phone}: {content[:10]}..."):
+                st.write(content)
+                if reply: st.success(f"已回: {reply}")
+                else:
+                    r_txt = st.text_input("回复", key=f"r_{fid}")
+                    if st.button("发送", key=f"b_{fid}"):
+                        reply_feedback(fid, r_txt)
+                        st.rerun()

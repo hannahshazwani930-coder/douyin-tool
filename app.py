@@ -109,14 +109,6 @@ st.markdown("""
     .sp-title { font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 4px; }
     .sp-desc { font-size: 11px; color: #64748b; line-height: 1.3; }
 
-    /* 侧边栏联系胶囊 */
-    .contact-pill {
-        display: flex; align-items: center; justify-content: space-between;
-        background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px;
-        font-size: 12px; color: #475569; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;
-    }
-    .contact-pill:hover { border-color: #3b82f6; color: #2563eb; background: #eff6ff; }
-    
     /* --- 🔥 首页功能卡片样式 🔥 --- */
     [data-testid="stVerticalBlockBorderWrapper"] {
         border-radius: 16px !important;
@@ -192,10 +184,64 @@ def send_mock_sms(phone): return str(random.randint(1000, 9999))
 def render_footer():
     st.markdown("""<div class="footer-legal"><div class="footer-links"><a href="#">用户协议</a> | <a href="#">隐私政策</a> | <a href="#">免责声明</a> | <a href="#">关于我们</a></div><div style="margin-top: 10px;">© 2026 爆款工场 Pro | 鄂ICP备2024XXXXXX号-1 | 违法和不良信息举报：TG777188</div><div style="font-size: 11px; color: #cbd5e1; margin-top: 5px;">本站仅提供技术工具，请勿用于任何非法用途，用户生成内容文责自负。</div></div>""", unsafe_allow_html=True)
 
-def render_hover_copy_box(text, label):
-    safe = text.replace("`", "\`").replace("'", "\\'")
-    html = f"""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');body{{margin:0;padding:0;background:transparent;overflow:hidden;font-family:'Inter';}}.contact-pill{{display:flex;align-items:center;justify-content:space-between;background:white;border:1px solid #e2e8f0;border-radius:8px;padding:0 12px;height:36px;font-size:12px;color:#475569;cursor:pointer;transition:all 0.2s;box-sizing:border-box;}}.contact-pill:hover{{border-color:#3b82f6;color:#2563eb;background:#eff6ff;}}.lbl{{font-weight:600;}}</style></head><body><div class="contact-pill" onclick="copyText(this)"><span class="lbl">{label}</span><span id="txt">{safe}</span></div><script>function copyText(e){{const t=`{safe}`,s=e.querySelector(".lbl"),o=e.querySelector("#txt");navigator.clipboard.writeText(t).then(()=>{{e.style.background="#ecfdf5";e.style.borderColor="#10b981";e.style.color="#047857";const old=s.innerText;s.innerText="✅ 已复制";setTimeout(()=>{{e.style.background="";e.style.borderColor="";e.style.color="";s.innerText=old;}},1500)}})}}</script></body></html>"""
-    components.html(html, height=40)
+# 🔥 全新微信组件：标签左对齐，图标+ID右对齐，带Logo 🔥
+def render_wechat_box(label, wx_id):
+    html = f"""
+    <!DOCTYPE html><html><head><style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');
+    body{{margin:0;padding:0;background:transparent;overflow:hidden;font-family:'Inter',sans-serif;}}
+    .wx-pill{{
+        display:flex;align-items:center;justify-content:space-between;
+        background:white;border:1px solid #e2e8f0;border-radius:10px;
+        padding:0 12px;height:40px;cursor:pointer;transition:all 0.2s;
+        box-sizing:border-box;color:#334155;
+    }}
+    .wx-pill:hover{{border-color:#07c160;background:#07c160;}}
+    .wx-pill:hover .label{{color:white;}}
+    .wx-pill:hover .right-part{{color:white;}}
+    .wx-pill:hover svg{{fill:white;}}
+    
+    .label{{font-size:13px;font-weight:600;transition:0.2s;}}
+    .right-part{{display:flex;align-items:center;gap:6px;font-family:monospace;font-weight:500;font-size:13px;transition:0.2s;color:#07c160;}}
+    .copied-msg{{display:none;font-size:12px;font-weight:bold;color:white;}}
+    .wx-pill:hover .copied-msg{{color:white;}}
+    
+    </style></head><body>
+    <div class="wx-pill" onclick="copyText(this)">
+        <span class="label" id="lbl">{label}</span>
+        <div class="right-part" id="val">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#07c160" xmlns="http://www.w3.org/2000/svg"><path d="M8.5 13.5L11 15L10 17.5C10 17.5 10.5 17.5 12.5 15C15 15 17 13 17 10.5C17 8 15 6 12.5 6C10 6 8 8 8 10.5C8 12 8.5 13.5 8.5 13.5ZM16.5 5.5C14 5.5 12 7 12 9C12 11 14 12.5 16.5 12.5C17 12.5 17.5 12.5 18 12L19.5 13L19 11C20 10.5 20.5 9.5 20.5 9C20.5 7 18.5 5.5 16.5 5.5Z" fill="currentColor"/></svg>
+            <span>{wx_id}</span>
+        </div>
+        <span class="copied-msg" id="msg">✅ 已复制</span>
+    </div>
+    <script>
+    function copyText(e){{
+        const id = '{wx_id}';
+        const lbl = document.getElementById('lbl');
+        const val = document.getElementById('val');
+        const msg = document.getElementById('msg');
+        
+        const textArea = document.createElement("textarea");
+        textArea.value = id;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        lbl.style.display = 'none';
+        val.style.display = 'none';
+        msg.style.display = 'block';
+        
+        setTimeout(()=>{{
+            lbl.style.display = 'block';
+            val.style.display = 'flex';
+            msg.style.display = 'none';
+        }}, 1500);
+    }}
+    </script></body></html>
+    """
+    components.html(html, height=45)
 
 def render_copy_button_html(text, k):
     safe = text.replace("`", "\`").replace("'", "\\'")
@@ -368,18 +414,19 @@ with st.sidebar:
     
     st.markdown("<div style='height:15px'></div>", unsafe_allow_html=True)
     
-    # 4. 变现咨询
-    render_hover_copy_box("W7774X", "💰 变现咨询: W7774X")
-    st.markdown("<div style='height:5px'></div>", unsafe_allow_html=True)
+    # 4. 变现咨询 (微信组件)
+    render_wechat_box("💰 变现咨询", "W7774X")
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    
     # 5. 技术合作 (辅助)
-    render_hover_copy_box("TG777188", "🛠️ 技术合作: TG777188")
+    render_wechat_box("🛠️ 技术合作", "TG777188")
     
     st.markdown("---")
     if st.button("🚪 退出登录", use_container_width=True, type="secondary"): del st.session_state['user_phone']; st.rerun()
 
 menu = st.session_state['nav_menu']
 
-# --- 首页 (Embedded Button Design) ---
+# --- 首页 ---
 def page_home():
     st.markdown("## 💠 抖音爆款工场 Pro")
     st.caption("专为素人 KOC 打造的 AI 提效神器 | 文案 · 选题 · 海报 · 变现")
@@ -482,6 +529,7 @@ def page_poster():
     .invite-code{font-size:28px;font-weight:800;color:#4f46e5;letter-spacing:1px;}
     .invite-hint{font-size:12px;color:#94a3b8;margin-top:5px;opacity:0;transition:0.2s;}
     .invite:hover .invite-hint{opacity:1;color:#6366f1;}
+    /* 极致阴影微调 */
     .jump{flex:1.5;background:linear-gradient(135deg,#4f46e5,#7c3aed);text-decoration:none;box-shadow:0 4px 15px rgba(124,58,237,0.1);border:1px solid rgba(255,255,255,0.15);}
     .jump:hover{transform:translateY(-5px);box-shadow:0 8px 20px rgba(124,58,237,0.25);filter:brightness(1.05);}
     .jump-title{color:#fff;font-size:24px;font-weight:800;margin-bottom:4px;text-shadow:0 2px 4px rgba(0,0,0,0.1);}

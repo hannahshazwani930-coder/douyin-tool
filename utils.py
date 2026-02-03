@@ -17,16 +17,17 @@ def generate_invite_code():
 # ==============================================================================
 
 def inject_css(page_id="auth"):
-    # 1. 全局基础
+    # 1. 全局基础 - 隐藏原生组件
     base_css = """
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         html, body, [class*="css"] { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
         
-        /* 隐藏原生组件 */
+        /* 隐藏 Streamlit 顶栏 */
         header[data-testid="stHeader"] { display: none !important; height: 0 !important; visibility: hidden !important; }
+        [data-testid="stToolbar"] { display: none !important; }
+        [data-testid="stDecoration"] { display: none !important; }
         #MainMenu { display: none !important; }
-        [data-testid="stSidebarCollapsedControl"] { display: none !important; }
         
         /* 侧边栏 */
         [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
@@ -65,91 +66,76 @@ def inject_css(page_id="auth"):
         </style>
         """, unsafe_allow_html=True)
 
-    # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 首页独立设计 - 悬浮岛式 (Floating Island)
-    # ----------------------------------------------------------------
+    # ============================================================
+    # 🏠 [LOCKED] 首页 - 保持无白框完美状态
+    # ============================================================
     elif page_id == "home":
         st.markdown("""
         <style>
-            .stApp { background-color: #f8fafc; }
-            
-            /* 1. 容器：不再尝试去填满顶部，而是留出优雅的间距 */
-            div.block-container { 
+            /* 1. 容器清理：物理归零 */
+            div[data-testid="block-container"] { 
                 max-width: 1200px !important; 
-                padding: 1rem 40px 50px 40px !important; /* 顶部留白，不再强行置顶 */
+                padding-top: 0px !important;
+                padding-left: 40px !important;
+                padding-right: 40px !important;
+                margin-top: 20px !important; 
+                background-color: transparent !important; 
             }
+            .stApp, div[data-testid="stAppViewContainer"] { background-color: #f8fafc !important; }
 
-            /* 2. 悬浮岛头图 (Card Header) - 独立卡片，不与顶部粘连 */
+            /* 悬浮岛头图 */
             .home-header-card {
                 background: linear-gradient(120deg, #2563eb, #1d4ed8);
-                border-radius: 20px;
-                padding: 50px 40px;
-                text-align: center; color: white;
+                border-radius: 20px; padding: 50px 40px; text-align: center; color: white;
                 box-shadow: 0 15px 40px -10px rgba(37, 99, 235, 0.4); 
-                margin-bottom: 30px;
-                position: relative;
-                overflow: hidden;
+                margin-bottom: 30px; position: relative; overflow: hidden;
             }
-            /* 增加一点极光纹理 */
             .home-header-card::before {
                 content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
                 background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
                 animation: rotateLight 20s linear infinite;
             }
             @keyframes rotateLight { from {transform: rotate(0deg);} to {transform: rotate(360deg);} }
-            
-            .header-title { font-size: 36px; font-weight: 800; margin-bottom: 10px; position: relative; z-index: 2; }
-            .header-sub { font-size: 15px; opacity: 0.95; font-weight: 400; position: relative; z-index: 2; }
+            .header-title-v3 { font-size: 36px; font-weight: 800; margin-bottom: 10px; position: relative; z-index: 2; }
+            .header-sub-v3 { font-size: 15px; opacity: 0.95; font-weight: 400; position: relative; z-index: 2; }
 
-            /* 3. 栏目标题 */
-            .section-label { 
-                font-size: 18px; font-weight: 800; color: #1e293b; 
-                margin-bottom: 15px; display: flex; align-items: center; gap: 8px; 
-            }
-            .section-label::before { content: ""; display: block; width: 4px; height: 18px; background: #3b82f6; border-radius: 2px; }
-
-            /* 4. 核心功能卡片 */
-            .feature-card-pro {
+            /* 核心功能 */
+            .feature-box-v3 {
                 background: white; border: 1px solid #e2e8f0; border-radius: 16px;
                 padding: 25px 20px; text-align: center; height: 160px;
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
                 transition: all 0.3s ease; position: relative; overflow: hidden;
             }
-            .feature-card-pro:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08);
-                border-color: #bfdbfe;
-            }
-            .feat-icon { font-size: 32px; margin-bottom: 12px; } 
-            .feat-title { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
-            .feat-desc { font-size: 12px; color: #64748b; line-height: 1.4; }
+            .feature-box-v3:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); border-color: #bfdbfe; }
+            .feat-icon-v3 { font-size: 32px; margin-bottom: 12px; } 
+            .feat-title-v3 { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
+            .feat-desc-v3 { font-size: 12px; color: #64748b; line-height: 1.4; }
 
-            /* 5. 系统公告 (静态悬浮条) */
-            .news-container {
+            /* 公告 */
+            .news-box-v3 {
                 background: white; border: 1px solid #fed7aa; border-radius: 12px;
                 padding: 12px 15px; display: flex; align-items: center; gap: 15px;
-                box-shadow: 0 4px 10px -2px rgba(249, 115, 22, 0.1);
-                margin-bottom: 30px;
+                box-shadow: 0 4px 10px -2px rgba(249, 115, 22, 0.1); margin-bottom: 30px;
             }
-            .news-badge { 
-                background: #fff7ed; color: #ea580c; font-size: 11px; font-weight: 800; 
-                padding: 3px 8px; border-radius: 4px; border: 1px solid #ffedd5; flex-shrink: 0;
-            }
-            .news-content { font-size: 14px; color: #334155; font-weight: 500; }
-            
-            /* 隐形按钮 */
-            div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 5; }
+            .news-tag-v3 { background: #fff7ed; color: #ea580c; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 4px; border: 1px solid #ffedd5; flex-shrink: 0; }
+            .news-text-v3 { font-size: 14px; color: #334155; font-weight: 500; }
+
+            /* 标题与中控 */
+            .section-title-v3 { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+            .section-title-v3::before { content: ""; display: block; width: 4px; height: 18px; background: #3b82f6; border-radius: 2px; }
+            .creation-console { background: white; border-radius: 24px; padding: 10px 40px 40px 40px; margin-top: 0px; }
+            div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 10; }
             div.stButton button:hover { background: transparent; }
         </style>
         """, unsafe_allow_html=True)
 
-    # ----------------------------------------------------------------
-    # 📝 [NEW] 文案改写页 (Rewrite) - 全新设计
-    # ----------------------------------------------------------------
+    # ============================================================
+    # 📝 [NEW] 文案改写页 (Rewrite) - 修复版
+    # ============================================================
     elif page_id == "rewrite":
         st.markdown("""
         <style>
-            /* 1. 基础环境：灰色底，确保无白框 */
+            /* 1. 基础环境：延续首页的清爽灰底 + 无白框配置 */
             .stApp, div[data-testid="stAppViewContainer"] { 
                 background-color: #f8fafc !important; 
             }
@@ -162,63 +148,59 @@ def inject_css(page_id="auth"):
                 margin-top: 20px !important; 
             }
 
-            /* 2. 顶部头图 (移植自首页，保持一致性) */
-            .rewrite-header-card {
+            /* 2. 顶部头图 (完全复刻首页样式) */
+            .rewrite-header {
                 background: linear-gradient(120deg, #2563eb, #1d4ed8);
                 border-radius: 20px; 
-                padding: 40px 30px; 
+                padding: 50px 40px; 
                 text-align: center; color: white;
                 box-shadow: 0 15px 40px -10px rgba(37, 99, 235, 0.4); 
                 margin-bottom: 30px; 
                 position: relative; overflow: hidden;
             }
-            .rewrite-header-card::before {
+            .rewrite-header::before {
                 content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
                 background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
                 animation: rotateLight 20s linear infinite;
             }
             @keyframes rotateLight { from {transform: rotate(0deg);} to {transform: rotate(360deg);} }
             
-            .rw-title { font-size: 32px; font-weight: 800; margin-bottom: 8px; position: relative; z-index: 2; }
-            .rw-sub { font-size: 14px; opacity: 0.9; font-weight: 400; position: relative; z-index: 2; }
+            .rw-title { font-size: 36px; font-weight: 800; margin-bottom: 10px; position: relative; z-index: 2; }
+            .rw-sub { font-size: 15px; opacity: 0.95; font-weight: 400; position: relative; z-index: 2; }
 
-            /* 3. 操作台区域 */
-            .rewrite-console {
+            /* 3. 工作台区域 (整齐的白底卡片) */
+            .rewrite-workstation {
                 background: white;
                 border-radius: 16px;
                 border: 1px solid #e2e8f0;
                 padding: 30px;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                margin-bottom: 30px;
             }
-
-            /* 4. 输入框样式 */
+            
+            /* 4. 输入框/输出框美化 */
             .stTextArea textarea {
-                border-radius: 8px !important;
                 border: 1px solid #cbd5e1 !important;
                 background-color: #f8fafc !important;
+                border-radius: 8px !important;
                 font-size: 15px !important;
                 padding: 15px !important;
-                transition: all 0.2s;
             }
             .stTextArea textarea:focus {
                 border-color: #3b82f6 !important;
-                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
                 background-color: white !important;
+                box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
             }
-            .stTextArea label { font-weight: 600; color: #334155; }
             
-            /* 5. 按钮样式 */
+            /* 5. 按钮美化 */
             div.stButton button[kind="primary"] {
-                width: 100%;
-                border-radius: 8px;
-                font-weight: 600;
-                background: linear-gradient(90deg, #2563eb, #3b82f6);
-                border: none;
-                height: 42px;
-                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+                width: 100%; border-radius: 8px; font-weight: 600;
+                background: linear-gradient(90deg, #2563eb, #3b82f6); border: none; height: 42px;
             }
-            div.stButton button[kind="primary"]:hover { transform: translateY(-2px); }
-            div.stButton button[kind="secondary"] { width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; color: #475569; height: 42px; }
+            div.stButton button[kind="primary"]:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+            
+            div.stButton button[kind="secondary"] {
+                width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; color: #475569; height: 42px;
+            }
         </style>
         """, unsafe_allow_html=True)
 
@@ -255,8 +237,7 @@ def render_page_banner(title, desc): st.markdown(f"""<div class="page-banner"><d
 def render_conversion_tip(): st.markdown("""<div class="conversion-tip"><span>💰</span><span><b>商业化建议：</b> 已自动植入私域钩子，预计提升 30% 导流效率。</span></div>""", unsafe_allow_html=True)
 def render_feature_card_home(icon, title, desc): return ""
 
-# 🔴 全新的卡片组件：高度压缩版 (高度从 270px -> 190px, iframe 200px)
-# [CRITICAL RESTORATION]: 恢复为 render_project_card 以匹配 home.py 的调用
+# 🔴 [FIXED] 恢复 render_project_card 函数名，确保首页正常调用
 def render_project_card(icon, title, desc, wx_id):
     safe_text = wx_id.replace("'", "\\'")
     
@@ -267,34 +248,66 @@ def render_project_card(icon, title, desc, wx_id):
     <meta charset="UTF-8">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        
         body {{
             margin: 0; padding: 0;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
             overflow: hidden;
             box-sizing: border-box;
         }}
+        
         .card-container {{
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 16px;
-            display: flex; flex-direction: column; justify-content: space-between;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
             height: 190px;
             transition: all 0.3s ease;
-            cursor: pointer; position: relative; overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }}
-        .card-container:hover {{ border-color: #bfdbfe; box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.1); transform: translateY(-4px); }}
-        .card-content {{ padding: 18px 18px 10px 18px; }}
-        .header {{ display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }}
+        
+        .card-container:hover {{
+            border-color: #bfdbfe;
+            box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.1);
+            transform: translateY(-4px);
+        }}
+        
+        .card-content {{
+            padding: 18px 18px 10px 18px;
+        }}
+        
+        .header {{
+            display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+        }}
+        
         .icon {{ font-size: 22px; }}
         .title {{ font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; }}
         .desc {{ font-size: 12px; color: #64748b; line-height: 1.4; margin: 0; }}
         
+        /* 底部长条按钮 */
         .action-btn {{
-            background-color: #ecfdf5; color: #059669; width: 100%; padding: 10px 0;
-            text-align: center; font-size: 12px; font-weight: 600; border-top: 1px solid #e2e8f0;
-            transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+            background-color: #ecfdf5;
+            color: #059669;
+            width: 100%;
+            padding: 10px 0;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            border-top: 1px solid #e2e8f0;
+            transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
         }}
-        .card-container:hover .action-btn {{ background-color: #10b981; color: white; border-color: #10b981; }}
+        
+        .card-container:hover .action-btn {{
+            background-color: #10b981;
+            color: white;
+            border-color: #10b981;
+        }}
+        
         .action-btn:active {{ background-color: #059669; }}
     </style>
     </head>
@@ -307,20 +320,31 @@ def render_project_card(icon, title, desc, wx_id):
                 </div>
                 <div class="desc">{desc}</div>
             </div>
+            
             <div class="action-btn" id="btn-text">
                 <span>📋</span> 复制微信领取资料 ({wx_id})
             </div>
         </div>
+
         <script>
             function copyAction() {{
                 const text = "{safe_text}";
                 navigator.clipboard.writeText(text).then(() => {{
                     const btn = document.getElementById('btn-text');
                     const originalHTML = btn.innerHTML;
+                    
                     btn.innerHTML = '✅ 已复制！请去微信添加';
-                    btn.style.backgroundColor = '#10b981'; btn.style.color = 'white';
-                    setTimeout(() => {{ btn.innerHTML = originalHTML; btn.style.backgroundColor = ''; btn.style.color = ''; }}, 2000);
-                }}).catch(err => {{ alert('复制失败: ' + text); }});
+                    btn.style.backgroundColor = '#10b981';
+                    btn.style.color = 'white';
+                    
+                    setTimeout(() => {{
+                        btn.innerHTML = originalHTML;
+                        btn.style.backgroundColor = ''; 
+                        btn.style.color = '';
+                    }}, 2000);
+                }}).catch(err => {{
+                    alert('复制失败: ' + text);
+                }});
             }}
         </script>
     </body>

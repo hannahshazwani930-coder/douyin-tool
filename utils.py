@@ -74,14 +74,14 @@ def inject_css(mode="app"):
         [data-testid="stSidebar"] {
             background-color: #ffffff; border-right: 1px solid #e2e8f0;
             box-shadow: 4px 0 15px rgba(0,0,0,0.02);
-            padding-top: 1rem; /* 减少顶部留白 */
+            padding-top: 1rem;
         }
         
-        /* --- 侧边栏紧凑优化 (Requirements 2) --- */
+        /* 侧边栏紧凑优化 */
         div[role="radiogroup"] > label > div:first-child { display: none !important; }
-        div[role="radiogroup"] { gap: 4px; /* 极小间距 */ }
+        div[role="radiogroup"] { gap: 4px; }
         div[role="radiogroup"] label {
-            padding: 8px 12px !important; /* 压缩内边距 */
+            padding: 8px 12px !important;
             border-radius: 6px !important;
             transition: all 0.2s ease;
             margin-bottom: 2px;
@@ -95,9 +95,7 @@ def inject_css(mode="app"):
             font-weight: 600 !important; border: 1px solid #bfdbfe;
         }
 
-        /* 隐藏 Streamlit 默认的 Sidebar 顶部留白 */
         section[data-testid="stSidebar"] > div { padding-top: 20px; }
-        
         div.block-container { padding-top: 2rem; max-width: 1100px; }
         
         /* 首页项目卡片样式 */
@@ -123,8 +121,7 @@ def inject_css(mode="app"):
     else: st.markdown(app_css, unsafe_allow_html=True)
 
 def render_sidebar_user_card(username, vip_info):
-    """侧边栏用户卡片：支持显示剩余天数 (Requirement 1)"""
-    # 解析 VIP 状态颜色
+    """侧边栏用户卡片：支持显示剩余天数"""
     if "VIP" in vip_info or "管理员" in vip_info:
         status_color = "#2563eb"
         bg_color = "#eff6ff"
@@ -150,6 +147,25 @@ def render_sidebar_user_card(username, vip_info):
     """
     st.sidebar.markdown(html, unsafe_allow_html=True)
 
+# 👇👇👇 [这里补回了 render_copy_btn 函数] 👇👇👇
+def render_copy_btn(text, key_suffix):
+    """渲染一键复制按钮"""
+    safe_text = text.replace("`", "\`").replace("'", "\\'")
+    html = f"""
+    <script>
+    function copy_{key_suffix}() {{
+        navigator.clipboard.writeText(`{safe_text}`);
+        document.getElementById('btn_{key_suffix}').innerHTML = '✅ 已复制';
+        setTimeout(() => {{ document.getElementById('btn_{key_suffix}').innerHTML = '📋 一键复制'; }}, 2000);
+    }}
+    </script>
+    <button id="btn_{key_suffix}" onclick="copy_{key_suffix}()" style="
+        width:100%; height:40px; background:#0f172a; color:white; 
+        border:none; border-radius:8px; cursor:pointer; font-weight:600; font-family:'Inter';
+    ">📋 一键复制</button>
+    """
+    components.html(html, height=50)
+
 def render_wechat_pill(label, wx_id):
     """简单的微信复制胶囊 (侧边栏用)"""
     components.html(f"""
@@ -160,7 +176,7 @@ def render_wechat_pill(label, wx_id):
     """, height=40)
 
 def render_cta_wechat(wx_id):
-    """首页专用：带悬浮特效的微信资料领取按钮 (Requirement 3)"""
+    """首页专用：带悬浮特效的微信资料领取按钮"""
     html = f"""
     <style>
     .cta-box {{
@@ -212,7 +228,7 @@ def render_cta_wechat(wx_id):
     components.html(html, height=90)
 
 def render_home_project_card(icon, title, desc, tag):
-    """渲染首页的项目切片 (Requirement 3)"""
+    """渲染首页的项目切片"""
     return f"""
     <div class="project-card">
         <div class="proj-title"><span style="margin-right:8px;">{icon}</span>{title}</div>

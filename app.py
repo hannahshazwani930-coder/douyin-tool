@@ -263,13 +263,12 @@ CURRENT_USER = st.session_state['user_phone']
 IS_ADMIN = (CURRENT_USER == ADMIN_PHONE)
 IS_VIP, VIP_MSG = get_user_vip_status(CURRENT_USER)
 
-# --- 导航核心逻辑 ---
-# 初始化导航状态
+# --- 导航核心逻辑 (修复失效问题) ---
 if 'nav_menu' not in st.session_state: st.session_state['nav_menu'] = "🏠 首页"
 
-# 定义跳转函数
 def go_to(page):
     st.session_state['nav_menu'] = page
+    st.session_state['sb_radio'] = page # 🔥 关键：同步侧边栏状态
 
 # --- 侧边栏 ---
 with st.sidebar:
@@ -299,13 +298,16 @@ with st.sidebar:
     ops = ["🏠 首页", "📝 文案改写", "💡 爆款选题库", "🎨 海报生成", "🏷️ 账号起名", "👤 个人中心"]
     if IS_ADMIN: ops.append("🕵️‍♂️ 管理后台")
     
-    # 状态同步：根据 session_state 确定 radio 的索引
-    try: curr_idx = ops.index(st.session_state['nav_menu'])
-    except: curr_idx = 0; st.session_state['nav_menu'] = ops[0]
+    # 侧边栏逻辑：使用 Session State 同步
+    try:
+        # 如果 session 中的值在选项里，就用它；否则默认第一个
+        default_index = ops.index(st.session_state.get('sb_radio', st.session_state['nav_menu']))
+    except ValueError:
+        default_index = 0
 
-    selected = st.radio("导航", ops, index=curr_idx, label_visibility="collapsed", key="sb_radio")
+    selected = st.radio("导航", ops, index=default_index, label_visibility="collapsed", key="sb_radio")
     
-    # 如果 radio 被点击改变了，更新 session state 并刷新
+    # 双向绑定：如果侧边栏被点击改变，同步更新 nav_menu
     if selected != st.session_state['nav_menu']:
         st.session_state['nav_menu'] = selected
         st.rerun()
@@ -315,7 +317,7 @@ with st.sidebar:
 
 menu = st.session_state['nav_menu']
 
-# --- 首页 ---
+# --- 首页 (Embedded Button Design) ---
 def page_home():
     st.markdown("## 💠 抖音爆款工场 Pro")
     st.caption("专为素人 KOC 打造的 AI 提效神器 | 文案 · 选题 · 海报 · 变现")
@@ -323,7 +325,6 @@ def page_home():
     
     c1, c2, c3, c4 = st.columns(4)
     
-    # 🔥 修复：使用原生容器 + on_click 回调，确保跳转有效 🔥
     with c1:
         with st.container(border=True):
             st.markdown("""<div class="card-icon-box">📝</div><div class="card-title">文案改写</div><div class="card-desc">5路并发 · 爆款重组<br>解决文案枯竭</div>""", unsafe_allow_html=True)

@@ -3,10 +3,20 @@ import sqlite3
 import datetime
 import uuid
 import hashlib
-import random
-import string
+import random  # 新增
+import string  # 新增
 from config import DB_FILE, ADMIN_ACCOUNT, ADMIN_INIT_PASSWORD, REWARD_DAYS_NEW_USER, REWARD_DAYS_REFERRER, GLOBAL_INVITE_CODE
-from utils import hash_password, generate_invite_code
+
+# --- 🔒 [LOCKED] 基础安全工具 (已从 utils 隔离) ---
+def hash_password(password):
+    """为密码提供 SHA-256 加密，不再依赖外部 utils"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def generate_invite_code():
+    """生成唯一邀请码，不再依赖外部 utils"""
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+# --- 基础连接 ---
 
 def get_conn():
     return sqlite3.connect(DB_FILE, check_same_thread=False)
@@ -261,3 +271,4 @@ def update_setting(key, value):
     c.execute("REPLACE INTO settings (key, value) VALUES (?, ?)", (key, value))
     conn.commit()
     conn.close()
+

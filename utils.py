@@ -64,7 +64,7 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ============================================================
-    # 🏠 [LOCKED] 首页悬浮岛设计 + 乱码修复
+    # 🏠 [LOCKED] 首页悬浮岛设计 - V3 (长按钮+乱码修复)
     # ============================================================
     elif page_id == "home":
         st.markdown("""
@@ -72,7 +72,7 @@ def inject_css(page_id="auth"):
             .stApp { background-color: #f8fafc; }
             div.block-container { max-width: 1200px !important; padding: 1rem 40px 50px 40px !important; }
 
-            /* 1. 悬浮岛头图 (您满意的版本) */
+            /* 1. 悬浮岛头图 */
             .home-header-card {
                 background: linear-gradient(120deg, #2563eb, #1d4ed8);
                 border-radius: 20px; padding: 50px 40px; text-align: center; color: white;
@@ -88,11 +88,11 @@ def inject_css(page_id="auth"):
             .header-title { font-size: 36px; font-weight: 800; margin-bottom: 10px; position: relative; z-index: 2; }
             .header-sub { font-size: 15px; opacity: 0.95; font-weight: 400; position: relative; z-index: 2; }
 
-            /* 2. 通用样式 */
+            /* 2. 通用 */
             .section-label { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
             .section-label::before { content: ""; display: block; width: 4px; height: 18px; background: #3b82f6; border-radius: 2px; }
 
-            /* 3. 核心功能卡片 */
+            /* 3. 核心功能卡片 (优化点击层级) */
             .feature-card-pro {
                 background: white; border: 1px solid #e2e8f0; border-radius: 16px;
                 padding: 25px 20px; text-align: center; height: 160px;
@@ -100,12 +100,7 @@ def inject_css(page_id="auth"):
                 transition: all 0.3s ease; position: relative; overflow: hidden;
             }
             .feature-card-pro:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); border-color: #bfdbfe; }
-            
-            /* 🔴 修复乱码：指定 Emoji 字体栈 */
-            .feat-icon { 
-                font-size: 32px; margin-bottom: 12px; font-weight: normal;
-                font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif !important;
-            }
+            .feat-icon { font-size: 32px; margin-bottom: 12px; }
             .feat-title { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
             .feat-desc { font-size: 12px; color: #64748b; line-height: 1.4; }
 
@@ -118,32 +113,31 @@ def inject_css(page_id="auth"):
             .news-badge { background: #fff7ed; color: #ea580c; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 4px; border: 1px solid #ffedd5; flex-shrink: 0; }
             .news-content { font-size: 14px; color: #334155; font-weight: 500; }
 
-            /* 5. 变现任务卡片 */
+            /* 5. 变现任务卡片 (V2: 恢复简单结构 + 长按钮) */
             .monetize-card {
                 background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px;
-                padding: 20px; height: 100%; position: relative; transition: all 0.3s;
+                padding: 20px; height: 100%; display: flex; flex-direction: column;
+                transition: all 0.3s;
             }
-            .monetize-card:hover { border-color: #cbd5e1; box-shadow: 0 15px 35px -5px rgba(0,0,0,0.06); transform: translateY(-3px); }
+            .monetize-card:hover { border-color: #cbd5e1; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.06); }
+            
             .mon-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-            
-            /* 🔴 修复乱码：指定 Emoji 字体栈 */
-            .mon-icon { 
-                font-size: 24px; font-weight: normal;
-                font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif !important;
-            }
+            .mon-icon { font-size: 24px; } /* 恢复默认字体，解决乱码 */
             .mon-title { font-size: 15px; font-weight: 700; color: #0f172a; }
-            .mon-desc { font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 30px; min-height: 40px; }
+            .mon-desc { font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 20px; flex-grow: 1; }
             
-            /* 微信徽章 */
-            .wechat-badge {
-                position: absolute; bottom: 15px; right: 15px;
-                background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;
-                padding: 4px 10px; border-radius: 8px;
-                font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px; z-index: 50;
+            /* 长条复制按钮 */
+            .long-copy-btn {
+                background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0;
+                width: 100%; padding: 8px 0; border-radius: 8px;
+                text-align: center; font-size: 13px; font-weight: 600;
+                cursor: pointer; transition: all 0.2s;
             }
-            .wechat-badge:hover { background: #166534; color: white; border-color: #166534; }
-            
-            div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 5; }
+            .long-copy-btn:hover { background: #16a34a; color: white; border-color: #16a34a; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.2); }
+            .long-copy-btn:active { transform: scale(0.98); }
+
+            /* 隐形跳转按钮 (覆盖核心功能) */
+            div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 10; }
             div.stButton button:hover { background: transparent; }
         </style>
         """, unsafe_allow_html=True)

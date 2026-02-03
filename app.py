@@ -33,51 +33,51 @@ REWARD_DAYS_REFERRER = 3
 # 数据库文件
 DB_FILE = 'saas_data_v2.db'
 
-# --- 数据库初始化 (核心修复逻辑) ---
+# --- 数据库初始化 ---
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    
-    # 1. 创建基础表 (如果不存在)
-    c.execute('''CREATE TABLE IF NOT EXISTS users (phone TEXT PRIMARY KEY, password_hash TEXT, register_time TIMESTAMP, last_login_ip TEXT, last_login_time TIMESTAMP)''')
+    # 用户表
+    c.execute('''CREATE TABLE IF NOT EXISTS users (
+                    phone TEXT PRIMARY KEY, 
+                    password_hash TEXT, 
+                    register_time TIMESTAMP, 
+                    last_login_ip TEXT, 
+                    last_login_time TIMESTAMP,
+                    own_invite_code TEXT UNIQUE,
+                    invited_by TEXT,
+                    invite_count INTEGER DEFAULT 0
+                )''')
+    # 卡密表
     c.execute('''CREATE TABLE IF NOT EXISTS access_codes (code TEXT PRIMARY KEY, duration_days INTEGER, activated_at TIMESTAMP, expire_at TIMESTAMP, status TEXT, create_time TIMESTAMP, bind_user TEXT)''')
+    # 反馈表
     c.execute('''CREATE TABLE IF NOT EXISTS feedbacks (id INTEGER PRIMARY KEY AUTOINCREMENT, user_phone TEXT, content TEXT, reply TEXT, create_time TIMESTAMP, status TEXT)''')
+    # 设置表
     c.execute('''CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)''')
     
-    # 2. 🔥 数据库迁移：自动检测并修补缺失字段 🔥
-    # 尝试添加 own_invite_code
-    try:
-        c.execute("ALTER TABLE users ADD COLUMN own_invite_code TEXT")
-    except sqlite3.OperationalError:
-        pass # 字段已存在，忽略
-    
-    # 尝试添加 invited_by
-    try:
-        c.execute("ALTER TABLE users ADD COLUMN invited_by TEXT")
-    except sqlite3.OperationalError:
-        pass
-        
-    # 尝试添加 invite_count
-    try:
-        c.execute("ALTER TABLE users ADD COLUMN invite_count INTEGER DEFAULT 0")
-    except sqlite3.OperationalError:
-        pass
+    # 自动迁移检查 (防止旧库报错)
+    try: c.execute("ALTER TABLE users ADD COLUMN own_invite_code TEXT")
+    except: pass
+    try: c.execute("ALTER TABLE users ADD COLUMN invited_by TEXT")
+    except: pass
+    try: c.execute("ALTER TABLE users ADD COLUMN invite_count INTEGER DEFAULT 0")
+    except: pass
 
-    # 3. 确保管理员存在且有邀请码
+    # 预设管理员
     c.execute("SELECT phone FROM users WHERE phone=?", (ADMIN_PHONE,))
     if not c.fetchone():
         admin_pwd_hash = hashlib.sha256(ADMIN_INIT_PASSWORD.encode()).hexdigest()
         c.execute("INSERT INTO users (phone, password_hash, register_time, own_invite_code) VALUES (?, ?, ?, ?)", 
                   (ADMIN_PHONE, admin_pwd_hash, datetime.datetime.now(), "ADMIN888"))
     else:
-        # 如果管理员已存在但没有邀请码(旧数据)，补上
+        # 确保管理员有邀请码
         c.execute("UPDATE users SET own_invite_code='ADMIN888' WHERE phone=? AND own_invite_code IS NULL", (ADMIN_PHONE,))
         
     conn.commit(); conn.close()
 
 init_db()
 
-# --- CSS 样式 ---
+# --- CSS 样式 (v9.0 极致美化版) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -105,32 +105,50 @@ st.markdown("""
     div.stButton > button[kind="secondary"] { background-color: #f1f5f9; color: #475569; border: 1px solid transparent; }
     div.stButton > button[kind="secondary"]:hover { background-color: #e2e8f0; color: #1e293b; border-color: #cbd5e1; }
 
-    /* --- 🔥 首页功能卡片样式 🔥 --- */
-    [data-testid="stVerticalBlockBorderWrapper"] {
-        border-radius: 16px !important;
-        border: 1px solid #e2e8f0 !important;
-        background-color: #ffffff;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        padding: 24px !important;
+    /* --- 🔥 首页极致美化 (Hero & Cards) 🔥 --- */
+    
+    /* Hero Title 渐变特效 */
+    .hero-main-title {
+        font-size: 42px; font-weight: 900; letter-spacing: -1px; text-align: center; margin-bottom: 10px;
+        background: -webkit-linear-gradient(120deg, #2563eb 0%, #7c3aed 50%, #db2777 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-    [data-testid="stVerticalBlockBorderWrapper"]:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 20px 40px -5px rgba(59, 130, 246, 0.15);
-        border-color: #bfdbfe !important;
+    .hero-sub-title {
+        font-size: 16px; color: #64748b; text-align: center; margin-bottom: 40px; font-weight: 500;
     }
-    .card-icon-box {
-        width: 56px; height: 56px;
-        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 28px; margin: 0 auto 15px auto;
-        color: #2563eb;
-    }
-    .card-title { font-size: 18px; font-weight: 800; color: #1e293b; text-align: center; margin-bottom: 6px; }
-    .card-desc { font-size: 13px; color: #64748b; text-align: center; margin-bottom: 20px; min-height: 40px; line-height: 1.5; }
 
-    /* --- 🔥 侧边栏美化 (v6.6 紧凑版) 🔥 --- */
+    /* 首页功能卡片 - 覆盖 Streamlit 容器 */
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        border-radius: 20px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #ffffff;
+        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05);
+        transition: all 0.3s ease-out;
+        padding: 24px !important;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    /* 悬浮光效 */
+    [data-testid="stVerticalBlockBorderWrapper"]:hover {
+        transform: translateY(-8px) scale(1.01);
+        box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.15);
+        border-color: #a5b4fc !important;
+    }
+    
+    .card-icon-box {
+        width: 64px; height: 64px;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border-radius: 18px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 32px; margin: 0 auto 15px auto;
+        color: #0284c7;
+        box-shadow: 0 4px 10px rgba(2, 132, 199, 0.1);
+    }
+    .card-title { font-size: 19px; font-weight: 800; color: #0f172a; text-align: center; margin-bottom: 8px; }
+    .card-desc { font-size: 13px; color: #64748b; text-align: center; margin-bottom: 24px; min-height: 40px; line-height: 1.5; font-weight: 500; }
+
+    /* --- 🔥 侧边栏美化 🔥 --- */
     [data-testid="stSidebar"] { background-color: #f8fafc; border-right: 1px solid #e2e8f0; }
     [data-testid="stSidebar"] .block-container { padding-top: 2rem !important; padding-bottom: 1rem !important; }
     .sidebar-user-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; box-shadow: 0 2px 4px -1px rgba(0,0,0,0.02); }
@@ -153,7 +171,7 @@ st.markdown("""
     .sp-title { font-weight: 700; font-size: 12px; color: #334155; margin-bottom: 2px; }
     .sp-desc { font-size: 10px; color: #94a3b8; line-height: 1.3; }
 
-    /* --- 🔥 海报页 & 登录页 美化还原 🔥 --- */
+    /* 海报/登录页复用 */
     .poster-hero-container { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.05); border: 1px solid #edf2f7; display: flex; align-items: center; margin-bottom: 25px; position: relative; overflow: hidden; }
     .poster-hero-container::before { content: ''; position: absolute; top: -50%; right: -10%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(167, 139, 250, 0.15) 0%, rgba(255,255,255,0) 70%); border-radius: 50%; z-index: 0; pointer-events: none; }
     .hero-icon-wrapper { width: 68px; height: 68px; background: linear-gradient(135deg, #c4b5fd, #818cf8); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 34px; margin-right: 24px; box-shadow: 0 10px 20px -5px rgba(129, 140, 248, 0.5); z-index: 1; color: white; }
@@ -197,7 +215,6 @@ st.markdown("""
     .stat-num { font-size: 20px; font-weight: 800; color: #c2410c; }
     .stat-lbl { font-size: 12px; color: #9a3412; }
 
-    /* 通用 */
     .footer-legal { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 12px; }
     .footer-links a { color: #64748b; text-decoration: none; margin: 0 10px; transition: color 0.2s; }
     .info-box-aligned { height: 45px !important; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1e40af; display: flex; align-items: center; padding: 0 16px; font-size: 14px; font-weight: 500; width: 100%; box-sizing: border-box; }
@@ -350,7 +367,6 @@ def get_user_vip_status(phone):
 
 def get_user_invite_info(phone):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
-    # 兼容性修复：如果字段还没刷新，这里会报错，所以init_db必须先执行
     try:
         c.execute("SELECT own_invite_code, invite_count FROM users WHERE phone=?", (phone,))
         row = c.fetchone()
@@ -454,7 +470,7 @@ with st.sidebar:
     st.markdown("<div style='font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:8px;'>🔥 热门变现项目</div>", unsafe_allow_html=True)
     st.markdown("""<div class="sidebar-project-card"><div class="sp-title">📹 素人 KOC 孵化</div><div class="sp-desc">真人出镜口播 · 红果/番茄拉新 · 0基础陪跑</div></div><div class="sidebar-project-card" style="border-left-color: #8b5cf6;"><div class="sp-title">🎨 御灵 AI 动漫</div><div class="sp-desc">小说转动漫 · 端原生流量 · 版权分销</div></div><div class="sidebar-project-card" style="border-left-color: #10b981;"><div class="sp-title">🌍 文娱出海</div><div class="sp-desc">短剧出海 · 工具拉新 · 资源变现</div></div>""", unsafe_allow_html=True)
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
-    render_wechat_box("💰 变现咨询", "W7774X")
+    render_wechat_box("🎁 领取资料", "W7774X")
     st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
     render_wechat_box("🛠️ 技术合作", "TG777188")
     st.markdown("---")
@@ -462,11 +478,12 @@ with st.sidebar:
 
 menu = st.session_state['nav_menu']
 
-# --- 首页 ---
+# --- 首页 (极致美化) ---
 def page_home():
-    st.markdown("## 💠 抖音爆款工场 Pro")
-    st.caption("专为素人 KOC 打造的 AI 提效神器 | 文案 · 选题 · 海报 · 变现")
-    st.markdown("---")
+    st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+    st.markdown("<h1 class='hero-main-title'>抖音爆款工场 Pro</h1>", unsafe_allow_html=True)
+    st.markdown("<div class='hero-sub-title'>专为素人 KOC 打造的 AI 提效神器 | 文案 · 选题 · 海报 · 变现</div>", unsafe_allow_html=True)
+    
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         with st.container(border=True):
@@ -484,6 +501,7 @@ def page_home():
         with st.container(border=True):
             st.markdown("""<div class="card-icon-box">🏷️</div><div class="card-title">账号起名</div><div class="card-desc">AI 算命 · 爆款玄学<br>赛道垂直定制</div>""", unsafe_allow_html=True)
             st.button("立即使用 ➜", key="h_btn4", on_click=go_to, args=("🏷️ 账号起名",), type="primary", use_container_width=True)
+    
     st.markdown("<br>", unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("#### 📢 系统公告")
@@ -633,41 +651,83 @@ def page_account():
                 if r: st.write(f"**回复**: :green[{r}]")
 
 def page_admin():
-    st.markdown("## 🕵️‍♂️ 管理后台"); 
-    pwd = st.text_input("二级密码", type="password")
-    if pwd == ADMIN_INIT_PASSWORD:
-        t1, t2, t3 = st.tabs(["设置", "卡密", "反馈"])
+    st.markdown("## 🕵️‍♂️ 管理后台")
+    # 管理员登录状态保持
+    if 'admin_unlocked' not in st.session_state: st.session_state['admin_unlocked'] = False
+    
+    if not st.session_state['admin_unlocked']:
+        pwd = st.text_input("请输入管理员密码", type="password")
+        if pwd == ADMIN_INIT_PASSWORD:
+            st.session_state['admin_unlocked'] = True
+            st.rerun()
+    else:
+        st.success("✅ 已登录管理员权限")
+        t1, t2, t3 = st.tabs(["待处理反馈", "历史记录", "系统设置"])
+        
+        # 1. 待处理反馈
         with t1:
-            st.write("#### 系统设置")
-            url = st.text_input("发卡网链接", value=get_setting("shop_url"))
-            if st.button("保存设置"): update_setting("shop_url", url); st.success("已保存")
+            conn = sqlite3.connect(DB_FILE)
+            pending = pd.read_sql("SELECT * FROM feedbacks WHERE status='pending'", conn)
+            conn.close()
+            
+            if pending.empty:
+                st.info("暂无待处理反馈")
+            else:
+                for i, r in pending.iterrows():
+                    with st.container(border=True):
+                        st.write(f"**用户**: {r['user_phone']} | **时间**: {r['create_time']}")
+                        st.info(f"内容: {r['content']}")
+                        reply = st.text_input("回复内容", key=f"rep_{r['id']}")
+                        if st.button("发送回复", key=f"send_{r['id']}"):
+                            conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+                            c.execute("UPDATE feedbacks SET reply=?, status='replied' WHERE id=?", (reply, r['id']))
+                            conn.commit(); conn.close(); st.success("已回复"); time.sleep(1); st.rerun()
+
+        # 2. 历史记录 (可修改/删除)
         with t2:
+            conn = sqlite3.connect(DB_FILE)
+            history = pd.read_sql("SELECT * FROM feedbacks WHERE status='replied' ORDER BY create_time DESC", conn)
+            conn.close()
+            
+            for i, r in history.iterrows():
+                with st.expander(f"已回复: {r['user_phone']} - {str(r['create_time'])[:10]}"):
+                    st.write(f"**用户内容**: {r['content']}")
+                    st.write(f"**当前回复**: :green[{r['reply']}]")
+                    
+                    c1, c2 = st.columns([3, 1])
+                    new_reply = c1.text_input("修改回复", value=r['reply'], key=f"edit_rep_{r['id']}")
+                    if c1.button("更新回复", key=f"upd_{r['id']}"):
+                        conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+                        c.execute("UPDATE feedbacks SET reply=? WHERE id=?", (new_reply, r['id']))
+                        conn.commit(); conn.close(); st.success("更新成功"); st.rerun()
+                        
+                    if c2.button("🗑️ 删除记录", key=f"del_{r['id']}"):
+                        conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+                        c.execute("DELETE FROM feedbacks WHERE id=?", (r['id'],))
+                        conn.commit(); conn.close(); st.warning("已删除"); st.rerun()
+
+        # 3. 系统设置 (卡密生成等)
+        with t3:
+            st.write("#### 卡密生成")
             q = st.number_input("数量", 1, 100, 10); d = st.number_input("天数", 1, 365, 30)
-            if st.button("生成卡密"):
+            if st.button("一键生成"):
                 conn = sqlite3.connect(DB_FILE); c = conn.cursor()
-                codes = []
                 for _ in range(q):
                     code = "VIP-" + str(uuid.uuid4())[:8].upper()
                     c.execute("INSERT INTO access_codes (code, duration_days, status, create_time) VALUES (?, ?, ?, ?)", (code, d, 'unused', datetime.datetime.now()))
-                    codes.append(code)
                 conn.commit(); conn.close(); st.success(f"已生成 {q} 个")
+            
             conn = sqlite3.connect(DB_FILE)
-            df = pd.read_sql("SELECT * FROM access_codes ORDER BY create_time DESC", conn)
+            df = pd.read_sql("SELECT * FROM access_codes ORDER BY create_time DESC LIMIT 50", conn)
             st.dataframe(df, height=300)
-            st.download_button("下载 CSV", df.to_csv(index=False).encode('utf-8'), "codes.csv", "text/csv")
+            st.download_button("下载所有卡密", df.to_csv(index=False).encode('utf-8'), "codes.csv", "text/csv")
             conn.close()
-        with t3:
-            conn = sqlite3.connect(DB_FILE); pending = pd.read_sql("SELECT * FROM feedbacks WHERE status='pending'", conn); conn.close()
-            for i, r in pending.iterrows():
-                with st.container(border=True):
-                    st.write(f"用户: {r['user_phone']} | 内容: {r['content']}")
-                    reply = st.text_input("回复", key=f"rep_{r['id']}")
-                    if st.button("发送", key=f"send_{r['id']}"):
-                        conn = sqlite3.connect(DB_FILE); c = conn.cursor()
-                        c.execute("UPDATE feedbacks SET reply=?, status='replied' WHERE id=?", (reply, r['id']))
-                        conn.commit(); conn.close(); st.rerun()
+            
+            st.markdown("---")
+            url = st.text_input("发卡网链接", value=get_setting("shop_url"))
+            if st.button("保存链接"): update_setting("shop_url", url); st.success("已保存")
 
-# --- 路由 ---
+# --- 路由逻辑 ---
 if not IS_VIP and menu not in ["🏠 首页", "👤 个人中心", "🕵️‍♂️ 管理后台"]:
     st.warning("⚠️ 会员功能，请先激活"); st.stop()
 

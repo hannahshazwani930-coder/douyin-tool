@@ -23,12 +23,10 @@ def inject_css(page_id="auth"):
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         html, body, [class*="css"] { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
         
-        /* 隐藏原生组件 */
         header[data-testid="stHeader"] { display: none !important; height: 0 !important; visibility: hidden !important; }
         #MainMenu { display: none !important; }
         [data-testid="stSidebarCollapsedControl"] { display: none !important; }
         
-        /* 侧边栏 */
         [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
         div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; }
         div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; }
@@ -66,101 +64,85 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ============================================================
-    # 🏠 [NEW] 首页独立设计 - 悬浮岛式 (Floating Island)
+    # 🏠 [LOCKED] 首页悬浮岛设计 + 乱码修复
     # ============================================================
     elif page_id == "home":
         st.markdown("""
         <style>
             .stApp { background-color: #f8fafc; }
-            
-            /* 1. 容器：不再尝试去填满顶部，而是留出优雅的间距 */
-            div.block-container { 
-                max-width: 1200px !important; 
-                padding: 1rem 40px 50px 40px !important; /* 顶部留白，不再强行置顶 */
-            }
+            div.block-container { max-width: 1200px !important; padding: 1rem 40px 50px 40px !important; }
 
-            /* 2. 悬浮岛头图 (Card Header) - 独立卡片，不与顶部粘连 */
+            /* 1. 悬浮岛头图 (您满意的版本) */
             .home-header-card {
                 background: linear-gradient(120deg, #2563eb, #1d4ed8);
-                border-radius: 20px;
-                padding: 50px 40px;
-                text-align: center; color: white;
+                border-radius: 20px; padding: 50px 40px; text-align: center; color: white;
                 box-shadow: 0 15px 40px -10px rgba(37, 99, 235, 0.4); 
-                margin-bottom: 30px;
-                position: relative;
-                overflow: hidden;
+                margin-bottom: 30px; position: relative; overflow: hidden;
             }
-            /* 增加一点极光纹理 */
             .home-header-card::before {
                 content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
                 background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
                 animation: rotateLight 20s linear infinite;
             }
             @keyframes rotateLight { from {transform: rotate(0deg);} to {transform: rotate(360deg);} }
-            
             .header-title { font-size: 36px; font-weight: 800; margin-bottom: 10px; position: relative; z-index: 2; }
             .header-sub { font-size: 15px; opacity: 0.95; font-weight: 400; position: relative; z-index: 2; }
 
-            /* 3. 栏目标题 */
-            .section-label { 
-                font-size: 18px; font-weight: 800; color: #1e293b; 
-                margin-bottom: 15px; display: flex; align-items: center; gap: 8px; 
-            }
+            /* 2. 通用样式 */
+            .section-label { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
             .section-label::before { content: ""; display: block; width: 4px; height: 18px; background: #3b82f6; border-radius: 2px; }
 
-            /* 4. 核心功能卡片 */
+            /* 3. 核心功能卡片 */
             .feature-card-pro {
                 background: white; border: 1px solid #e2e8f0; border-radius: 16px;
                 padding: 25px 20px; text-align: center; height: 160px;
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
                 transition: all 0.3s ease; position: relative; overflow: hidden;
             }
-            .feature-card-pro:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08);
-                border-color: #bfdbfe;
+            .feature-card-pro:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); border-color: #bfdbfe; }
+            
+            /* 🔴 修复乱码：指定 Emoji 字体栈 */
+            .feat-icon { 
+                font-size: 32px; margin-bottom: 12px; font-weight: normal;
+                font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif !important;
             }
-            .feat-icon { font-size: 32px; margin-bottom: 12px; } /* 🔴 移除 font-family 强制，恢复默认 */
             .feat-title { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
             .feat-desc { font-size: 12px; color: #64748b; line-height: 1.4; }
 
-            /* 5. 系统公告 (静态悬浮条) */
+            /* 4. 公告 */
             .news-container {
                 background: white; border: 1px solid #fed7aa; border-radius: 12px;
                 padding: 12px 15px; display: flex; align-items: center; gap: 15px;
-                box-shadow: 0 4px 10px -2px rgba(249, 115, 22, 0.1);
-                margin-bottom: 30px;
+                box-shadow: 0 4px 10px -2px rgba(249, 115, 22, 0.1); margin-bottom: 30px;
             }
-            .news-badge { 
-                background: #fff7ed; color: #ea580c; font-size: 11px; font-weight: 800; 
-                padding: 3px 8px; border-radius: 4px; border: 1px solid #ffedd5; flex-shrink: 0;
-            }
+            .news-badge { background: #fff7ed; color: #ea580c; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 4px; border: 1px solid #ffedd5; flex-shrink: 0; }
             .news-content { font-size: 14px; color: #334155; font-weight: 500; }
 
-            /* 6. 变现任务卡片 (Monetize Card) */
+            /* 5. 变现任务卡片 */
             .monetize-card {
                 background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px;
-                padding: 20px; height: 100%; position: relative;
-                transition: all 0.3s;
+                padding: 20px; height: 100%; position: relative; transition: all 0.3s;
             }
             .monetize-card:hover { border-color: #cbd5e1; box-shadow: 0 15px 35px -5px rgba(0,0,0,0.06); transform: translateY(-3px); }
             .mon-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-            .mon-icon { font-size: 24px; } /* 🔴 移除 font-family 强制 */
+            
+            /* 🔴 修复乱码：指定 Emoji 字体栈 */
+            .mon-icon { 
+                font-size: 24px; font-weight: normal;
+                font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif !important;
+            }
             .mon-title { font-size: 15px; font-weight: 700; color: #0f172a; }
             .mon-desc { font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 30px; min-height: 40px; }
             
-            /* 微信领取徽章 */
+            /* 微信徽章 */
             .wechat-badge {
                 position: absolute; bottom: 15px; right: 15px;
                 background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;
                 padding: 4px 10px; border-radius: 8px;
-                font-size: 11px; font-weight: 600; 
-                cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px;
-                z-index: 50;
+                font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px; z-index: 50;
             }
             .wechat-badge:hover { background: #166534; color: white; border-color: #166534; }
             
-            /* 隐形按钮 */
             div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 5; }
             div.stButton button:hover { background: transparent; }
         </style>

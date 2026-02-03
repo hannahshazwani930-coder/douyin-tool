@@ -3,42 +3,66 @@ import streamlit as st
 from database import login_user, register_user
 
 def view_auth():
-    # --- 1. 深度清理与样式锁定 (解决图片中的颜色不一和文字消失) ---
+    # --- 1. 深度对齐 CSS：锁定统一字号与色彩 ---
     st.markdown("""
         <style>
-            /* 强制抹除所有表单自带的提示语 */
-            [data-testid="stFormInstructions"] { display: none !important; }
+            /* 【统一字体基准】 */
+            :root {
+                --pro-font-size: 14px;
+                --pro-text-color: #475569;
+                --pro-active-color: #1E3A8A;
+            }
 
-            /* 统一输入框底色：解决图片中“两个色不统一”的问题 */
+            /* 1. 顶部 Tab 样式对齐 */
+            button[data-baseweb="tab"] {
+                font-size: var(--pro-font-size) !important;
+                color: var(--pro-text-color) !important;
+                font-weight: 500 !important;
+                padding: 12px 20px !important;
+            }
+            button[aria-selected="true"] {
+                color: var(--pro-active-color) !important;
+                border-bottom-color: var(--pro-active-color) !important;
+            }
+
+            /* 2. 文本框提示信息 (Placeholder) 样式对齐 */
+            [data-testid="stTextInput"] input::placeholder {
+                font-size: var(--pro-font-size) !important;
+                color: var(--pro-text-color) !important;
+                opacity: 0.8 !important; /* 稍微减淡以示区分，但大小一致 */
+            }
+
+            /* 3. 输入框本体样式统一 */
             [data-testid="stTextInput"] input {
                 background-color: #F8FAFC !important;
                 border: 1px solid #E2E8F0 !important;
-                color: #334155 !important;
                 border-radius: 6px !important;
+                font-size: var(--pro-font-size) !important;
+                height: 45px !important;
+                color: var(--pro-active-color) !important;
             }
 
-            /* 修复 Tab 标签重叠乱码 */
-            button[data-baseweb="tab"] {
-                padding: 10px 15px !important;
-            }
+            /* 4. 彻底物理屏蔽英文提示语 */
+            [data-testid="stFormInstructions"] { display: none !important; }
+            .stForm [data-testid="stMarkdownContainer"] p:not(:only-child) { display: none !important; }
 
-            /* 按钮文字强制找回：使用最强路径锁定 */
-            button[kind="primaryFormSubmit"] div[data-testid="stMarkdownContainer"] p {
+            /* 5. 按钮文字保障 */
+            button[kind="primaryFormSubmit"] [data-testid="stMarkdownContainer"] p {
                 visibility: visible !important;
                 display: block !important;
-                color: #1E3A8A !important;
+                color: var(--pro-active-color) !important;
                 font-weight: bold !important;
-                font-size: 16px !important;
+                font-size: var(--pro-font-size) !important;
             }
 
-            /* 隐藏顶部冗余 */
+            /* 净化顶部 */
             header, [data-testid="stHeader"] { visibility: hidden; }
         </style>
     """, unsafe_allow_html=True)
 
     st.write("\n" * 2)
 
-    # --- 2. 居中弹性卡片布局 (锁定比例防止重叠) ---
+    # --- 2. 卡片布局 ---
     _, card_container, _ = st.columns([1.1, 3.2, 1.1])
 
     with card_container:
@@ -46,58 +70,43 @@ def view_auth():
             col_brand, col_auth = st.columns([1, 1.5], gap="large")
 
             with col_brand:
-                # --- 左侧：图标+精简文案 ---
                 st.write("\n")
                 st.markdown("<h3 style='color:#1E3A8A; margin-bottom:5px;'>💠 爆款工场</h3>", unsafe_allow_html=True)
                 st.markdown("<p style='color:#94A3B8; font-size: 12px; margin-bottom: 25px;'>创作者的 AI 军师</p>", unsafe_allow_html=True)
                 
-                # 功能磁贴
                 features = [("🎯", "精准选题"), ("✍️", "爆款文案"), ("⚡", "效率革命")]
                 for icon, title in features:
                     st.markdown(f"<div style='font-size:13px; color:#475569; margin-bottom:12px;'>{icon} <b>{title}</b></div>", unsafe_allow_html=True)
-                
                 st.success("已助力 10k+ 出圈")
 
             with col_auth:
-                # --- 右侧：登录/注册交互 ---
+                # 使用 Tabs
                 tab_l, tab_r = st.tabs(["安全登录", "快速注册"])
                 
                 with tab_l:
-                    # 使用唯一的 form key 防止冲突
-                    with st.form("login_stable_v1", border=False):
-                        st.write("\n")
-                        acc = st.text_input("账号", placeholder="手机号 / 邮箱", label_visibility="collapsed", key="login_acc")
-                        pwd = st.text_input("密码", type="password", placeholder="请输入密码", label_visibility="collapsed", key="login_pwd")
-                        
-                        if st.form_submit_button("立即登录", use_container_width=True):
+                    with st.form("login_unified", border=False):
+                        acc = st.text_input("账号", placeholder="手机号 / 邮箱", label_visibility="collapsed", key="u_acc")
+                        pwd = st.text_input("密码", type="password", placeholder="请输入密码", label_visibility="collapsed", key="u_pwd")
+                        if st.form_submit_button("立 即 登 录", use_container_width=True):
                             if acc and pwd:
                                 success, msg = login_user(acc, pwd)
                                 if success:
                                     st.session_state['user_phone'] = acc
                                     st.rerun()
-                                else:
-                                    st.error(msg)
+                                else: st.error(msg)
 
                 with tab_r:
-                    with st.form("reg_stable_v1", border=False):
-                        st.write("\n")
-                        ru = st.text_input("手机号/邮箱", placeholder="手机号/邮箱", label_visibility="collapsed", key="reg_acc")
-                        rp = st.text_input("设置密码", type="password", placeholder="设置登录密码", label_visibility="collapsed", key="reg_pwd1")
-                        rp2 = st.text_input("确认密码", type="password", placeholder="确认密码", label_visibility="collapsed", key="reg_pwd2")
-                        ri = st.text_input("邀请码", value="888888", label_visibility="collapsed", key="reg_inv")
-                        
-                        if st.form_submit_button("快速注册", use_container_width=True):
-                            if rp != rp2:
-                                st.error("密码不一致")
+                    with st.form("reg_unified", border=False):
+                        ru = st.text_input("账号", placeholder="手机号 / 邮箱", label_visibility="collapsed", key="r_acc")
+                        rp = st.text_input("密码", type="password", placeholder="请设置登录密码", label_visibility="collapsed", key="r_pwd")
+                        rp2 = st.text_input("确认", type="password", placeholder="请再次确认密码", label_visibility="collapsed", key="r_pwd2")
+                        ri = st.text_input("邀请码", value="888888", label_visibility="collapsed", key="r_inv")
+                        if st.form_submit_button("免 费 注 册", use_container_width=True):
+                            if rp != rp2: st.error("密码不一致")
                             else:
                                 success, msg = register_user(ru, rp, ri)
-                                if success:
-                                    st.success("注册成功！")
-
-    # --- 3. 底部声明 (彻底修复代码外露问题) ---
+                                if success: st.success("成功！请登录")
+    
+    # --- 3. 底部剧中声明 ---
     st.write("\n" * 4)
-    st.markdown("""
-        <div style="text-align: center; color: #94A3B8; font-size: 11px; width: 100%;">
-            © 2026 DOUYIN MASTER PRO. ALL RIGHTS RESERVED.
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; color: #94A3B8; font-size: 12px;'>© 2026 DOUYIN MASTER PRO. ALL RIGHTS RESERVED.</div>", unsafe_allow_html=True)

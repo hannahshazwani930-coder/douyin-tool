@@ -44,19 +44,16 @@ def inject_css(page_id="auth"):
 
     # ----------------------------------------------------------------
     # 🔒 [已锁定] 登录页样式 (Auth) - 绝对不改动
-    # 特征：深色极光背景 + 居中大白卡 + 内部分栏 + 输入框完美修复
     # ----------------------------------------------------------------
     if page_id == "auth":
         st.markdown("""
         <style>
-            /* A. 背景：深色极光流光 */
             .stApp {
                 background: linear-gradient(-45deg, #020617, #0f172a, #1e3a8a, #172554);
                 background-size: 400% 400%; animation: authGradient 15s ease infinite;
             }
             @keyframes authGradient { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
 
-            /* B. 核心卡片：大白卡绝对居中 */
             div.block-container {
                 background-color: rgba(255, 255, 255, 0.98); border-radius: 24px;
                 box-shadow: 0 30px 80px rgba(0,0,0,0.6);
@@ -64,24 +61,18 @@ def inject_css(page_id="auth"):
                 margin: auto; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); overflow: hidden;
             }
             
-            /* C. 登录页专用布局类 */
             .auth-left-decor { border-right: 1px solid #f1f5f9; padding-right: 40px; height: 100%; display: flex; flex-direction: column; justify-content: center; }
             .hero-title { font-size: 42px; font-weight: 800; color: #0f172a; line-height: 1.2; margin-bottom: 20px; letter-spacing: -1px; }
             .hero-sub { font-size: 16px; color: #64748b; line-height: 1.6; margin-bottom: 30px; }
             .hero-tags { display: flex; gap: 10px; }
             .tag-pill { background: #eff6ff; color: #2563eb; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
 
-            /* D. 登录页专用输入框修复 (Fix Double Border & Height) */
-            /* 外壳：负责边框和背景 */
             .stTextInput div[data-baseweb="input"] {
                 background-color: #f8fafc !important; border: 1px solid #cbd5e1 !important;
                 border-radius: 8px !important; height: 48px !important; padding: 0 !important;
             }
-            /* 内胆：透明，去边框 */
             .stTextInput input { background-color: transparent !important; border: none !important; color: #1e293b !important; height: 48px !important; padding: 0 15px !important; }
-            /* 聚焦 */
             .stTextInput div[data-baseweb="input"]:focus-within { border-color: #3b82f6 !important; background-color: #ffffff !important; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important; }
-            /* 图标背景修复 */
             .stTextInput div[data-baseweb="input"] > div { background-color: transparent !important; }
 
             div.stButton > button { width: 100%; height: 48px; background: linear-gradient(90deg, #2563eb, #3b82f6); color: white; border: none; border-radius: 8px; font-weight: 600; }
@@ -95,76 +86,92 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🏠 [独立] 首页样式 (Home)
+    # 🏠 [独立] 首页样式 (Home) - 修复白框
     # ----------------------------------------------------------------
     elif page_id == "home":
         st.markdown("""
         <style>
             .stApp { background-color: #f8fafc; }
-            div.block-container { max-width: 1200px !important; padding: 0 40px 50px 40px !important; }
+            
+            /* 🔴 去除容器顶部 padding，消灭白框根源 */
+            div.block-container { 
+                max-width: 1200px !important; 
+                padding: 0 40px 50px 40px !important; 
+            }
 
-            /* 首页流光 Header */
+            /* 首页流光 Header - 加深下探距离 */
             .flowing-header {
                 background: linear-gradient(-45deg, #1e3a8a, #2563eb, #3b82f6, #0ea5e9);
                 background-size: 400% 400%; animation: gradientBG 10s ease infinite;
                 border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
-                padding: 50px 40px 100px 40px; color: white; text-align: center;
-                margin-bottom: -70px; margin-left: -40px; margin-right: -40px;
+                padding: 50px 40px 140px 40px; /* 底部留白加深 */
+                color: white; text-align: center;
+                margin-bottom: -120px; /* 🔴 负边距加大，强制吸附 */
+                margin-left: -40px; margin-right: -40px;
                 box-shadow: 0 20px 50px rgba(37, 99, 235, 0.3); position: relative; z-index: 0;
             }
             @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
             .header-title { font-size: 42px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             .header-sub { font-size: 15px; opacity: 0.95; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 30px; backdrop-filter: blur(10px); display: inline-block; border: 1px solid rgba(255,255,255,0.2); }
 
-            /* 首页白卡 */
+            /* 首页白卡 - 向上重叠 */
             .creation-console {
                 background: white; border-radius: 24px; padding: 40px;
                 box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); 
-                border: 1px solid #e2e8f0; position: relative; z-index: 10; margin-top: 20px;
+                border: 1px solid #e2e8f0; 
+                position: relative; z-index: 10; 
+                margin-top: 0px; /* 紧贴 Header */
             }
             
-            /* 首页专用按钮 (隐形铺满) */
+            /* 按钮 */
             div.stButton button { width: 100%; border:none; background:transparent; color:transparent; height:100px; position:absolute; top:0; left:0; z-index:2; }
             div.stButton button:hover { background:rgba(0,0,0,0.02); }
             
             /* 标签 */
             .custom-label { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 20px; border-left: 4px solid #3b82f6; padding-left: 10px; }
-            
-            /* 公告 */
             .ann-card { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 12px 15px; margin-bottom: 10px; display: flex; align-items: start; gap: 10px; font-size: 14px; color: #9a3412; }
         </style>
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 📝 [独立] 文案改写页样式 (Rewrite)
+    # 📝 [独立] 文案改写页样式 (Rewrite) - 修复白框
     # ----------------------------------------------------------------
     elif page_id == "rewrite":
         st.markdown("""
         <style>
             .stApp { background-color: #f8fafc; }
-            div.block-container { max-width: 1400px !important; padding: 0 40px 50px 40px !important; }
+            
+            /* 🔴 去除容器顶部 padding */
+            div.block-container { 
+                max-width: 1400px !important; 
+                padding: 0 40px 50px 40px !important; 
+            }
 
-            /* 文案页悬浮流光 Header (更宽) */
+            /* 文案页悬浮流光 Header (加深) */
             .flowing-header {
                 background: linear-gradient(-45deg, #1e3a8a, #2563eb, #3b82f6, #0ea5e9);
                 background-size: 400% 400%; animation: gradientBG 10s ease infinite;
                 border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
-                padding: 50px 40px 100px 40px; color: white; text-align: center;
-                margin-bottom: -70px; margin-left: -40px; margin-right: -40px;
+                padding: 50px 40px 140px 40px; /* 底部空间加大，容纳按钮 */
+                color: white; text-align: center;
+                margin-bottom: -100px; /* 🔴 负边距加大 */
+                margin-left: -40px; margin-right: -40px;
                 box-shadow: 0 20px 50px rgba(37, 99, 235, 0.3); position: relative; z-index: 0;
             }
             @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
             .header-title { font-size: 42px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             .header-sub { font-size: 15px; opacity: 0.95; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 30px; backdrop-filter: blur(10px); display: inline-block; border: 1px solid rgba(255,255,255,0.2); }
 
-            /* 文案页一体化控制台 */
+            /* 文案页一体化控制台 - 向上重叠 */
             .creation-console {
                 background: white; border-radius: 24px; padding: 40px;
                 box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); 
-                border: 1px solid #e2e8f0; position: relative; z-index: 10; margin-top: 20px;
+                border: 1px solid #e2e8f0; 
+                position: relative; z-index: 10; 
+                margin-top: 0px; 
             }
 
-            /* 文案页专用输入框 (纯白无叠影) */
+            /* 输入框纯白 */
             .stTextArea > div { border: none !important; box-shadow: none !important; background: transparent !important; }
             .stTextArea > label { display: none !important; }
             .stTextArea textarea {

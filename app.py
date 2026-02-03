@@ -35,104 +35,41 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS access_codes (code TEXT PRIMARY KEY, duration_days INTEGER, activated_at TIMESTAMP, expire_at TIMESTAMP, status TEXT, create_time TIMESTAMP, bind_user TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS feedbacks (id INTEGER PRIMARY KEY AUTOINCREMENT, user_phone TEXT, content TEXT, reply TEXT, create_time TIMESTAMP, status TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)''')
-    
-    # 强制预设管理员
     admin_pwd_hash = hashlib.sha256(ADMIN_INIT_PASSWORD.encode()).hexdigest()
     c.execute("REPLACE INTO users (phone, password_hash, register_time) VALUES (?, ?, ?)", (ADMIN_PHONE, admin_pwd_hash, datetime.datetime.now()))
     conn.commit(); conn.close()
 
 init_db()
 
-# --- CSS 样式 (极致美化 + 细节修复) ---
+# --- CSS 样式 ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@500&display=swap');
-
     .stApp { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
     
-    /* 🔥 核心修复：隐藏所有标题旁的锚点链接符号 (🔗) 🔥 */
-    [data-testid="stHeader"] a, .stMarkdown h1 a, .stMarkdown h2 a, .stMarkdown h3 a, .stMarkdown h4 a { 
-        display: none !important; 
-        pointer-events: none;
-    }
+    /* 隐藏锚点 */
+    [data-testid="stHeader"] a, .stMarkdown h1 a, .stMarkdown h2 a, .stMarkdown h3 a, .stMarkdown h4 a { display: none !important; pointer-events: none; }
     
     /* 容器 */
     div.block-container { max-width: 90% !important; background-color: #ffffff; padding: 3rem !important; border-radius: 24px; box-shadow: 0 20px 60px -20px rgba(0,0,0,0.1); margin-bottom: 50px; }
     
-    /* 按钮全局优化 */
+    /* 按钮 */
     div.stButton > button { border-radius: 10px; font-weight: 600; height: 48px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); width: 100%; font-size: 15px; }
+    div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border: none; color: white !important; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
+    div.stButton > button[kind="primary"]:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4); background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); }
     
-    /* 主按钮 */
-    div.stButton > button[kind="primary"] { 
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
-        border: none; color: white !important; 
-        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
-    }
-    div.stButton > button[kind="primary"]:hover { 
-        transform: translateY(-2px); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
-        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-    }
-    
-    /* 次级按钮 */
-    div.stButton > button[kind="secondary"] { background-color: #f1f5f9; color: #475569; border: 1px solid transparent; }
-    div.stButton > button[kind="secondary"]:hover { background-color: #e2e8f0; color: #1e293b; border-color: #cbd5e1; }
-
     /* 首页卡片 */
-    .home-card-box { 
-        border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center; background: #fff; 
-        height: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center; 
-        margin-bottom: 15px; transition: all 0.3s ease;
-    }
+    .home-card-box { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center; background: #fff; height: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 15px; transition: all 0.3s ease; }
     .home-card-box:hover { border-color: #bfdbfe; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
     .home-card-title { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
     .home-card-sub { font-size: 12px; color: #94a3b8; font-weight: 400; }
     
-    /* 🔥 海报页面：顶部 Banner 🔥 */
-    .poster-hero-container {
-        background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.05);
-        border: 1px solid #edf2f7; display: flex; align-items: center; margin-bottom: 35px; position: relative; overflow: hidden;
-    }
-    .poster-hero-container::before {
-        content: ''; position: absolute; top: -50%; right: -10%; width: 400px; height: 400px;
-        background: radial-gradient(circle, rgba(167, 139, 250, 0.15) 0%, rgba(255,255,255,0) 70%);
-        border-radius: 50%; z-index: 0; pointer-events: none;
-    }
-    .hero-icon-wrapper {
-        width: 68px; height: 68px; background: linear-gradient(135deg, #c4b5fd, #818cf8);
-        border-radius: 16px; display: flex; align-items: center; justify-content: center;
-        font-size: 34px; margin-right: 24px; box-shadow: 0 10px 20px -5px rgba(129, 140, 248, 0.5); z-index: 1; color: white;
-    }
+    /* 海报顶部 Banner */
+    .poster-hero-container { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.05); border: 1px solid #edf2f7; display: flex; align-items: center; margin-bottom: 25px; position: relative; overflow: hidden; }
+    .poster-hero-container::before { content: ''; position: absolute; top: -50%; right: -10%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(167, 139, 250, 0.15) 0%, rgba(255,255,255,0) 70%); border-radius: 50%; z-index: 0; pointer-events: none; }
+    .hero-icon-wrapper { width: 68px; height: 68px; background: linear-gradient(135deg, #c4b5fd, #818cf8); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 34px; margin-right: 24px; box-shadow: 0 10px 20px -5px rgba(129, 140, 248, 0.5); z-index: 1; color: white; }
     .hero-title { font-size: 22px; font-weight: 800; color: #1e293b; margin: 0 0 8px 0; letter-spacing: -0.5px; z-index: 1; position: relative; }
     .hero-desc { font-size: 15px; color: #64748b; margin: 0; font-weight: 500; z-index: 1; position: relative; }
-
-    /* 🔥 海报页面：指令终端 (增加间距) 🔥 */
-    .terminal-box {
-        background: #0f172a; border-radius: 12px; overflow: hidden; margin-top: 30px;
-        box-shadow: 0 15px 40px rgba(15, 23, 42, 0.2); border: 1px solid #334155;
-        margin-bottom: 25px; /* 🔥 增加底部间距，与按钮拉开距离 */
-    }
-    .terminal-header { background: #1e293b; padding: 10px 16px; display: flex; align-items: center; border-bottom: 1px solid #334155; }
-    .traffic-lights { display: flex; gap: 8px; margin-right: 16px; }
-    .light { width: 12px; height: 12px; border-radius: 50%; }
-    .light.red { background: #ef4444; } .light.yellow { background: #f59e0b; } .light.green { background: #22c55e; }
-    .terminal-title-text { color: #94a3b8; font-size: 13px; font-weight: 600; font-family: monospace; }
-    .terminal-body { padding: 24px; font-family: 'Fira Code', monospace; font-size: 16px; color: #e2e8f0; line-height: 1.6; display: flex; align-items: center; }
-    .prompt-sign { color: #22c55e; margin-right: 12px; user-select: none; }
-    .command-highlight { color: #a78bfa; font-weight: bold; }
-
-    /* 双卡片 */
-    .action-card-container { display: flex; gap: 20px; width: 100%; }
-    .copy-card-box { background: #ffffff; border: 2px dashed #cbd5e1; border-radius: 16px; height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s ease; position: relative; }
-    .copy-card-box:hover { border-color: #6366f1; background-color: #f5f3ff; transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.05); }
-    .copy-label { font-size: 13px; color: #64748b; font-weight: 500; margin-bottom: 5px; }
-    .copy-code { font-size: 28px; font-weight: 800; color: #4f46e5; letter-spacing: 1px; font-family: monospace; }
-    .copy-hint { font-size: 12px; color: #94a3b8; margin-top: 5px; opacity: 0; transition: opacity 0.2s; }
-    .copy-card-box:hover .copy-hint { opacity: 1; color: #6366f1; }
-    .jump-card-btn { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border-radius: 16px; height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-decoration: none !important; transition: all 0.3s ease; box-shadow: 0 10px 25px rgba(124, 58, 237, 0.3); border: 1px solid rgba(255,255,255,0.1); }
-    .jump-card-btn:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(124, 58, 237, 0.5); filter: brightness(1.1); }
-    .jump-main-text { color: #ffffff !important; font-size: 24px; font-weight: 800; margin-bottom: 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-    .jump-sub-text { color: rgba(255,255,255,0.9) !important; font-size: 14px; font-weight: 500; }
 
     /* 教程步骤 */
     .step-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 12px; display: flex; align-items: flex-start; transition: transform 0.2s; }
@@ -419,41 +356,60 @@ def page_poster():
     # 🔥 终极美化 Banner 🔥
     st.markdown("""<div class="poster-hero-container"><div class="hero-icon-wrapper">🚀</div><div class="hero-text-content"><h2 class="hero-title">算力全面升级！好莱坞级光影引擎</h2><p class="hero-desc">为了提供极致的渲染效果，海报功能已迁移至性能更强的独立工作站。</p></div></div>""", unsafe_allow_html=True)
     
-    # 终极美化双卡片
-    st.markdown("""
-    <div class="action-card-container">
-        <div class="copy-card-box" onclick="copyText(this)" style="flex:1;">
-            <div class="copy-label">👇 第一步：点击复制邀请码</div>
-            <div class="copy-code">5yzMbpxn</div>
-            <div class="copy-hint" id="status-code">点击立即复制</div>
+    # 交互卡片
+    components.html("""
+    <!DOCTYPE html><html><head><style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;800&display=swap');
+    body{margin:0;font-family:'Inter',sans-serif;overflow:hidden;background:transparent;}
+    .container{display:flex;gap:20px;width:100%;}
+    .card{flex:1;border-radius:16px;height:120px;display:flex;flex-direction:column;justify-content:center;align-items:center;cursor:pointer;transition:all 0.3s;box-sizing:border-box;}
+    
+    /* 邀请码卡片 */
+    .invite{background:#fff;border:2px dashed #cbd5e1;position:relative;}
+    .invite:hover{border-color:#6366f1;background:#f5f3ff;transform:translateY(-5px);}
+    .invite-label{font-size:13px;color:#64748b;margin-bottom:5px;}
+    .invite-code{font-size:28px;font-weight:800;color:#4f46e5;letter-spacing:1px;}
+    .invite-hint{font-size:12px;color:#94a3b8;margin-top:5px;opacity:0;transition:0.2s;}
+    .invite:hover .invite-hint{opacity:1;color:#6366f1;}
+    
+    /* 跳转卡片 */
+    .jump{flex:1.5;background:linear-gradient(135deg,#4f46e5,#7c3aed);text-decoration:none;box-shadow:0 10px 25px rgba(124,58,237,0.3);}
+    .jump:hover{transform:translateY(-5px);box-shadow:0 20px 40px rgba(124,58,237,0.5);filter:brightness(1.1);}
+    .jump-title{color:#fff;font-size:24px;font-weight:800;margin-bottom:4px;text-shadow:0 2px 4px rgba(0,0,0,0.2);}
+    .jump-sub{color:rgba(255,255,255,0.9);font-size:14px;}
+    </style></head><body>
+    
+    <div class="container">
+        <div class="card invite" onclick="copyInvite(this)">
+            <div class="invite-label">👇 第一步：点击复制邀请码</div>
+            <div class="invite-code">5yzMbpxn</div>
+            <div class="invite-hint" id="status">点击立即复制</div>
         </div>
-        <a href="https://aixtdz.com/" target="_blank" class="jump-card-btn" style="flex:1.5;">
-            <div class="jump-main-text">🚀 前往小提大作</div>
-            <div class="jump-sub-text">第二步：点击跳转，开启创作</div>
+        <a href="https://aixtdz.com/" target="_blank" class="card jump">
+            <div class="jump-title">🚀 前往小提大作</div>
+            <div class="jump-sub">第二步：点击跳转，开启创作</div>
         </a>
     </div>
-    
+
     <script>
-    function copyText(e){
-        // 强制使用备用方案，兼容性更好
+    function copyInvite(e){
+        const text = '5yzMbpxn';
         const textArea = document.createElement("textarea");
-        textArea.value = '5yzMbpxn';
+        textArea.value = text;
         document.body.appendChild(textArea);
         textArea.select();
         try {
             document.execCommand('copy');
-            const hint = e.querySelector('#status-code');
+            const hint = e.querySelector('#status');
             hint.innerText = '✅ 复制成功！';
             hint.style.opacity = '1';
             hint.style.color = '#10b981';
             setTimeout(()=>{ hint.innerText = '点击立即复制'; hint.style.opacity = '0'; hint.style.color = '#94a3b8'; }, 2000);
-        } catch (err) {
-            console.error('Fallback copy failed', err);
-        }
+        } catch (err) {}
         document.body.removeChild(textArea);
     }
-    </script>
-    """, unsafe_allow_html=True)
+    </script></body></html>
+    """, height=130)
     
     st.write("")
     st.markdown("#### 📖 新手保姆级教程")
@@ -461,9 +417,46 @@ def page_poster():
     for idx, (title, desc) in enumerate(steps, 1):
         st.markdown(f"""<div class="step-card"><div class="step-icon">{idx}</div><div class="step-content"><h4>{title}</h4><p>{desc}</p></div></div>""", unsafe_allow_html=True)
 
-    # 🔥 终极美化 Terminal 🔥
-    st.markdown("""<div class="terminal-box"><div class="terminal-header"><div class="traffic-lights"><div class="light red"></div><div class="light yellow"></div><div class="light green"></div></div><div class="terminal-title-text">root@ai-generator ~ %</div></div><div class="terminal-body"><div><span class="prompt-sign">➜</span><span class="command-text">将原图剧名：原剧名 改为：<span class="command-highlight">[你的新剧名]</span></span></div></div></div>""", unsafe_allow_html=True)
-    render_copy_button_html("将原图剧名：原剧名\n改为：[你的新剧名]", "cmd_copy")
+    # 🔥 交互式终端 (点击即复制) 🔥
+    cmd_text = "将原图剧名：[原剧名] 改为：[你的新剧名]"
+    components.html(f"""
+    <!DOCTYPE html><html><head><style>
+    @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@500&display=swap');
+    body{{margin:0;font-family:'Fira Code',monospace;overflow:hidden;background:transparent;}}
+    .terminal{{background:#0f172a;border-radius:12px;border:1px solid #334155;overflow:hidden;cursor:pointer;transition:0.2s;box-shadow:0 10px 30px rgba(0,0,0,0.2);}}
+    .terminal:hover{{border-color:#6366f1;transform:translateY(-2px);}}
+    .header{{background:#1e293b;padding:10px 16px;display:flex;align-items:center;border-bottom:1px solid #334155;}}
+    .dots{{display:flex;gap:6px;margin-right:12px;}}
+    .dot{{width:10px;height:10px;border-radius:50%;}}
+    .red{{background:#ef4444;}} .yellow{{background:#f59e0b;}} .green{{background:#22c55e;}}
+    .title{{color:#64748b;font-size:12px;}}
+    .body{{padding:20px;color:#e2e8f0;font-size:14px;display:flex;align-items:center;}}
+    .prompt{{color:#22c55e;margin-right:10px;}}
+    .hl{{color:#a78bfa;font-weight:bold;}}
+    .success-overlay{{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(16,185,129,0.95);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:16px;opacity:0;pointer-events:none;transition:0.2s;}}
+    .terminal:active .success-overlay{{opacity:1;}}
+    </style></head><body>
+    <div class="terminal" onclick="copyCmd()">
+        <div class="header"><div class="dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><div class="title">root@ai-generator ~ % (点击复制)</div></div>
+        <div class="body"><span class="prompt">➜</span><span>将原图剧名：<span class="hl">[原剧名]</span> 改为：<span class="hl">[你的新剧名]</span></span></div>
+        <div class="success-overlay" id="overlay">✅ 指令已复制到剪贴板</div>
+    </div>
+    <script>
+    function copyCmd(){{
+        const text = `{cmd_text}`;
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        const overlay = document.getElementById('overlay');
+        overlay.style.opacity = '1';
+        setTimeout(()=>{{ overlay.style.opacity = '0'; }}, 1500);
+    }}
+    </script></body></html>
+    """, height=120)
 
 def page_brainstorm():
     st.markdown("## 💡 爆款选题灵感库"); st.markdown("---")

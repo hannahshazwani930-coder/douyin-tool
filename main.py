@@ -3,9 +3,10 @@ import streamlit as st
 import time
 from config import ADMIN_ACCOUNT
 from database import init_db, get_user_vip_status, login_user, register_user
+# 确保引入所有工具函数
 from utils import inject_css, render_wechat_pill, render_sidebar_user_card, render_tech_support_btn
 
-# --- 导入视图 ---
+# --- 视图 ---
 from views.home import view_home
 from views.rewrite import view_rewrite
 from views.brainstorm import view_brainstorm
@@ -18,38 +19,36 @@ st.set_page_config(page_title="抖音爆款工场 Pro", layout="wide", page_icon
 init_db()
 
 # ==========================================
-# 🔐 登录 / 注册 (左右排版 + 极光设计)
+# 🔐 登录 / 注册 (切片内镶嵌式左右排版)
 # ==========================================
 def login_page():
-    # 注入 Auth 样式 (深色极光)
+    # 注入 Auth CSS (定义了极光背景 + 居中大白卡)
     inject_css(mode="auth")
     
-    # 左右排版布局
-    col_text, col_form = st.columns([1.2, 1], gap="large")
+    # 注意：这里的 columns 是在 block-container (白卡) 内部创建的
+    col_left, col_right = st.columns([1.2, 1], gap="large")
     
-    # 左侧：极光文案
-    with col_text:
-        st.markdown("<br><br>", unsafe_allow_html=True)
+    # --- 左侧：营销文案 (镶嵌在卡片左侧) ---
+    with col_left:
+        st.markdown('<div class="auth-left-decor">', unsafe_allow_html=True)
         st.markdown("""
-        <div>
-            <div class="hero-title">打造爆款<br>从未如此简单</div>
-            <div class="hero-sub">
-                抖音爆款工场 Pro 是一站式 AI 创作工作台。<br>
-                集成了文案改写、海报设计、选题挖掘等核心功能，<br>
-                帮助企业和创作者高效产出优质内容。
-            </div>
-            <div>
-                <span class="hero-tag">🚀 极速生成</span>
-                <span class="hero-tag">💡 爆款逻辑</span>
-                <span class="hero-tag">🔒 数据安全</span>
-            </div>
+        <div class="hero-title">打造爆款<br><span style="color:#2563eb">从未如此简单</span></div>
+        <div class="hero-sub">
+            抖音爆款工场 Pro 是一站式 AI 创作工作台。<br>
+            集成了文案改写、海报设计、选题挖掘等核心功能，<br>
+            帮助企业和创作者高效产出优质内容。
+        </div>
+        <div class="hero-tags">
+            <span class="tag-pill">🚀 极速生成</span>
+            <span class="tag-pill">💡 爆款逻辑</span>
+            <span class="tag-pill">🔒 数据安全</span>
         </div>
         """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    # 右侧：登录表单 (白色玻璃卡片)
-    with col_form:
-        st.markdown('<div class="login-card-container">', unsafe_allow_html=True)
-        
+    # --- 右侧：登录表单 (镶嵌在卡片右侧) ---
+    with col_right:
+        st.markdown("<div style='padding-top:10px'></div>", unsafe_allow_html=True)
         tab_login, tab_register = st.tabs(["账号登录", "注册新号"])
         
         with tab_login:
@@ -57,7 +56,7 @@ def login_page():
             with st.form("login_form"):
                 username = st.text_input("账号", placeholder="手机号 / 邮箱")
                 password = st.text_input("密码", type="password", placeholder="请输入密码")
-                st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
+                st.markdown("<div style='height:25px'></div>", unsafe_allow_html=True)
                 submit_login = st.form_submit_button("立即登录", use_container_width=True)
                 
                 if submit_login:
@@ -80,7 +79,7 @@ def login_page():
                 new_pass = st.text_input("设置密码", type="password", placeholder="密码 (≥6位)")
                 confirm_pass = st.text_input("确认密码", type="password", placeholder="再次确认")
                 invite_input = st.text_input("邀请码", placeholder="邀请码 (默认888888)")
-                st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
+                st.markdown("<div style='height:25px'></div>", unsafe_allow_html=True)
                 submit_reg = st.form_submit_button("创建账号", use_container_width=True)
                 
                 if submit_reg:
@@ -93,8 +92,6 @@ def login_page():
                         if success: st.balloons(); st.success("✅ 注册成功！请切换登录");
                         else: st.error(f"⛔ {msg}")
 
-        st.markdown('</div>', unsafe_allow_html=True) # End login-card
-
 # ==========================================
 # 主程序
 # ==========================================
@@ -102,7 +99,7 @@ def main():
     if 'user_phone' not in st.session_state:
         login_page()
     else:
-        # 注入 App 样式 (浅色 + 悬浮控制台)
+        # 注入 App CSS (流光 Header + 纯白控制台)
         inject_css(mode="app")
         
         current_user = st.session_state['user_phone']

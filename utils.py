@@ -21,7 +21,11 @@ def inject_css(page_id="auth"):
     base_css = """
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        html, body, [class*="css"] { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+        
+        /* 全局字体 */
+        html, body, [class*="css"] { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+        }
         
         /* 隐藏 Streamlit 顶栏 */
         header[data-testid="stHeader"] { display: none !important; height: 0 !important; visibility: hidden !important; }
@@ -67,7 +71,7 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ============================================================
-    # 🏠 [LOCKED] 首页 - 保持无白框完美状态
+    # 🏠 [LOCKED] 首页 - 保持无白框完美状态 (V6/V8 Hybrid)
     # ============================================================
     elif page_id == "home":
         st.markdown("""
@@ -126,6 +130,34 @@ def inject_css(page_id="auth"):
             .creation-console { background: white; border-radius: 24px; padding: 10px 40px 40px 40px; margin-top: 0px; }
             div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 10; }
             div.stButton button:hover { background: transparent; }
+
+            /* 变现项目 V6 (无JS交互，纯CSS，最稳定) */
+            .proj-card-v6 {
+                background: white;
+                border-radius: 16px;
+                border: 1px solid #e2e8f0;
+                padding: 24px;
+                height: 100%;
+                display: flex; flex-direction: column;
+                position: relative; overflow: hidden;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .proj-card-v6::before {
+                content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+                background: linear-gradient(90deg, #3b82f6, #06b6d4); opacity: 0.8;
+            }
+            .proj-card-v6:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(0,0,0,0.08); border-color: #3b82f6; }
+            .proj-head-v6 { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+            .proj-icon-v6 { font-size: 24px; }
+            .proj-title-v6 { font-size: 16px; font-weight: 700; color: #0f172a; }
+            .proj-desc-v6 { font-size: 13px; color: #64748b; line-height: 1.6; flex-grow: 1; margin-bottom: 20px; }
+            .proj-footer-v6 {
+                background-color: #f8fafc; border-top: 1px dashed #cbd5e1;
+                margin: 0 -24px -24px -24px; padding: 12px 24px;
+                display: flex; justify-content: space-between; align-items: center;
+            }
+            .proj-tag-v6 { background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+            .proj-wx-v6 { font-family: monospace; font-size: 12px; color: #64748b; font-weight: 600; }
         </style>
         """, unsafe_allow_html=True)
 
@@ -135,21 +167,21 @@ def inject_css(page_id="auth"):
     elif page_id == "rewrite":
         st.markdown("""
         <style>
-            /* 1. 基础环境：延续首页的清爽灰底 + 无白框配置 */
+            /* 1. 基础环境：延续首页的配置，确保无白框 */
             .stApp, div[data-testid="stAppViewContainer"] { 
                 background-color: #f8fafc !important; 
             }
             div[data-testid="block-container"] { 
                 background-color: transparent !important; 
-                max-width: 1300px !important; 
+                max-width: 1200px !important; 
                 padding-top: 0px !important; 
                 padding-left: 40px !important; 
                 padding-right: 40px !important; 
                 margin-top: 20px !important; 
             }
 
-            /* 2. 顶部头图 (完全复刻首页样式) */
-            .rewrite-header {
+            /* 2. 顶部头图 (复刻首页样式) */
+            .rewrite-header-card {
                 background: linear-gradient(120deg, #2563eb, #1d4ed8);
                 border-radius: 20px; 
                 padding: 50px 40px; 
@@ -158,7 +190,7 @@ def inject_css(page_id="auth"):
                 margin-bottom: 30px; 
                 position: relative; overflow: hidden;
             }
-            .rewrite-header::before {
+            .rewrite-header-card::before {
                 content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
                 background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
                 animation: rotateLight 20s linear infinite;
@@ -175,6 +207,7 @@ def inject_css(page_id="auth"):
                 border: 1px solid #e2e8f0;
                 padding: 30px;
                 margin-bottom: 30px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             }
             
             /* 4. 输入框/输出框美化 */
@@ -205,7 +238,7 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 其他页面
+    # 🔒 [LOCKED] 其他页面 (General/Admin) - 保持原样
     # ----------------------------------------------------------------
     elif page_id == "general":
         st.markdown("""<style>.stApp { background-color: #f8fafc; } div.block-container { max-width: 1200px !important; padding: 2rem 40px 50px 40px !important; } .page-banner { background: linear-gradient(120deg, #2563eb, #1d4ed8); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4); } .banner-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; } .banner-desc { font-size: 15px; opacity: 0.9; line-height: 1.5; } div[data-testid="stVerticalBlock"] > div { background: transparent; } .stButton > button { border-radius: 8px; font-weight: 600; border: none; } </style>""", unsafe_allow_html=True)
@@ -238,116 +271,19 @@ def render_conversion_tip(): st.markdown("""<div class="conversion-tip"><span>�
 def render_feature_card_home(icon, title, desc): return ""
 
 # 🔴 [FIXED] 恢复 render_project_card 函数名，确保首页正常调用
+# 采用纯 HTML 渲染 (V6/V7 Hybrid)，无乱码，无复杂JS交互
 def render_project_card(icon, title, desc, wx_id):
-    safe_text = wx_id.replace("'", "\\'")
-    
     html = f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-    <meta charset="UTF-8">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        
-        body {{
-            margin: 0; padding: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
-            overflow: hidden;
-            box-sizing: border-box;
-        }}
-        
-        .card-container {{
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 190px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }}
-        
-        .card-container:hover {{
-            border-color: #bfdbfe;
-            box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.1);
-            transform: translateY(-4px);
-        }}
-        
-        .card-content {{
-            padding: 18px 18px 10px 18px;
-        }}
-        
-        .header {{
-            display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
-        }}
-        
-        .icon {{ font-size: 22px; }}
-        .title {{ font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; }}
-        .desc {{ font-size: 12px; color: #64748b; line-height: 1.4; margin: 0; }}
-        
-        /* 底部长条按钮 */
-        .action-btn {{
-            background-color: #ecfdf5;
-            color: #059669;
-            width: 100%;
-            padding: 10px 0;
-            text-align: center;
-            font-size: 12px;
-            font-weight: 600;
-            border-top: 1px solid #e2e8f0;
-            transition: all 0.2s;
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-        }}
-        
-        .card-container:hover .action-btn {{
-            background-color: #10b981;
-            color: white;
-            border-color: #10b981;
-        }}
-        
-        .action-btn:active {{ background-color: #059669; }}
-    </style>
-    </head>
-    <body>
-        <div class="card-container" onclick="copyAction()">
-            <div class="card-content">
-                <div class="header">
-                    <span class="icon">{icon}</span>
-                    <span class="title">{title}</span>
-                </div>
-                <div class="desc">{desc}</div>
-            </div>
-            
-            <div class="action-btn" id="btn-text">
-                <span>📋</span> 复制微信领取资料 ({wx_id})
-            </div>
+    <div class="proj-card-v6">
+        <div class="proj-head-v6">
+            <span class="proj-icon-v6">{icon}</span>
+            <span class="proj-title-v6">{title}</span>
         </div>
-
-        <script>
-            function copyAction() {{
-                const text = "{safe_text}";
-                navigator.clipboard.writeText(text).then(() => {{
-                    const btn = document.getElementById('btn-text');
-                    const originalHTML = btn.innerHTML;
-                    
-                    btn.innerHTML = '✅ 已复制！请去微信添加';
-                    btn.style.backgroundColor = '#10b981';
-                    btn.style.color = 'white';
-                    
-                    setTimeout(() => {{
-                        btn.innerHTML = originalHTML;
-                        btn.style.backgroundColor = ''; 
-                        btn.style.color = '';
-                    }}, 2000);
-                }}).catch(err => {{
-                    alert('复制失败: ' + text);
-                }});
-            }}
-        </script>
-    </body>
-    </html>
+        <div class="proj-desc-v6">{desc}</div>
+        <div class="proj-footer-v6">
+            <span class="proj-tag-v6">🔥 热门项目</span>
+            <span class="proj-wx-v6">🎁 资料: {wx_id}</span>
+        </div>
+    </div>
     """
-    components.html(html, height=200)
+    st.markdown(html, unsafe_allow_html=True)

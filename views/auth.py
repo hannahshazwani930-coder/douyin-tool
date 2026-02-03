@@ -3,36 +3,33 @@ import streamlit as st
 from database import login_user, register_user
 
 def view_auth():
-    # --- 1. 终极深度 CSS 屏蔽：物理级杀掉所有动态提示语 ---
+    # --- 1. 工业级强力 CSS 补丁 ---
     st.markdown("""
         <style>
-            /* [绝对屏蔽] 锁定表单内部所有可能的动态提示容器 */
-            /* 重点：[data-testid="stFormInstructions"] 是 Streamlit 官方定义的提示语容器 */
-            [data-testid="stFormInstructions"], 
-            .stForm [data-testid="stMarkdownContainer"] p:not(:empty) {
+            /* 【核心屏蔽】直接锁定 Streamlit 专门存放提示语的容器类名 */
+            [data-testid="stFormInstructions"] {
                 display: none !important;
-                visibility: hidden !important;
-                height: 0 !important;
-                margin: 0 !important;
-                padding: 0 !important;
+            }
+            
+            /* 【针对性隐藏】防止点击文本框时动态生成的提示语（通过通用兄弟选择器过滤） */
+            .stTextInput div[data-testid="stMarkdownContainer"] p {
+                display: none !important;
             }
 
-            /* [强制显现] 按钮内的文字必须独立出来，不受上面屏蔽规则影响 */
-            /* 我们通过特定的按钮类名来强制找回文字 */
+            /* 【强制找回】确保按钮上的文字以最高优先级显示 */
+            /* 重点：不再使用 display:none 隐藏所有 p，而是精准定位按钮内部的文字容器 */
             div.stButton > button[kind="primaryFormSubmit"] div[data-testid="stMarkdownContainer"] p {
                 display: block !important;
                 visibility: visible !important;
-                height: auto !important;
                 color: white !important;
                 font-size: 16px !important;
                 font-weight: bold !important;
+                opacity: 1 !important;
                 margin: 0 !important;
             }
 
-            /* [UI 净化] 隐藏页面顶部多余组件 */
+            /* 【视觉净化】 */
             header, [data-testid="stHeader"] { visibility: hidden; }
-            
-            /* [细节调优] 让 Tab 标签点击时更显专业 */
             button[data-baseweb="tab"] { color: #94A3B8 !important; }
             button[aria-selected="true"] { color: #1E3A8A !important; border-bottom: 2px solid #1E3A8A !important; }
         </style>
@@ -40,7 +37,7 @@ def view_auth():
 
     st.write("\n" * 2)
 
-    # --- 2. 居中卡片布局 ---
+    # --- 2. 居中卡片布局 (保持之前的精致比例) ---
     _, card_container, _ = st.columns([1.1, 3.2, 1.1])
 
     with card_container:
@@ -48,7 +45,7 @@ def view_auth():
             col_left, col_right = st.columns([1.8, 2.2], gap="large")
 
             with col_left:
-                # --- 左边：紧凑精致的文案排版 ---
+                # --- 左边：紧凑精致文案 ---
                 st.write("\n")
                 st.markdown("<h2 style='color:#1E3A8A; margin-bottom:5px; font-size: 28px;'>💠 爆款工场</h2>", unsafe_allow_html=True)
                 st.markdown("<p style='color:#94A3B8; font-size: 14px; margin-bottom: 25px;'>抖音创作者的 AI 军师</p>", unsafe_allow_html=True)
@@ -78,12 +75,12 @@ def view_auth():
                 tab_login, tab_reg = st.tabs(["安全登录", "开启创作"])
                 
                 with tab_login:
-                    with st.form("login_final_fixed_v4", border=False):
+                    with st.form("form_login_final", border=False):
                         st.write("\n")
                         acc = st.text_input("账号", placeholder="手机号 / 邮箱", label_visibility="collapsed")
                         pwd = st.text_input("密码", type="password", placeholder="请输入密码", label_visibility="collapsed")
                         
-                        # 指定按钮文字：立即登录
+                        # 按钮文字：立即登录
                         if st.form_submit_button("立 即 登 录", use_container_width=True):
                             if acc and pwd:
                                 success, msg = login_user(acc, pwd)
@@ -91,17 +88,17 @@ def view_auth():
                                     st.session_state['user_phone'] = acc
                                     st.rerun()
                                 else: st.error(msg)
-                            else: st.warning("请完善登录信息")
+                            else: st.warning("请填写账号和密码")
 
                 with tab_reg:
-                    with st.form("reg_final_fixed_v4", border=False):
+                    with st.form("form_reg_final", border=False):
                         st.write("\n")
                         r_acc = st.text_input("账号", placeholder="手机号/邮箱", label_visibility="collapsed")
                         r_pwd = st.text_input("密码", type="password", placeholder="设置登录密码", label_visibility="collapsed")
-                        r_pwd_2 = st.text_input("确认密码", type="password", placeholder="再次确认密码", label_visibility="collapsed")
+                        r_pwd_2 = st.text_input("确认密码", type="password", placeholder="再次输入密码", label_visibility="collapsed")
                         r_inv = st.text_input("邀请码", value="888888", label_visibility="collapsed")
                         
-                        # 指定按钮文字：免 费 注 册
+                        # 按钮文字：免 费 注 册
                         if st.form_submit_button("免 费 注 册", use_container_width=True):
                             if r_pwd != r_pwd_2:
                                 st.error("两次密码输入不一致")
@@ -112,6 +109,6 @@ def view_auth():
                                 if success: st.success("注册成功！请登录")
                                 else: st.error(msg)
 
-    # --- 3. 底部剧中声明 ---
+    # --- 3. 底部声明 ---
     st.write("\n" * 4)
     st.markdown("<p style='text-align: center; color: #94A3B8; font-size: 11px;'>© 2026 DOUYIN MASTER PRO. ALL RIGHTS RESERVED.</p>", unsafe_allow_html=True)

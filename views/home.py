@@ -1,19 +1,22 @@
 # views/home.py
 import streamlit as st
-from utils import render_cta_wechat
+from utils import render_safe_copy_btn
 from database import get_active_announcements
 
 def view_home():
-    # 1. 悬浮岛头图 V3
+    # 1. 悬浮岛头图
     st.markdown("""
-    <div class="header-card-v3">
-        <div class="header-title-v3">抖音爆款工场 Pro</div>
-        <div class="header-sub-v3">全流程 AI 创作工作台 · 赋能内容生产 · 连接商业变现</div>
+    <div class="home-header-card">
+        <div class="header-title">抖音爆款工场 Pro</div>
+        <div class="header-sub">全流程 AI 创作工作台 · 赋能内容生产 · 连接商业变现</div>
     </div>
     """, unsafe_allow_html=True)
     
-    # === A. 核心功能区 V3 ===
-    st.markdown('<div class="section-title-v3">🚀 核心创作引擎</div>', unsafe_allow_html=True)
+    # 2. 中控台 (去白框 + 悬浮岛设计)
+    st.markdown('<div class="creation-console">', unsafe_allow_html=True)
+    
+    # === A. 核心功能区 ===
+    st.markdown('<div class="section-label">🚀 核心创作引擎</div>', unsafe_allow_html=True)
     
     c1, c2, c3, c4 = st.columns(4, gap="medium")
     
@@ -26,35 +29,34 @@ def view_home():
     
     for i, (icon, title, desc, target) in enumerate(features):
         with [c1, c2, c3, c4][i]:
-            # 使用新类名
             st.markdown(f"""
-            <div class="feature-box-v3">
-                <div class="feat-icon-v3">{icon}</div>
-                <div class="feat-title-v3">{title}</div>
-                <div class="feat-desc-v3">{desc}</div>
+            <div class="feature-card-pro">
+                <div class="feat-icon">{icon}</div>
+                <div class="feat-title">{title}</div>
+                <div class="feat-desc">{desc}</div>
             </div>
             """, unsafe_allow_html=True)
             
-            # 隐形点击
+            # 隐形点击层
             if st.button(f"nav_home_{i}", key=f"feat_btn_{i}", use_container_width=True):
                 st.session_state['nav_menu_selection'] = target
                 st.rerun()
 
-    # === B. 系统公告 V3 ===
+    # === B. 系统公告 ===
     st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
     anns = get_active_announcements()
     latest_ann = anns[0][0] if anns else "暂无最新系统公告，请留意后续更新。"
     
     st.markdown(f"""
-    <div class="news-box-v3">
-        <div class="news-tag-v3">🔔 NEW</div>
-        <div class="news-text-v3">{latest_ann}</div>
+    <div class="news-container">
+        <div class="news-badge">🔔 NEW</div>
+        <div class="news-content">{latest_ann}</div>
     </div>
     """, unsafe_allow_html=True)
 
-    # === C. 热门变现任务 V3 (长按钮版) ===
+    # === C. 热门变现任务 (分离式渲染，杜绝乱码) ===
     st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
-    st.markdown('<div class="section-title-v3">🔥 热门变现项目</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-label">🔥 热门变现项目</div>', unsafe_allow_html=True)
     
     p1, p2, p3 = st.columns(3, gap="medium")
     
@@ -66,18 +68,20 @@ def view_home():
     
     for i, (icon, title, desc) in enumerate(projects):
         with [p1, p2, p3][i]:
+            # 1. 渲染卡片上半部分 (文本)
             st.markdown(f"""
-            <div class="project-card-v3">
-                <div class="proj-head-v3">
-                    <span class="proj-icon-v3">{icon}</span>
-                    <span class="proj-title-v3">{title}</span>
+            <div class="monetize-card-box">
+                <div class="mon-head">
+                    <span class="mon-icon">{icon}</span>
+                    <span class="mon-title">{title}</span>
                 </div>
-                <div class="proj-desc-v3">{desc}</div>
-                
-                <div class="copy-btn-v3" onclick="navigator.clipboard.writeText('W7774X'); alert('✅ 微信 W7774X 已复制！\\n请添加微信并备注【资料】领取内部白皮书。')">
-                    📋 复制微信领取资料 (W7774X)
-                </div>
+                <div class="mon-desc">{desc}</div>
             </div>
             """, unsafe_allow_html=True)
+            
+            # 2. 渲染卡片下半部分 (安全按钮组件)
+            # 使用 iframe 渲染，绝对不会出现乱码
+            render_safe_copy_btn("W7774X")
 
     st.markdown("<div style='height:40px'></div>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True) # End Console

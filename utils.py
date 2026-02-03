@@ -39,7 +39,7 @@ def inject_css(page_id="auth"):
     st.markdown(base_css, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 登录页 (Auth) - 绝对不动
+    # 🔒 [LOCKED] 登录页
     # ----------------------------------------------------------------
     if page_id == "auth":
         st.markdown("""
@@ -66,7 +66,7 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ============================================================
-    # 🏠 [NEW] 首页独立设计 - 悬浮岛式 (Floating Island)
+    # 🏠 [LOCKED] 首页悬浮岛设计 - 严格保留您满意的版本
     # ============================================================
     elif page_id == "home":
         st.markdown("""
@@ -120,7 +120,7 @@ def inject_css(page_id="auth"):
                 box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08);
                 border-color: #bfdbfe;
             }
-            .feat-icon { font-size: 32px; margin-bottom: 12px; } /* 🔴 移除 font-family 强制，恢复默认 */
+            .feat-icon { font-size: 32px; margin-bottom: 12px; } 
             .feat-title { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
             .feat-desc { font-size: 12px; color: #64748b; line-height: 1.4; }
 
@@ -136,29 +136,6 @@ def inject_css(page_id="auth"):
                 padding: 3px 8px; border-radius: 4px; border: 1px solid #ffedd5; flex-shrink: 0;
             }
             .news-content { font-size: 14px; color: #334155; font-weight: 500; }
-
-            /* 6. 变现任务卡片 (Monetize Card) */
-            .monetize-card {
-                background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px;
-                padding: 20px; height: 100%; position: relative;
-                transition: all 0.3s;
-            }
-            .monetize-card:hover { border-color: #cbd5e1; box-shadow: 0 15px 35px -5px rgba(0,0,0,0.06); transform: translateY(-3px); }
-            .mon-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-            .mon-icon { font-size: 24px; } /* 🔴 移除 font-family 强制 */
-            .mon-title { font-size: 15px; font-weight: 700; color: #0f172a; }
-            .mon-desc { font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 30px; min-height: 40px; }
-            
-            /* 微信领取徽章 */
-            .wechat-badge {
-                position: absolute; bottom: 15px; right: 15px;
-                background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;
-                padding: 4px 10px; border-radius: 8px;
-                font-size: 11px; font-weight: 600; 
-                cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px;
-                z-index: 50;
-            }
-            .wechat-badge:hover { background: #166534; color: white; border-color: #166534; }
             
             /* 隐形按钮 */
             div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 5; }
@@ -167,77 +144,14 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 文案改写页 (Rewrite) - 绝对不动
+    # 🔒 [LOCKED] 其他页面保持原样
     # ----------------------------------------------------------------
     elif page_id == "rewrite":
-        st.markdown("""
-        <style>
-            .stApp { background-color: #f8fafc; }
-            div.block-container { max-width: 1400px !important; padding: 0 40px 50px 40px !important; margin-top: 0 !important; }
-            .flowing-header {
-                background: linear-gradient(-45deg, #1e3a8a, #2563eb, #3b82f6, #0ea5e9); background-size: 400% 400%; animation: gradientBG 10s ease infinite;
-                border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
-                padding: 60px 40px 180px 40px; color: white; text-align: center;
-                margin: -60px -40px -100px -40px; box-shadow: 0 20px 50px rgba(37, 99, 235, 0.3); position: relative; z-index: 0;
-            }
-            @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
-            .header-title { font-size: 42px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-            .header-sub { font-size: 15px; opacity: 0.95; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 30px; backdrop-filter: blur(10px); display: inline-block; border: 1px solid rgba(255,255,255,0.2); }
-            div.stButton button[kind="primary"], div.stButton button[kind="secondary"] { position: relative; z-index: 20; }
-            .creation-console {
-                background: white; border-radius: 24px; padding: 10px 40px 40px 40px;
-                box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; 
-                position: relative; z-index: 10; margin-top: -50px; 
-            }
-            .stTextArea > div { border: none !important; box-shadow: none !important; background: transparent !important; }
-            .stTextArea > label { display: none !important; }
-            .stTextArea textarea { background-color: #ffffff !important; border: 2px solid #e2e8f0 !important; border-radius: 12px; padding: 15px; font-size: 15px; line-height: 1.6; color: #334155; }
-            .stTextArea textarea:focus { border-color: #3b82f6 !important; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important; }
-            .custom-label { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: block; }
-            div[data-baseweb="select"] > div { height: 48px !important; border-radius: 10px !important; background-color: #f8fafc; }
-            div.stButton button[kind="primary"] { width: 100%; height: 48px !important; border: none !important; background: linear-gradient(90deg, #2563eb, #3b82f6) !important; color: white !important; border-radius: 10px !important; font-size: 16px !important; box-shadow: 0 8px 20px -5px rgba(37, 99, 235, 0.4) !important; }
-            div.stButton button[kind="primary"]:hover { transform: translateY(-2px); }
-            div.stButton button[kind="secondary"] { height: 48px !important; border: 1px solid #e2e8f0 !important; background: white !important; color: #64748b !important; font-weight: 600 !important; }
-            .info-box { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 0 20px; border-radius: 10px; font-size: 15px; display: flex; align-items: center; gap: 10px; height: 48px; }
-            .conversion-tip { margin-top: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 10px 15px; border-radius: 10px; font-size: 13px; display: flex; align-items: center; gap: 10px; }
-        </style>
-        """, unsafe_allow_html=True)
-
-    # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 其他页面 (General) - 绝对不动
-    # ----------------------------------------------------------------
+        st.markdown("""<style>.stApp { background-color: #f8fafc; } div.block-container { max-width: 1400px !important; padding: 0 40px 50px 40px !important; margin-top: 0 !important; } .flowing-header { background: linear-gradient(-45deg, #1e3a8a, #2563eb, #3b82f6, #0ea5e9); background-size: 400% 400%; animation: gradientBG 10s ease infinite; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; padding: 60px 40px 180px 40px; color: white; text-align: center; margin: -60px -40px -100px -40px; box-shadow: 0 20px 50px rgba(37, 99, 235, 0.3); position: relative; z-index: 0; } @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} } .header-title { font-size: 42px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); } .header-sub { font-size: 15px; opacity: 0.95; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 30px; backdrop-filter: blur(10px); display: inline-block; border: 1px solid rgba(255,255,255,0.2); } div.stButton button[kind="primary"], div.stButton button[kind="secondary"] { position: relative; z-index: 20; } .creation-console { background: white; border-radius: 24px; padding: 10px 40px 40px 40px; box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; position: relative; z-index: 10; margin-top: -50px; } .stTextArea > div { border: none !important; box-shadow: none !important; background: transparent !important; } .stTextArea > label { display: none !important; } .stTextArea textarea { background-color: #ffffff !important; border: 2px solid #e2e8f0 !important; border-radius: 12px; padding: 15px; font-size: 15px; line-height: 1.6; color: #334155; } .stTextArea textarea:focus { border-color: #3b82f6 !important; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important; } .custom-label { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: block; } div[data-baseweb="select"] > div { height: 48px !important; border-radius: 10px !important; background-color: #f8fafc; } div.stButton button[kind="primary"] { width: 100%; height: 48px !important; border: none !important; background: linear-gradient(90deg, #2563eb, #3b82f6) !important; color: white !important; border-radius: 10px !important; font-size: 16px !important; box-shadow: 0 8px 20px -5px rgba(37, 99, 235, 0.4) !important; } div.stButton button[kind="primary"]:hover { transform: translateY(-2px); } div.stButton button[kind="secondary"] { height: 48px !important; border: 1px solid #e2e8f0 !important; background: white !important; color: #64748b !important; font-weight: 600 !important; } .info-box { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 0 20px; border-radius: 10px; font-size: 15px; display: flex; align-items: center; gap: 10px; height: 48px; } .conversion-tip { margin-top: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 10px 15px; border-radius: 10px; font-size: 13px; display: flex; align-items: center; gap: 10px; } </style>""", unsafe_allow_html=True)
     elif page_id == "general":
-        st.markdown("""
-        <style>
-            .stApp { background-color: #f8fafc; }
-            div.block-container { max-width: 1200px !important; padding: 2rem 40px 50px 40px !important; }
-            .page-banner { background: linear-gradient(120deg, #2563eb, #1d4ed8); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4); }
-            .banner-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
-            .banner-desc { font-size: 15px; opacity: 0.9; line-height: 1.5; }
-            div[data-testid="stVerticalBlock"] > div { background: transparent; }
-            .stButton > button { border-radius: 8px; font-weight: 600; border: none; }
-        </style>
-        """, unsafe_allow_html=True)
-
-    # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 管理后台 (Admin) - 绝对不动
-    # ----------------------------------------------------------------
+        st.markdown("""<style>.stApp { background-color: #f8fafc; } div.block-container { max-width: 1200px !important; padding: 2rem 40px 50px 40px !important; } .page-banner { background: linear-gradient(120deg, #2563eb, #1d4ed8); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4); } .banner-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; } .banner-desc { font-size: 15px; opacity: 0.9; line-height: 1.5; } div[data-testid="stVerticalBlock"] > div { background: transparent; } .stButton > button { border-radius: 8px; font-weight: 600; border: none; } </style>""", unsafe_allow_html=True)
     elif page_id == "admin":
-        st.markdown("""
-        <style>
-            .stApp { background-color: #f1f5f9; }
-            [data-testid="stSidebar"] { background-color: #1e293b; border-right: 1px solid #334155; padding-top: 1rem; }
-            [data-testid="stSidebar"] * { color: #e2e8f0 !important; }
-            div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; }
-            div[role="radiogroup"] label:hover { background-color: #334155 !important; }
-            div[role="radiogroup"] label[aria-checked="true"] { background-color: #3b82f6 !important; color: white !important; border: 1px solid #60a5fa; font-weight: 600 !important; }
-            div[role="radiogroup"] > label > div:first-child { display: none !important; }
-            div.block-container { max-width: 1600px !important; padding: 2rem 40px 50px 40px !important; }
-            .page-banner { background: linear-gradient(120deg, #1e293b, #0f172a); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.4); }
-            .banner-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
-            .banner-desc { font-size: 15px; opacity: 0.9; line-height: 1.5; }
-        </style>
-        """, unsafe_allow_html=True)
+        st.markdown("""<style>.stApp { background-color: #f1f5f9; } [data-testid="stSidebar"] { background-color: #1e293b; border-right: 1px solid #334155; padding-top: 1rem; } [data-testid="stSidebar"] * { color: #e2e8f0 !important; } div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; } div[role="radiogroup"] label:hover { background-color: #334155 !important; } div[role="radiogroup"] label[aria-checked="true"] { background-color: #3b82f6 !important; color: white !important; border: 1px solid #60a5fa; font-weight: 600 !important; } div[role="radiogroup"] > label > div:first-child { display: none !important; } div.block-container { max-width: 1600px !important; padding: 2rem 40px 50px 40px !important; } .page-banner { background: linear-gradient(120deg, #1e293b, #0f172a); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.4); } .banner-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; } .banner-desc { font-size: 15px; opacity: 0.9; line-height: 1.5; } </style>""", unsafe_allow_html=True)
 
 # --- 组件函数 ---
 def render_sidebar_user_card(username, vip_info):
@@ -259,15 +173,122 @@ def render_cta_wechat(wx_id):
     html = f"""<div style="padding:10px;"><div style="background:linear-gradient(90deg,#059669,#10b981);color:white;border-radius:12px;padding:15px 25px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 5px 15px rgba(16,185,129,0.4);font-family:'Inter',sans-serif;" onclick="navigator.clipboard.writeText('{wx_id}');alert('微信号 {wx_id} 已复制！')"><div style="display:flex;align-items:center;"><div style="font-size:24px;margin-right:15px;">🎁</div><div><span style="font-size:16px;font-weight:700;display:block;">领取内部资料 & 项目白皮书</span><span style="font-size:13px;opacity:0.9;">添加微信，备注【资料】</span></div></div><div style="background:rgba(255,255,255,0.2);padding:5px 12px;border-radius:20px;font-size:13px;font-weight:600;font-family:monospace;">📋 {wx_id}</div></div></div>"""
     components.html(html, height=100)
 
-def render_home_project_card(icon, title, desc, tag):
-    return f"""<div style="background:white;border-radius:12px;padding:20px;border:1px solid #e2e8f0;height:100%;display:flex;flex-direction:column;"><div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:8px;"><span style="margin-right:8px;">{icon}</span>{title}</div><div style="font-size:12px;color:#64748b;line-height:1.5;flex-grow:1;">{desc}</div><div style="font-size:11px;padding:3px 8px;border-radius:10px;background:#f8fafc;color:#475569;margin-top:15px;width:fit-content;border:1px solid #e2e8f0;">{tag}</div></div>"""
+def render_home_project_card(icon, title, desc, tag): return ""
+def render_page_banner(title, desc): st.markdown(f"""<div class="page-banner"><div class="banner-title">{title}</div><div class="banner-desc">{desc}</div></div>""", unsafe_allow_html=True)
+def render_conversion_tip(): st.markdown("""<div class="conversion-tip"><span>💰</span><span><b>商业化建议：</b> 已自动植入私域钩子，预计提升 30% 导流效率。</span></div>""", unsafe_allow_html=True)
+def render_feature_card_home(icon, title, desc): return ""
 
-def render_page_banner(title, desc):
-    st.markdown(f"""<div class="page-banner"><div class="banner-title">{title}</div><div class="banner-desc">{desc}</div></div>""", unsafe_allow_html=True)
+# 🔴 全新的卡片组件：使用 iframe 渲染，彻底避免乱码
+def render_project_card(icon, title, desc, wx_id):
+    safe_text = wx_id.replace("'", "\\'")
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        
+        body {{
+            margin: 0; padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+            overflow: hidden;
+            box-sizing: border-box;
+        }}
+        
+        .card-container {{
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 270px; 
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        .card-container:hover {{
+            border-color: #bfdbfe;
+            box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.1);
+            transform: translateY(-4px);
+        }}
+        
+        .card-content {{
+            padding: 25px 25px 15px 25px;
+        }}
+        
+        .header {{
+            display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+        }}
+        
+        .icon {{ font-size: 26px; }}
+        .title {{ font-size: 16px; font-weight: 700; color: #0f172a; margin: 0; }}
+        .desc {{ font-size: 13px; color: #64748b; line-height: 1.5; margin: 0; }}
+        
+        /* 底部长条按钮 */
+        .action-btn {{
+            background-color: #ecfdf5; /* 浅绿背景 */
+            color: #059669; /* 深绿文字 */
+            width: 100%;
+            padding: 14px 0;
+            text-align: center;
+            font-size: 13px; font-weight: 600;
+            border-top: 1px solid #e2e8f0;
+            transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }}
+        
+        /* 鼠标悬停时的按钮变色 */
+        .card-container:hover .action-btn {{
+            background-color: #10b981;
+            color: white;
+            border-color: #10b981;
+        }}
+        
+        .action-btn:active {{ background-color: #059669; }}
+    </style>
+    </head>
+    <body>
+        <div class="card-container" onclick="copyAction()">
+            <div class="card-content">
+                <div class="header">
+                    <span class="icon">{icon}</span>
+                    <span class="title">{title}</span>
+                </div>
+                <div class="desc">{desc}</div>
+            </div>
+            
+            <div class="action-btn" id="btn-text">
+                <span>📋</span> 复制微信领取资料 ({wx_id})
+            </div>
+        </div>
 
-def render_conversion_tip():
-    st.markdown("""<div class="conversion-tip"><span>💰</span><span><b>商业化建议：</b> 已自动植入私域钩子，预计提升 30% 导流效率。</span></div>""", unsafe_allow_html=True)
-
-def render_feature_card_home(icon, title, desc):
-    return f"""<div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:15px;text-align:center;height:100px;display:flex;flex-direction:column;justify-content:center;align-items:center;"><div style="font-size:24px;margin-bottom:5px;">{icon}</div><div style="font-weight:700;color:#0f172a;">{title}</div></div>"""
-
+        <script>
+            function copyAction() {{
+                const text = "{safe_text}";
+                navigator.clipboard.writeText(text).then(() => {{
+                    const btn = document.getElementById('btn-text');
+                    const originalHTML = btn.innerHTML;
+                    
+                    btn.innerHTML = '✅ 已复制！请去微信添加';
+                    btn.style.backgroundColor = '#10b981';
+                    btn.style.color = 'white';
+                    
+                    setTimeout(() => {{
+                        btn.innerHTML = originalHTML;
+                        btn.style.backgroundColor = ''; 
+                        btn.style.color = '';
+                    }}, 2000);
+                }}).catch(err => {{
+                    alert('复制失败: ' + text);
+                }});
+            }}
+        </script>
+    </body>
+    </html>
+    """
+    components.html(html, height=280)

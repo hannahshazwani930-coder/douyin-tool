@@ -3,42 +3,45 @@ import streamlit as st
 from database import login_user, register_user
 
 def view_auth():
-    # --- 1. 像素级样式打磨：针对文本框背景、文字颜色、提示语屏蔽 ---
+    # --- 1. 物理级 CSS 修复：排除法锁定 ---
     st.markdown("""
         <style>
-            /* 【核心屏蔽】彻底物理抹除 Press Enter 提示语 */
-            [data-testid="stFormInstructions"], 
-            .stForm [data-testid="stMarkdownContainer"] p:not(:empty) {
+            /* 【核心屏蔽】隐藏表单底部的 Press Enter 提示语容器 */
+            [data-testid="stFormInstructions"] {
                 display: none !important;
             }
 
-            /* 【文本框深度美化】颜色减淡、背景减淡 */
-            [data-testid="stTextInput"] input {
-                background-color: #FBFBFC !important; /* 极淡的底色 */
-                color: #334155 !important;           /* 输入文字颜色 */
-                border: 1px solid #F1F5F9 !important; /* 极细边框 */
-                font-size: 14px !important;           /* 减小字号 */
-                height: 45px !important;
+            /* 【精准排除】隐藏表单中除了按钮文字以外的所有 P 标签 */
+            /* 只要不是 stButton 里的 p，全部隐藏，彻底杀掉 Press Enter */
+            [data-testid="stForm"] p:not(div.stButton p) {
+                display: none !important;
+                height: 0 !important;
+                margin: 0 !important;
             }
 
-            /* 【Placeholder 减淡】针对输入框内的提示文字 */
-            [data-testid="stTextInput"] input::placeholder {
-                color: #CBD5E1 !important;           /* 极淡的提示文字颜色 */
-                font-size: 12px !important;           /* 提示文字缩小 */
-                opacity: 1 !important;
-            }
-
-            /* 【强制找回按钮文字】确保蓝色按钮上的文字 100% 显示 */
-            div.stButton > button[kind="primaryFormSubmit"] div[data-testid="stMarkdownContainer"] p {
+            /* 【按钮文字保障】强制显示按钮文字，并设定样式 */
+            div.stButton button p {
                 display: block !important;
                 visibility: visible !important;
                 color: white !important;
                 font-size: 16px !important;
                 font-weight: bold !important;
-                margin: 0 !important;
+                opacity: 1 !important;
             }
 
-            /* 【视觉净化】隐藏顶部冗余 */
+            /* 【文本框美化】背景减淡、提示减淡 */
+            [data-testid="stTextInput"] input {
+                background-color: #FBFBFC !important;
+                color: #334155 !important;
+                border: 1px solid #F1F5F9 !important;
+                font-size: 14px !important;
+            }
+            [data-testid="stTextInput"] input::placeholder {
+                color: #CBD5E1 !important;
+                font-size: 12px !important;
+            }
+
+            /* 【全局净化】 */
             header, [data-testid="stHeader"] { visibility: hidden; }
             button[data-baseweb="tab"] { color: #94A3B8 !important; }
             button[aria-selected="true"] { color: #1E3A8A !important; border-bottom: 2px solid #1E3A8A !important; }
@@ -55,7 +58,7 @@ def view_auth():
             col_left, col_right = st.columns([1.8, 2.2], gap="large")
 
             with col_left:
-                # --- 左边：精简、精致卖点 ---
+                # --- 左边：精致卖点 ---
                 st.write("\n")
                 st.markdown("<h2 style='color:#1E3A8A; margin-bottom:5px; font-size: 28px;'>💠 爆款工场</h2>", unsafe_allow_html=True)
                 st.markdown("<p style='color:#94A3B8; font-size: 14px; margin-bottom: 25px;'>抖音创作者的 AI 军师</p>", unsafe_allow_html=True)
@@ -85,11 +88,12 @@ def view_auth():
                 tab_login, tab_reg = st.tabs(["安全登录", "开启创作"])
                 
                 with tab_login:
-                    with st.form("login_form_final_v5", border=False):
+                    with st.form("login_v6", border=False):
                         st.write("\n")
                         acc = st.text_input("账号", placeholder="手机号 / 邮箱", label_visibility="collapsed")
                         pwd = st.text_input("密码", type="password", placeholder="请输入密码", label_visibility="collapsed")
                         
+                        # 重点：此处文字必现
                         if st.form_submit_button("立 即 登 录", use_container_width=True):
                             if acc and pwd:
                                 success, msg = login_user(acc, pwd)
@@ -97,21 +101,22 @@ def view_auth():
                                     st.session_state['user_phone'] = acc
                                     st.rerun()
                                 else: st.error(msg)
-                            else: st.warning("请完善登录信息")
+                            else: st.warning("请填写账号和密码")
 
                 with tab_reg:
-                    with st.form("reg_form_final_v5", border=False):
+                    with st.form("reg_v6", border=False):
                         st.write("\n")
                         r_acc = st.text_input("账号", placeholder="手机号/邮箱", label_visibility="collapsed")
-                        r_pwd = st.text_input("密码", type="password", placeholder="设置 6-16 位密码", label_visibility="collapsed")
-                        r_pwd_2 = st.text_input("确认密码", type="password", placeholder="再次确认密码", label_visibility="collapsed")
+                        r_pwd = st.text_input("密码", type="password", placeholder="设置密码", label_visibility="collapsed")
+                        r_pwd_2 = st.text_input("确认密码", type="password", placeholder="再次输入密码", label_visibility="collapsed")
                         r_inv = st.text_input("邀请码", value="888888", label_visibility="collapsed")
                         
+                        # 重点：此处文字必现
                         if st.form_submit_button("免 费 注 册", use_container_width=True):
                             if r_pwd != r_pwd_2:
                                 st.error("两次密码输入不一致")
                             elif not r_acc or not r_pwd:
-                                st.warning("请填写完整信息")
+                                st.warning("信息不完整")
                             else:
                                 success, msg = register_user(r_acc, r_pwd, r_inv)
                                 if success: st.success("注册成功！请登录")

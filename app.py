@@ -12,7 +12,7 @@ import pandas as pd
 import string
 
 # ==========================================
-# 0. 核心配置 & 数据库 (后端逻辑保持稳健)
+# 0. 核心配置 & 数据库
 # ==========================================
 st.set_page_config(
     page_title="抖音爆款工场 Pro", 
@@ -29,26 +29,40 @@ REWARD_DAYS_NEW_USER = 3
 REWARD_DAYS_REFERRER = 3  
 DB_FILE = 'saas_data_final.db'
 
-# --- 数据库初始化 ---
+# --- 数据库初始化 (修复 SyntaxError) ---
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
+    # 创建表
     c.execute('''CREATE TABLE IF NOT EXISTS users (phone TEXT PRIMARY KEY, password_hash TEXT, register_time TIMESTAMP, last_login_ip TEXT, last_login_time TIMESTAMP, own_invite_code TEXT UNIQUE, invited_by TEXT, invite_count INTEGER DEFAULT 0)''')
     c.execute('''CREATE TABLE IF NOT EXISTS access_codes (code TEXT PRIMARY KEY, duration_days INTEGER, activated_at TIMESTAMP, expire_at TIMESTAMP, status TEXT, create_time TIMESTAMP, bind_user TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS feedbacks (id INTEGER PRIMARY KEY AUTOINCREMENT, user_phone TEXT, content TEXT, reply TEXT, create_time TIMESTAMP, status TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)''')
     
-    # 兼容性更新字段
-    try: c.execute("ALTER TABLE users ADD COLUMN own_invite_code TEXT"); except: pass
-    try: c.execute("ALTER TABLE users ADD COLUMN invited_by TEXT"); except: pass
-    try: c.execute("ALTER TABLE users ADD COLUMN invite_count INTEGER DEFAULT 0"); except: pass
+    # 兼容性更新字段 (标准写法)
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN own_invite_code TEXT")
+    except:
+        pass
+        
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN invited_by TEXT")
+    except:
+        pass
+        
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN invite_count INTEGER DEFAULT 0")
+    except:
+        pass
     
     # 初始化管理员
     c.execute("SELECT phone FROM users WHERE phone=?", (ADMIN_ACCOUNT,))
     if not c.fetchone():
         admin_pwd_hash = hashlib.sha256(ADMIN_INIT_PASSWORD.encode()).hexdigest()
         c.execute("INSERT INTO users (phone, password_hash, register_time, own_invite_code) VALUES (?, ?, ?, ?)", (ADMIN_ACCOUNT, admin_pwd_hash, datetime.datetime.now(), "ADMIN888"))
-    conn.commit(); conn.close()
+    
+    conn.commit()
+    conn.close()
 
 init_db()
 
@@ -154,40 +168,54 @@ def inject_css(mode="app"):
     """
     
     st.markdown(base_css, unsafe_allow_html=True)
-    if mode == "auth": st.markdown(auth_css, unsafe_allow_html=True)
-    else: st.markdown(app_css, unsafe_allow_html=True)
+    if mode == "auth": 
+        st.markdown(auth_css, unsafe_allow_html=True)
+    else: 
+        st.markdown(app_css, unsafe_allow_html=True)
 
 # ==========================================
 # 2. 逻辑层 (Logic Layer)
 # ==========================================
 
 # 辅助函数
-def hash_password(password): return hashlib.sha256(password.encode()).hexdigest()
-def get_remote_ip(): return "unknown_ip"
-def generate_invite_code(): return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+def hash_password(password): 
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def get_remote_ip(): 
+    return "unknown_ip"
+
+def generate_invite_code(): 
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
 # 数据库操作
 def get_setting(key):
-    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
     c.execute("SELECT value FROM settings WHERE key=?", (key,))
-    row = c.fetchone(); conn.close()
+    row = c.fetchone()
+    conn.close()
     return row[0] if row else ""
 
 def update_setting(key, value):
-    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
     c.execute("REPLACE INTO settings (key, value) VALUES (?, ?)", (key, value))
-    conn.commit(); conn.close()
+    conn.commit()
+    conn.close()
 
 def login_user(account, password):
-    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
     c.execute("SELECT password_hash FROM users WHERE phone=?", (account,))
-    row = c.fetchone(); conn.close()
+    row = c.fetchone()
+    conn.close()
     if row and row[0] == hash_password(password):
         return True, "登录成功"
     return False, "账号或密码错误"
 
 def register_user(account, password, invite_code_used):
-    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
     try:
         new_own_code = generate_invite_code()
         while True:
@@ -217,31 +245,44 @@ def register_user(account, password, invite_code_used):
     except Exception as e: 
         return False, f"注册失败: {str(e)}"
     finally:
-        try: conn.close()
-        except: pass
+        try:
+            conn.close()
+        except:
+            pass
 
 def add_vip_days(account, days, source="system"):
-    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
     c.execute("SELECT expire_at FROM access_codes WHERE bind_user=? AND status='active'", (account,))
     rows = c.fetchall()
     now = datetime.datetime.now()
     if rows:
         max_expire = max([datetime.datetime.strptime(str(r[0]).split('.')[0], '%Y-%m-%d %H:%M:%S') for r in rows])
         start_time = max_expire if max_expire > now else now
-    else: start_time = now
+    else: 
+        start_time = now
+        
     expire_at = start_time + datetime.timedelta(days=days)
     new_code = f"GIFT-{source}-{str(uuid.uuid4())[:6].upper()}"
     c.execute("INSERT INTO access_codes (code, duration_days, activated_at, expire_at, status, create_time, bind_user) VALUES (?, ?, ?, ?, ?, ?, ?)",
               (new_code, days, now, expire_at, 'active', now, account))
-    conn.commit(); conn.close()
+    conn.commit()
+    conn.close()
 
 def get_user_vip_status(phone):
-    if phone == ADMIN_ACCOUNT: return True, "👑 超级管理员"
-    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+    if phone == ADMIN_ACCOUNT: 
+        return True, "👑 超级管理员"
+        
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
     now = datetime.datetime.now()
     c.execute("SELECT expire_at FROM access_codes WHERE bind_user=? AND status='active'", (phone,))
-    rows = c.fetchall(); conn.close()
-    if not rows: return False, "未开通会员"
+    rows = c.fetchall()
+    conn.close()
+    
+    if not rows: 
+        return False, "未开通会员"
+        
     max_expire = max([datetime.datetime.strptime(str(r[0]).split('.')[0], '%Y-%m-%d %H:%M:%S') for r in rows])
     if max_expire > now:
         days_left = (max_expire - now).days
@@ -249,11 +290,13 @@ def get_user_vip_status(phone):
     return False, "会员已过期"
 
 def get_user_invite_info(phone):
-    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
     try:
         c.execute("SELECT own_invite_code, invite_count FROM users WHERE phone=?", (phone,))
         row = c.fetchone()
-    except: row = None
+    except: 
+        row = None
     conn.close()
     if row: return row[0], row[1]
     return "...", 0
@@ -291,7 +334,8 @@ def render_wechat_pill(label, wx_id):
 def render_announcement():
     # 首页公告栏
     ann_text = get_setting("announcement")
-    if not ann_text: ann_text = "🎉 欢迎使用抖音爆款工场 Pro，系统已升级至 V2.0 稳定版！"
+    if not ann_text: 
+        ann_text = "🎉 欢迎使用抖音爆款工场 Pro，系统已升级至 V2.0 稳定版！"
     st.markdown(f"""
     <div class="announcement-box">
         <span class="ann-icon">📢</span>
@@ -418,8 +462,10 @@ def view_rewrite():
     api_key = st.secrets.get("DEEPSEEK_API_KEY", "")
     client = None
     if api_key:
-        try: client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
-        except: pass
+        try: 
+            client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+        except: 
+            pass
     
     if not client:
         st.warning("⚠️ 未配置 API Key，系统将运行在演示模式（不返回真实结果）")
@@ -543,18 +589,22 @@ def view_account():
         st.write("#### 激活卡密")
         c_code = st.text_input("输入卡密", placeholder="VIP-XXXXXX")
         if st.button("立即激活"):
-            conn = sqlite3.connect(DB_FILE); cur = conn.cursor()
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
             cur.execute("SELECT * FROM access_codes WHERE code=?", (c_code,))
             row = cur.fetchone()
             cur.close()
             
             if row and row[4] == 'unused':
                 add_vip_days(user, row[1], "CDKEY")
-                conn = sqlite3.connect(DB_FILE); cur = conn.cursor()
+                conn = sqlite3.connect(DB_FILE)
+                cur = conn.cursor()
                 cur.execute("UPDATE access_codes SET status='active', activated_at=?, bind_user=? WHERE code=?", (datetime.datetime.now(), user, c_code))
-                conn.commit(); conn.close()
+                conn.commit()
+                conn.close()
                 st.success(f"✅ 激活成功！增加 {row[1]} 天")
-                time.sleep(1); st.rerun()
+                time.sleep(1)
+                st.rerun()
             else:
                 st.error("❌ 卡密无效或已使用")
 
@@ -576,13 +626,15 @@ def view_admin():
         days = st.number_input("天数", value=30)
         count = st.number_input("数量", value=10)
         if st.button("生成卡密"):
-            conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+            conn = sqlite3.connect(DB_FILE)
+            c = conn.cursor()
             new_codes = []
             for _ in range(count):
                 code = f"VIP-{uuid.uuid4().hex[:8].upper()}"
                 c.execute("INSERT INTO access_codes (code, duration_days, status, create_time) VALUES (?, ?, ?, ?)", (code, days, 'unused', datetime.datetime.now()))
                 new_codes.append([code, days])
-            conn.commit(); conn.close()
+            conn.commit()
+            conn.close()
             st.success(f"已生成 {count} 个卡密")
             st.dataframe(pd.DataFrame(new_codes, columns=["卡密", "天数"]))
 
@@ -599,8 +651,11 @@ def main():
             st.markdown(f"**👤 用户：{st.session_state['user_phone']}**")
             
             # 导航菜单
-            nav = st.radio("导航", ["🏠 首页", "📝 文案改写", "💡 爆款选题", "🎨 海报生成", "🏷️ 账号起名", "👤 个人中心", "🕵️‍♂️ 管理后台" if st.session_state['user_phone'] == ADMIN_ACCOUNT else "None"], index=0, label_visibility="collapsed")
-            if nav == "None": nav = "🏠 首页"
+            ops = ["🏠 首页", "📝 文案改写", "💡 爆款选题", "🎨 海报生成", "🏷️ 账号起名", "👤 个人中心"]
+            if st.session_state['user_phone'] == ADMIN_ACCOUNT:
+                ops.append("🕵️‍♂️ 管理后台")
+                
+            nav = st.radio("导航", ops, index=0, label_visibility="collapsed")
             
             st.markdown("---")
             render_wechat_pill("🎁 领取资料", "W7774X")

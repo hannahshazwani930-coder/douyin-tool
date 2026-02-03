@@ -4,41 +4,41 @@ from utils import load_isolated_css
 from database import login_user, register_user
 
 def view_auth():
-    # 注入纯净版 CSS (只管颜色，不管排版)
+    # 注入样式
     load_isolated_css("auth")
     
-    # 顶部空行，实现视觉垂直居中
     st.write("\n" * 4)
 
-    # 核心容器：使用原生列建立一个 80% 宽度的居中卡片区域
-    _, main_card, _ = st.columns([1, 8, 1])
+    # 核心：通过比例锁定，让卡片宽度保持在约 600px-700px 之间
+    _, main_card, _ = st.columns([1.2, 2.5, 1.2])
 
     with main_card:
-        # 模拟卡片背景：通过容器美化
+        # 使用原生边框容器模拟卡片
         with st.container(border=True):
-            # 内部左右分栏：左侧品牌 (40%)，右侧表单 (60%)
-            col_left, col_right = st.columns([2, 3], gap="large")
+            # 内部左右分栏调整为对等或更紧凑的比例
+            col_left, col_right = st.columns([1, 1.2], gap="medium")
 
             with col_left:
-                st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-                st.markdown("### 💠 爆款工场 Pro")
+                st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+                st.subheader("💠 爆款工场")
                 st.write("---")
-                st.info("AI 驱动的一站式创作辅助系统")
+                st.caption("AI 驱动创作中枢")
                 st.markdown("""
-                    - **高效**：全模块化设计
-                    - **安全**：独立数据存储
-                    - **专业**：抖音深度定制
-                """)
-                st.caption("Version 2026.1")
+                    <div style='font-size: 13px; color: #64748b; line-height: 1.8;'>
+                    • 专业定制方案<br>
+                    • 全模块化安全<br>
+                    • 2026 旗舰版
+                    </div>
+                """, unsafe_allow_html=True)
 
             with col_right:
-                # 镶嵌在卡片右侧的登录/注册
-                tab_l, tab_r = st.tabs(["🔑 安全登录", "📝 快速注册"])
+                # 镶嵌在右侧的简洁表单
+                tab_l, tab_r = st.tabs(["登录", "注册"])
                 
                 with tab_l:
-                    with st.form("l_form_card"):
-                        u = st.text_input("账号", placeholder="手机号 / 邮箱")
-                        p = st.text_input("密码", type="password")
+                    with st.form("l_form_compact"):
+                        u = st.text_input("账号", placeholder="手机号/邮箱", label_visibility="collapsed")
+                        p = st.text_input("密码", type="password", placeholder="请输入密码", label_visibility="collapsed")
                         if st.form_submit_button("立即登录", use_container_width=True):
                             if u and p:
                                 success, msg = login_user(u, p)
@@ -46,18 +46,17 @@ def view_auth():
                                     st.session_state['user_phone'] = u
                                     st.rerun()
                                 else: st.error(msg)
-                            else: st.warning("请填写完整")
-
+                
                 with tab_r:
-                    with st.form("r_form_card"):
-                        ru = st.text_input("设置账号")
-                        rp = st.text_input("设置密码", type="password")
+                    with st.form("r_form_compact"):
+                        ru = st.text_input("账号", placeholder="新账号")
+                        rp = st.text_input("密码", type="password", placeholder="设置密码")
                         ri = st.text_input("邀请码", value="888888")
                         if st.form_submit_button("注 册", use_container_width=True):
                             success, msg = register_user(ru, rp, ri)
-                            if success: st.success("注册成功！请登录")
+                            if success: st.success("成功！请登录")
                             else: st.error(msg)
 
-    # 底部声明
-    st.write("\n" * 2)
-    st.caption("<center>© 2026 DOUYIN MASTER PRO. ALL RIGHTS RESERVED.</center>", unsafe_allow_html=True)
+    # 居中显示底部声明
+    st.write("\n")
+    st.markdown("<p style='text-align: center; color: rgba(255,255,255,0.3); font-size: 11px;'>© 2026 DOUYIN MASTER PRO</p>", unsafe_allow_html=True)

@@ -33,30 +33,46 @@ REWARD_DAYS_REFERRER = 3
 # 数据库文件
 DB_FILE = 'saas_data_v2.db'
 
-# --- 数据库初始化 ---
+# --- 数据库初始化 (核心修复逻辑) ---
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS users (
-                    phone TEXT PRIMARY KEY, 
-                    password_hash TEXT, 
-                    register_time TIMESTAMP, 
-                    last_login_ip TEXT, 
-                    last_login_time TIMESTAMP,
-                    own_invite_code TEXT UNIQUE,
-                    invited_by TEXT,
-                    invite_count INTEGER DEFAULT 0
-                )''')
+    
+    # 1. 创建基础表 (如果不存在)
+    c.execute('''CREATE TABLE IF NOT EXISTS users (phone TEXT PRIMARY KEY, password_hash TEXT, register_time TIMESTAMP, last_login_ip TEXT, last_login_time TIMESTAMP)''')
     c.execute('''CREATE TABLE IF NOT EXISTS access_codes (code TEXT PRIMARY KEY, duration_days INTEGER, activated_at TIMESTAMP, expire_at TIMESTAMP, status TEXT, create_time TIMESTAMP, bind_user TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS feedbacks (id INTEGER PRIMARY KEY AUTOINCREMENT, user_phone TEXT, content TEXT, reply TEXT, create_time TIMESTAMP, status TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)''')
     
-    # 预设管理员
+    # 2. 🔥 数据库迁移：自动检测并修补缺失字段 🔥
+    # 尝试添加 own_invite_code
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN own_invite_code TEXT")
+    except sqlite3.OperationalError:
+        pass # 字段已存在，忽略
+    
+    # 尝试添加 invited_by
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN invited_by TEXT")
+    except sqlite3.OperationalError:
+        pass
+        
+    # 尝试添加 invite_count
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN invite_count INTEGER DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass
+
+    # 3. 确保管理员存在且有邀请码
     c.execute("SELECT phone FROM users WHERE phone=?", (ADMIN_PHONE,))
     if not c.fetchone():
         admin_pwd_hash = hashlib.sha256(ADMIN_INIT_PASSWORD.encode()).hexdigest()
         c.execute("INSERT INTO users (phone, password_hash, register_time, own_invite_code) VALUES (?, ?, ?, ?)", 
                   (ADMIN_PHONE, admin_pwd_hash, datetime.datetime.now(), "ADMIN888"))
+    else:
+        # 如果管理员已存在但没有邀请码(旧数据)，补上
+        c.execute("UPDATE users SET own_invite_code='ADMIN888' WHERE phone=? AND own_invite_code IS NULL", (ADMIN_PHONE,))
+        
     conn.commit(); conn.close()
 
 init_db()
@@ -114,7 +130,7 @@ st.markdown("""
     .card-title { font-size: 18px; font-weight: 800; color: #1e293b; text-align: center; margin-bottom: 6px; }
     .card-desc { font-size: 13px; color: #64748b; text-align: center; margin-bottom: 20px; min-height: 40px; line-height: 1.5; }
 
-    /* --- 🔥 侧边栏美化 🔥 --- */
+    /* --- 🔥 侧边栏美化 (v6.6 紧凑版) 🔥 --- */
     [data-testid="stSidebar"] { background-color: #f8fafc; border-right: 1px solid #e2e8f0; }
     [data-testid="stSidebar"] .block-container { padding-top: 2rem !important; padding-bottom: 1rem !important; }
     .sidebar-user-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; box-shadow: 0 2px 4px -1px rgba(0,0,0,0.02); }
@@ -334,10 +350,15 @@ def get_user_vip_status(phone):
 
 def get_user_invite_info(phone):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
-    c.execute("SELECT own_invite_code, invite_count FROM users WHERE phone=?", (phone,))
-    row = c.fetchone(); conn.close()
+    # 兼容性修复：如果字段还没刷新，这里会报错，所以init_db必须先执行
+    try:
+        c.execute("SELECT own_invite_code, invite_count FROM users WHERE phone=?", (phone,))
+        row = c.fetchone()
+    except:
+        row = None
+    conn.close()
     if row: return row[0], row[1]
-    return "ERROR", 0
+    return "系统升级中", 0
 
 def submit_feedback(phone, content):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
@@ -646,7 +667,7 @@ def page_admin():
                         c.execute("UPDATE feedbacks SET reply=?, status='replied' WHERE id=?", (reply, r['id']))
                         conn.commit(); conn.close(); st.rerun()
 
-# --- 路由逻辑 ---
+# --- 路由 ---
 if not IS_VIP and menu not in ["🏠 首页", "👤 个人中心", "🕵️‍♂️ 管理后台"]:
     st.warning("⚠️ 会员功能，请先激活"); st.stop()
 

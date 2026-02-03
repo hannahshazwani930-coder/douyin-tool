@@ -41,10 +41,12 @@ def init_db():
 
 init_db()
 
-# --- CSS 样式 (v4.8 终极修正) ---
+# --- CSS 样式 (v4.9 巅峰颜值) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@500&display=swap'); /* 引入等宽字体 */
+
     .stApp { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
     
     /* 容器 */
@@ -61,105 +63,89 @@ st.markdown("""
         transform: translateY(-2px); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
     }
     
-    /* 🔥 海报页面：双卡片极致对齐与美化 🔥 */
-    .action-card-container {
-        display: flex;
-        gap: 20px;
-        width: 100%;
-    }
-    
-    /* 左侧：复制卡片 */
-    .copy-card-box {
+    /* 🔥 海报页面：顶部 Banner 终极美化 🔥 */
+    .poster-hero-container {
         background: #ffffff;
-        border: 2px dashed #cbd5e1;
-        border-radius: 16px;
-        height: 120px; /* 强制固定高度 */
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.05);
+        border: 1px solid #edf2f7;
         display: flex;
-        flex-direction: column;
-        justify-content: center;
         align-items: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
+        margin-bottom: 35px;
         position: relative;
+        overflow: hidden;
     }
-    .copy-card-box:hover {
-        border-color: #6366f1;
-        background-color: #f5f3ff;
-        transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.05);
+    /* 极光背景光晕 */
+    .poster-hero-container::before {
+        content: ''; position: absolute; top: -50%; right: -10%; width: 400px; height: 400px;
+        background: radial-gradient(circle, rgba(167, 139, 250, 0.15) 0%, rgba(255,255,255,0) 70%);
+        border-radius: 50%; z-index: 0; pointer-events: none;
     }
+    .hero-icon-wrapper {
+        width: 68px; height: 68px;
+        background: linear-gradient(135deg, #c4b5fd, #818cf8); /* 柔和蓝紫渐变 */
+        border-radius: 16px; display: flex; align-items: center; justify-content: center;
+        font-size: 34px; margin-right: 24px;
+        box-shadow: 0 10px 20px -5px rgba(129, 140, 248, 0.5);
+        z-index: 1; color: white;
+    }
+    .hero-text-content { z-index: 1; }
+    .hero-title { font-size: 22px; font-weight: 800; color: #1e293b; margin: 0 0 8px 0; letter-spacing: -0.5px; }
+    .hero-desc { font-size: 15px; color: #64748b; margin: 0; font-weight: 500; }
+
+    /* 🔥 海报页面：底部指令终端 终极美化 🔥 */
+    .terminal-box {
+        background: #0f172a; /* 深色背景 */
+        border-radius: 12px;
+        overflow: hidden;
+        margin-top: 30px;
+        box-shadow: 0 15px 40px rgba(15, 23, 42, 0.2);
+        border: 1px solid #334155;
+    }
+    .terminal-header {
+        background: #1e293b;
+        padding: 10px 16px;
+        display: flex; align-items: center;
+        border-bottom: 1px solid #334155;
+    }
+    .traffic-lights { display: flex; gap: 8px; margin-right: 16px; }
+    .light { width: 12px; height: 12px; border-radius: 50%; }
+    .light.red { background: #ef4444; } .light.yellow { background: #f59e0b; } .light.green { background: #22c55e; }
+    .terminal-title-text { color: #94a3b8; font-size: 13px; font-weight: 600; font-family: monospace; }
+    .terminal-body {
+        padding: 24px;
+        font-family: 'Fira Code', monospace;
+        font-size: 16px;
+        color: #e2e8f0;
+        line-height: 1.6;
+        display: flex; align-items: center;
+    }
+    .prompt-sign { color: #22c55e; margin-right: 12px; user-select: none; }
+    .command-highlight { color: #a78bfa; font-weight: bold; } /* 高亮紫色 */
+
+    /* 双卡片 */
+    .action-card-container { display: flex; gap: 20px; width: 100%; }
+    .copy-card-box { background: #ffffff; border: 2px dashed #cbd5e1; border-radius: 16px; height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s ease; position: relative; }
+    .copy-card-box:hover { border-color: #6366f1; background-color: #f5f3ff; transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.05); }
     .copy-label { font-size: 13px; color: #64748b; font-weight: 500; margin-bottom: 5px; }
     .copy-code { font-size: 28px; font-weight: 800; color: #4f46e5; letter-spacing: 1px; font-family: monospace; }
     .copy-hint { font-size: 12px; color: #94a3b8; margin-top: 5px; opacity: 0; transition: opacity 0.2s; }
     .copy-card-box:hover .copy-hint { opacity: 1; color: #6366f1; }
-    
-    /* 右侧：跳转按钮 (修复色彩与对齐) */
-    .jump-card-btn {
-        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); /* 高饱和蓝紫渐变 */
-        border-radius: 16px;
-        height: 120px; /* 强制与左侧等高 */
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-decoration: none !important;
-        transition: all 0.3s ease;
-        box-shadow: 0 10px 25px rgba(124, 58, 237, 0.3);
-        border: 1px solid rgba(255,255,255,0.1);
-    }
-    .jump-card-btn:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 40px rgba(124, 58, 237, 0.5);
-        filter: brightness(1.1); /* 悬浮稍微变亮 */
-    }
-    .jump-main-text {
-        color: #ffffff !important; /* 强制纯白 */
-        font-size: 24px;
-        font-weight: 800;
-        margin-bottom: 4px;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.2); /* 增加文字阴影提高可读性 */
-    }
-    .jump-sub-text {
-        color: rgba(255,255,255,0.9) !important; /* 稍微透明的白色 */
-        font-size: 14px;
-        font-weight: 500;
-    }
+    .jump-card-btn { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border-radius: 16px; height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-decoration: none !important; transition: all 0.3s ease; box-shadow: 0 10px 25px rgba(124, 58, 237, 0.3); border: 1px solid rgba(255,255,255,0.1); }
+    .jump-card-btn:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(124, 58, 237, 0.5); filter: brightness(1.1); }
+    .jump-main-text { color: #ffffff !important; font-size: 24px; font-weight: 800; margin-bottom: 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .jump-sub-text { color: rgba(255,255,255,0.9) !important; font-size: 14px; font-weight: 500; }
 
-    /* 🔥 教程步骤美化 🔥 */
-    .step-card {
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 18px;
-        margin-bottom: 12px;
-        display: flex;
-        align-items: flex-start;
-        transition: transform 0.2s;
-    }
-    .step-card:hover {
-        border-color: #bfdbfe;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.05);
-        transform: translateX(5px);
-    }
-    .step-icon {
-        background: #eff6ff;
-        color: #2563eb;
-        width: 32px; height: 32px;
-        border-radius: 8px;
-        display: flex; align-items: center; justify-content: center;
-        font-weight: bold;
-        margin-right: 15px;
-        flex-shrink: 0;
-    }
+    /* 教程步骤 */
+    .step-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 12px; display: flex; align-items: flex-start; transition: transform 0.2s; }
+    .step-card:hover { border-color: #bfdbfe; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.05); transform: translateX(5px); }
+    .step-icon { background: #eff6ff; color: #2563eb; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px; flex-shrink: 0; }
     .step-content h4 { margin: 0 0 4px; font-size: 15px; color: #1e293b; font-weight: 700; }
     .step-content p { margin: 0; font-size: 13px; color: #64748b; }
 
     /* 首页卡片 */
-    .home-card-box { 
-        border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center; background: #fff; 
-        height: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center; 
-        margin-bottom: 15px; transition: all 0.3s ease;
-    }
+    .home-card-box { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center; background: #fff; height: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 15px; transition: all 0.3s ease; }
     .home-card-box:hover { border-color: #bfdbfe; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
     .home-card-title { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
     .home-card-sub { font-size: 12px; color: #94a3b8; font-weight: 400; }
@@ -439,8 +425,8 @@ def page_rewrite():
 
 def page_poster():
     st.markdown("## 🎨 海报生成 (专业版)")
-    # 终极美化 Banner
-    st.markdown("""<div style="background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%); padding: 30px; border-radius: 16px; color: #1e3a8a; display: flex; align-items: center; margin-bottom: 35px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3); position: relative; overflow: hidden;"><div style="width: 60px; height: 60px; background: rgba(255,255,255,0.9); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 32px; margin-right: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">🚀</div><div><h2 style="margin: 0; font-weight: 800; color: #1e3a8a; font-size: 22px;">算力全面升级！</h2><p style="margin: 8px 0 0; color: #475569; font-weight: 500;">为了提供好莱坞级的光影效果，海报功能已迁移至性能更强的独立站。</p></div></div>""", unsafe_allow_html=True)
+    # 🔥 终极美化 Banner 🔥
+    st.markdown("""<div class="poster-hero-container"><div class="hero-icon-wrapper">🚀</div><div class="hero-text-content"><h2 class="hero-title">算力全面升级！好莱坞级光影引擎</h2><p class="hero-desc">为了提供极致的渲染效果，海报功能已迁移至性能更强的独立工作站。</p></div></div>""", unsafe_allow_html=True)
     
     # 终极美化双卡片
     st.markdown("""
@@ -455,32 +441,17 @@ def page_poster():
             <div class="jump-sub-text">第二步：点击跳转，开启创作</div>
         </a>
     </div>
-    
-    <script>
-    function copyText(e){
-        navigator.clipboard.writeText('5yzMbpxn').then(()=>{
-            const hint = e.querySelector('#status-code');
-            hint.innerText = '✅ 复制成功！';
-            hint.style.opacity = '1';
-            hint.style.color = '#10b981';
-            setTimeout(()=>{ hint.innerText = '点击立即复制'; hint.style.opacity = '0'; hint.style.color = '#94a3b8'; }, 2000);
-        });
-    }
-    </script>
+    <script>function copyText(e){navigator.clipboard.writeText('5yzMbpxn').then(()=>{const hint=e.querySelector('#status-code');hint.innerText='✅ 复制成功！';hint.style.opacity='1';hint.style.color='#10b981';setTimeout(()=>{hint.innerText='点击立即复制';hint.style.opacity='0';hint.style.color='#94a3b8';},2000);});}</script>
     """, unsafe_allow_html=True)
     
     st.write("")
     st.markdown("#### 📖 新手保姆级教程")
-    steps = [
-        ("注册登录", "点击上方大按钮前往，注册时记得填写邀请码。"),
-        ("创建画布", "登录后，在首页点击 <b>“创建自由画布”</b>。"),
-        ("上传原图", "在画布中，点击组件栏的 <b>“+”</b> 号，上传剧照。"),
-        ("一键改图", "点击 <b>右侧边框</b>，复制下方指令输入，等待奇迹！")
-    ]
+    steps = [("注册登录", "点击上方大按钮前往，注册时记得填写邀请码。"), ("创建画布", "登录后，在首页点击 <b>“创建自由画布”</b>。"), ("上传原图", "在画布中，点击组件栏的 <b>“+”</b> 号，上传剧照。"), ("一键改图", "点击 <b>右侧边框</b>，复制下方指令输入，等待奇迹！")]
     for idx, (title, desc) in enumerate(steps, 1):
         st.markdown(f"""<div class="step-card"><div class="step-icon">{idx}</div><div class="step-content"><h4>{title}</h4><p>{desc}</p></div></div>""", unsafe_allow_html=True)
 
-    st.markdown("""<div style="background: #fff7ed; border: 2px dashed #fdba74; border-radius: 12px; padding: 20px; display: flex; align-items: center; margin-top: 25px;"><span style="font-size: 24px; margin-right: 15px;">🔥</span><div><div style="font-weight: bold; color: #c2410c; margin-bottom: 5px;">改图万能指令 (点右侧复制)</div><div style="font-family: monospace; background: #ffedd5; padding: 8px 12px; border-radius: 6px; color: #9a3412;">将原图剧名：原剧名 改为：[你的新剧名]</div></div></div>""", unsafe_allow_html=True)
+    # 🔥 终极美化 Terminal 🔥
+    st.markdown("""<div class="terminal-box"><div class="terminal-header"><div class="traffic-lights"><div class="light red"></div><div class="light yellow"></div><div class="light green"></div></div><div class="terminal-title-text">root@ai-generator ~ %</div></div><div class="terminal-body"><div><span class="prompt-sign">➜</span><span class="command-text">将原图剧名：原剧名 改为：<span class="command-highlight">[你的新剧名]</span></span></div></div></div>""", unsafe_allow_html=True)
     render_copy_button_html("将原图剧名：原剧名\n改为：[你的新剧名]", "cmd_copy")
 
 def page_brainstorm():

@@ -1,58 +1,27 @@
-/* * 🔐 [FINAL SOLUTION: NATIVE GRID ALIGNMENT] 
- * 放弃小盒子模型，改用全屏分栏视觉。
- */
+/* styles/auth.css */
+header, [data-testid="stHeader"] { visibility: hidden; }
 
-/* 彻底隐藏所有干扰项 */
-header, [data-testid="stHeader"], [data-testid="stSidebar"], [data-testid="stToolbar"] { 
-    display: none !important; 
-}
-
-/* 页面背景：左侧 40% 蓝色，右侧 60% 深色，形成自然的视觉分栏 */
 .stApp {
-    background: linear-gradient(to right, #1e3a8a 0%, #1e3a8a 40%, #050a18 40%, #050a18 100%) !important;
+    background: linear-gradient(135deg, #050a18 0%, #1e3a8a 100%) !important;
 }
 
-/* 居中核心容器 */
-div.block-container {
-    max-width: 1200px !important;
-    padding-top: 10% !important;
-    margin: auto !important;
-}
-
-/* 品牌文字美化 */
-.brand-hero {
-    color: white;
-    padding: 20px;
-}
-
-/* 右侧表单美化：给原生组件加一点半透明感 */
-[data-testid="stForm"] {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 20px !important;
-    padding: 40px !important;
-}
-
-.stTextInput label { color: rgba(255,255,255,0.7) !important; }
-
-/* 按钮大气设计 */
-div.stButton > button {
-    width: 100% !important;
-    height: 50px !important;
-    background: #2563eb !important;
+/* 强制 Tab 标签颜色为白色，解决看不清的问题 */
+button[data-baseweb="tab"] {
     color: white !important;
-    border-radius: 12px !important;
-    font-weight: 700 !important;
-    border: none !important;
-    margin-top: 20px !important;
 }
 
-/* 底部声明 */
-.footer-text {
-    position: fixed;
-    bottom: 30px;
-    width: 100%;
-    text-align: center;
-    color: rgba(255,255,255,0.3);
-    font-size: 12px;
+/* 表单背景：半透明毛玻璃，更有高级感 */
+[data-testid="stVerticalBlock"] > div:has(form) {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 30px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 登录按钮美化 */
+button[kind="primaryFormSubmit"] {
+    background: #2563eb !important;
+    border: none !important;
+    height: 45px;
+    font-weight: bold;
 }

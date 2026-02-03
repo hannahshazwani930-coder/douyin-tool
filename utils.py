@@ -1,6 +1,6 @@
 # utils.py
 import streamlit as st
-import streamlit.components.v1 as components 
+import streamlit.components.v1 as components
 import hashlib
 import random
 import string
@@ -30,49 +30,97 @@ def inject_css(mode="app"):
         #MainMenu { visibility: hidden; }
         [data-testid="stSidebarCollapsedControl"] { display: none; }
         
-        /* 全局按钮美化 */
+        /* 全局按钮美化 - 更加圆润和现代 */
         div.stButton > button {
-            border-radius: 10px; font-weight: 600; border: none; transition: all 0.2s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-radius: 8px; font-weight: 600; border: none; 
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 0.5rem 1rem;
         }
-        div.stButton > button:hover { transform: translateY(-2px); box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
+        div.stButton > button:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 15px rgba(0,0,0,0.15); 
+        }
         
-        /* 核心修复：强制输入框文字颜色为深黑 */
+        /* 核心修复：强制输入框文字颜色为深黑，背景纯白 */
         .stTextInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] {
             color: #1e293b !important; 
             background-color: #ffffff !important;
-            border: 1px solid #e2e8f0 !important;
+            border: 1px solid #cbd5e1 !important;
             border-radius: 8px !important;
+            height: 48px; /* 增加输入框高度 */
         }
         .stTextInput input:focus, .stTextArea textarea:focus {
             border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
         }
     </style>
     """
     
-    # 登录页专用样式
+    # 登录页专用样式 - 包含新的左侧卡片样式
     auth_css = """
     <style>
+        /* 动态渐变背景 */
         .stApp {
-            background: linear-gradient(-45deg, #0f172a, #334155, #1e293b, #0f172a);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #172554 100%);
             background-size: 400% 400%; animation: gradientBG 15s ease infinite;
         }
         @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
         
+        /* 登录框容器样式 */
         [data-testid="stForm"] {
-            background-color: rgba(255, 255, 255, 0.95) !important;
-            padding: 40px; border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255,255,255,0.2);
+            background-color: rgba(255, 255, 255, 0.98) !important;
+            padding: 40px 30px; border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        .lp-header { font-size: 48px; font-weight: 900; color: white; letter-spacing: -1.5px; text-shadow: 0 10px 20px rgba(0,0,0,0.3); margin-bottom: 10px; }
-        .lp-sub { font-size: 18px; color: #cbd5e1; margin-bottom: 40px; font-weight: 400; line-height: 1.6; }
-        .lp-item { color: #e2e8f0; font-size: 15px; margin-bottom: 15px; display: flex; align-items: center; }
-        .lp-icon { background: rgba(255,255,255,0.1); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 15px; }
-        .stTabs [data-baseweb="tab-list"] { gap: 10px; }
-        .stTabs [data-baseweb="tab"] { background-color: transparent; color: #64748b; font-weight: 600; }
-        .stTabs [aria-selected="true"] { color: #2563eb !important; border-bottom-color: #2563eb !important; }
+
+        /* 左侧营销文案样式 */
+        .hero-title {
+            font-size: 56px; font-weight: 800; color: #ffffff;
+            line-height: 1.1; margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .hero-subtitle {
+            font-size: 20px; color: #94a3b8; font-weight: 400;
+            margin-bottom: 40px; max-width: 90%;
+        }
+        
+        /* 悬停卡片样式 (左侧) */
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px; border-radius: 16px; margin-bottom: 15px;
+            display: flex; align-items: center; cursor: default;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .feature-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(10px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .feature-icon {
+            font-size: 24px; margin-right: 15px;
+            width: 45px; height: 45px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            color: white; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+        }
+        .feature-text h4 { color: white; margin: 0; font-size: 16px; font-weight: 600; }
+        .feature-text p { color: #cbd5e1; margin: 2px 0 0 0; font-size: 13px; }
+
+        /* Tabs 样式优化 */
+        .stTabs [data-baseweb="tab-list"] { 
+            gap: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 5px; 
+        }
+        .stTabs [data-baseweb="tab"] { 
+            background-color: transparent; color: #64748b; font-weight: 600; font-size: 16px; 
+        }
+        .stTabs [aria-selected="true"] { 
+            color: #2563eb !important; 
+        }
     </style>
     """
     

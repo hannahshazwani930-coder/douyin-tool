@@ -1,16 +1,16 @@
-/* * 🔐 [FINAL PRODUCTION: ZERO-ERROR VERSION] 
- * 目标：解决对齐、偏移、乱码及白块问题
+/* * 🔐 [ULTRA-PRO PRODUCTION VERSION] 
+ * 核心原理：物理屏蔽 + 强制组件偏移
  */
 
-/* 1. 强制清理原生 UI 干扰 */
+/* 1. 彻底清除原生白边和页眉 */
 header, [data-testid="stHeader"], [data-testid="stSidebar"] { display: none !important; }
 
+/* 2. 背景锁定 */
 .stApp {
     background: #050a18 !important;
-    overflow: hidden !important;
 }
 
-/* 2. 居中卡片容器：强制 850x520 */
+/* 3. 根容器改造成 850x520 的白卡片 */
 div.block-container {
     max-width: 850px !important;
     height: 520px !important;
@@ -22,40 +22,61 @@ div.block-container {
     background: white !important;
     border-radius: 32px !important;
     box-shadow: 0 50px 100px rgba(0,0,0,0.8) !important;
-    display: flex !important;
+    overflow: hidden !important;
 }
 
-/* 3. 左侧品牌区：使用绝对定位贴合 */
-.brand-panel {
+/* 4. 在白卡片左侧强行盖上一层蓝色面板 */
+div.block-container::before {
+    content: "";
     position: absolute;
     left: 0; top: 0;
-    width: 340px; /* 850 * 0.4 */
+    width: 360px; /* 品牌区宽度 */
     height: 100%;
     background: linear-gradient(135deg, #2563eb, #1e3a8a);
-    padding: 50px;
+    z-index: 1;
+}
+
+/* 5. 强制把右侧表单内容向右推 360px，解决“组件跑偏” */
+[data-testid="stVerticalBlock"] > div {
+    margin-left: 360px !important; /* 关键：强制右移 */
+    padding: 0 50px !important;
+    max-width: 490px !important;
+}
+
+/* 6. 品牌文字定位（由于是伪元素背景，文字需用 absolute 挂载） */
+.brand-overlay {
+    position: absolute;
+    left: 0; top: 0;
+    width: 360px;
+    height: 520px;
+    padding: 60px 45px;
     color: white;
-    z-index: 10;
+    z-index: 2;
+    pointer-events: none; /* 防止遮挡鼠标点击 */
 }
 
-/* 4. 右侧组件偏移：核心修正！ */
-/* 强制所有表单内容向右移动 340px 避开品牌区 */
-[data-testid="stForm"], [data-testid="stVerticalBlock"] > div:not(.brand-panel) {
-    margin-left: 340px !important;
-    padding: 30px 50px !important;
-    max-width: 510px !important;
+/* 7. 输入框与按钮大气化 */
+.stTextInput input {
+    height: 48px !important;
+    border-radius: 12px !important;
+    border: 1px solid #e2e8f0 !important;
 }
 
-/* 5. 交互元素美化 */
-.stTextInput input { border-radius: 12px !important; height: 48px !important; }
 div.stButton > button {
-    width: 100% !important; height: 50px !important;
-    background: #1e3a8a !important; color: white !important;
-    border-radius: 12px !important; font-weight: 700 !important;
+    width: 100% !important;
+    height: 50px !important;
+    background: #1e3a8a !important;
+    color: white !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
     border: none !important;
 }
 
-/* 6. 底部声明 */
-.footer-note {
-    position: fixed; bottom: 30px; width: 100%;
-    text-align: center; color: rgba(255,255,255,0.4); font-size: 11px;
+/* 8. 外部声明（跳出 block-container 渲染） */
+.footer-fix {
+    position: fixed;
+    bottom: 30px; width: 100%;
+    text-align: center;
+    color: rgba(255,255,255,0.4);
+    font-size: 11px;
 }

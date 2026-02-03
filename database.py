@@ -8,22 +8,24 @@ from utils import hash_password, generate_invite_code
 
 # --- 基础连接 ---
 def get_conn():
-    return sqlite3.connect(DB_FILE)
+    return sqlite3.connect(DB_FILE, check_same_thread=False)
 
 # --- 初始化 ---
 def init_db():
     conn = get_conn()
     c = conn.cursor()
-    # 建表
+    # 基础用户表
     c.execute('''CREATE TABLE IF NOT EXISTS users (phone TEXT PRIMARY KEY, password_hash TEXT, register_time TIMESTAMP, last_login_ip TEXT, last_login_time TIMESTAMP, own_invite_code TEXT UNIQUE, invited_by TEXT, invite_count INTEGER DEFAULT 0)''')
+    # 卡密表
     c.execute('''CREATE TABLE IF NOT EXISTS access_codes (code TEXT PRIMARY KEY, duration_days INTEGER, activated_at TIMESTAMP, expire_at TIMESTAMP, status TEXT, create_time TIMESTAMP, bind_user TEXT)''')
+    # 反馈表 (升级：增加回复字段)
     c.execute('''CREATE TABLE IF NOT EXISTS feedbacks (id INTEGER PRIMARY KEY AUTOINCREMENT, user_phone TEXT, content TEXT, reply TEXT, create_time TIMESTAMP, status TEXT)''')
+    # 公告表 (新增)
+    c.execute('''CREATE TABLE IF NOT EXISTS announcements (id INTEGER PRIMARY KEY AUTOINCREMENT, content TEXT, is_active INTEGER, create_time TIMESTAMP)''')
+    # 设置表
     c.execute('''CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)''')
     
-    # 兼容性更新 (静默处理)
-    for col in ["own_invite_code", "invited_by"]:
-        try: c.execute(f"ALTER TABLE users ADD COLUMN {col} TEXT")
-        except: pass
+    # 兼容性字段检查
     try: c.execute("ALTER TABLE users ADD COLUMN invite_count INTEGER DEFAULT 0")
     except: pass
     
@@ -52,25 +54,25 @@ def register_user(account, password, invite_code_used):
     conn = get_conn()
     c = conn.cursor()
     try:
-        # 生成唯一邀请码
         new_own_code = generate_invite_code()
         while True:
             c.execute("SELECT phone FROM users WHERE own_invite_code=?", (new_own_code,))
             if not c.fetchone(): break
             new_own_code = generate_invite_code()
         
-        # 查找邀请人
         referrer = None
-        if invite_code_used != GLOBAL_INVITE_CODE:
-            c.execute("SELECT phone FROM users WHERE own_invite_code=?", (invite_code_used,))
-            row = c.fetchone()
-            if row: referrer = row[0]
+        if invite_code_used and invite_code_used != "888888":
+            if invite_code_used == GLOBAL_INVITE_CODE: pass
+            else:
+                c.execute("SELECT phone FROM users WHERE own_invite_code=?", (invite_code_used,))
+                row = c.fetchone()
+                if row: referrer = row[0]
             
         c.execute("INSERT INTO users (phone, password_hash, register_time, own_invite_code, invited_by) VALUES (?, ?, ?, ?, ?)", 
                   (account, hash_password(password), datetime.datetime.now(), new_own_code, referrer))
         conn.commit()
         
-        # 发放奖励
+        # 奖励逻辑
         add_vip_days(account, REWARD_DAYS_NEW_USER, "NEW_USER")
         if referrer:
             add_vip_days(referrer, REWARD_DAYS_REFERRER, "REFERRAL")
@@ -87,18 +89,19 @@ def register_user(account, password, invite_code_used):
 def add_vip_days(account, days, source="system"):
     conn = get_conn()
     c = conn.cursor()
-    # 计算新的过期时间
     c.execute("SELECT expire_at FROM access_codes WHERE bind_user=? AND status='active'", (account,))
     rows = c.fetchall()
     now = datetime.datetime.now()
+    
     if rows:
-        max_expire = max([datetime.datetime.strptime(str(r[0]).split('.')[0], '%Y-%m-%d %H:%M:%S') for r in rows])
+        max_expire_str = max([str(r[0]) for r in rows])
+        max_expire = datetime.datetime.strptime(max_expire_str.split('.')[0], '%Y-%m-%d %H:%M:%S')
         start_time = max_expire if max_expire > now else now
     else:
         start_time = now
     
     expire_at = start_time + datetime.timedelta(days=days)
-    new_code = f"GIFT-{source}-{str(uuid.uuid4())[:6].upper()}"
+    new_code = f"AUTO-{source}-{str(uuid.uuid4())[:6].upper()}"
     c.execute("INSERT INTO access_codes (code, duration_days, activated_at, expire_at, status, create_time, bind_user) VALUES (?, ?, ?, ?, ?, ?, ?)",
               (new_code, days, now, expire_at, 'active', now, account))
     conn.commit()
@@ -115,13 +118,14 @@ def get_user_vip_status(phone):
     
     if not rows: return False, "未开通会员"
     
-    max_expire = max([datetime.datetime.strptime(str(r[0]).split('.')[0], '%Y-%m-%d %H:%M:%S') for r in rows])
+    max_expire_str = max([str(r[0]) for r in rows])
+    max_expire = datetime.datetime.strptime(max_expire_str.split('.')[0], '%Y-%m-%d %H:%M:%S')
+    
     if max_expire > now:
         days_left = (max_expire - now).days
         return True, f"VIP (剩{days_left}天)" 
     return False, "会员已过期"
 
-# --- 杂项 ---
 def get_user_invite_info(phone):
     conn = get_conn()
     c = conn.cursor()
@@ -133,17 +137,68 @@ def get_user_invite_info(phone):
     if row: return row[0], row[1]
     return "...", 0
 
-def get_setting(key):
+# --- 公告系统 ---
+def create_announcement(content):
     conn = get_conn()
     c = conn.cursor()
-    c.execute("SELECT value FROM settings WHERE key=?", (key,))
-    row = c.fetchone()
-    conn.close()
-    return row[0] if row else ""
-
-def update_setting(key, value):
-    conn = get_conn()
-    c = conn.cursor()
-    c.execute("REPLACE INTO settings (key, value) VALUES (?, ?)", (key, value))
+    c.execute("INSERT INTO announcements (content, is_active, create_time) VALUES (?, 1, ?)", (content, datetime.datetime.now()))
     conn.commit()
     conn.close()
+
+def get_active_announcements():
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("SELECT content, create_time FROM announcements WHERE is_active=1 ORDER BY create_time DESC LIMIT 5")
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+def delete_announcement(content):
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("UPDATE announcements SET is_active=0 WHERE content=?", (content,))
+    conn.commit()
+    conn.close()
+
+# --- 反馈系统 ---
+def add_feedback(phone, content):
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("INSERT INTO feedbacks (user_phone, content, create_time, status) VALUES (?, ?, ?, 'pending')", 
+              (phone, content, datetime.datetime.now()))
+    conn.commit()
+    conn.close()
+
+def get_user_feedbacks(phone):
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("SELECT content, reply, create_time, status FROM feedbacks WHERE user_phone=? ORDER BY create_time DESC", (phone,))
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+def get_all_feedbacks_admin():
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("SELECT id, user_phone, content, reply, create_time, status FROM feedbacks ORDER BY create_time DESC")
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+def reply_feedback(id, reply_text):
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("UPDATE feedbacks SET reply=?, status='replied' WHERE id=?", (reply_text, id))
+    conn.commit()
+    conn.close()
+
+# --- 统计系统 ---
+def get_stats():
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM users")
+    user_count = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM access_codes WHERE status='active'")
+    vip_count = c.fetchone()[0]
+    conn.close()
+    return user_count, vip_count

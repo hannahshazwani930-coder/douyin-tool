@@ -12,9 +12,10 @@ def hash_password(password):
 def generate_invite_code():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
-# --- 核心样式注入 (严格隔离 Auth 和 App) ---
+# --- CSS 样式配置 (拆分变量以防语法错误) ---
+
 def inject_css(mode="app"):
-    # 1. 基础通用 (字体/隐藏不需要的组件)
+    # 1. 基础样式
     base_css = """
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -27,13 +28,11 @@ def inject_css(mode="app"):
     """
     st.markdown(base_css, unsafe_allow_html=True)
 
-    # ============================================================
-    # 🔐 登录页专用样式 (极光背景 + 左右排版支持)
-    # ============================================================
+    # 2. 登录页样式 (左右排版 + 极光)
     if mode == "auth":
         st.markdown("""
         <style>
-            /* 1. 深色极光动态背景 */
+            /* 极光背景动画 */
             .stApp {
                 background: linear-gradient(-45deg, #020617, #0f172a, #1e3a8a, #172554);
                 background-size: 400% 400%;
@@ -41,18 +40,18 @@ def inject_css(mode="app"):
             }
             @keyframes authGradient { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
 
-            /* 2. 布局容器：允许左右排版，不再强制居中成一个小块 */
+            /* 布局容器：允许左右排版 */
             div.block-container {
                 max-width: 1200px !important;
-                padding-top: 10vh !important; /* 垂直居中 */
+                padding-top: 8vh !important;
             }
 
-            /* 3. 左侧文案区样式 */
+            /* 左侧文案 */
             .hero-title { font-size: 48px; font-weight: 800; color: white; line-height: 1.2; margin-bottom: 20px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
             .hero-sub { font-size: 18px; color: #cbd5e1; line-height: 1.6; margin-bottom: 40px; font-weight: 300; }
             .hero-tag { display:inline-block; background:rgba(37,99,235,0.2); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); padding:5px 15px; border-radius:20px; font-size:12px; margin-right:10px; }
 
-            /* 4. 右侧登录卡片 (玻璃拟态) */
+            /* 右侧登录卡片 (玻璃拟态) */
             .login-card-container {
                 background: rgba(255, 255, 255, 0.95);
                 border-radius: 24px;
@@ -61,38 +60,34 @@ def inject_css(mode="app"):
                 backdrop-filter: blur(20px);
             }
 
-            /* 5. 输入框 (标准样式，确保可见) */
+            /* 输入框 (标准样式，白底) */
             .stTextInput input {
                 background-color: #f8fafc !important;
                 color: #0f172a !important;
                 border: 1px solid #cbd5e1 !important;
                 border-radius: 8px !important;
-                height: 48px !important;
+                height: 45px !important;
             }
             .stTextInput input:focus { border-color: #3b82f6 !important; background: white !important; }
-            .stTextInput label { color: #64748b !important; font-size: 14px; }
             
-            /* 6. 按钮 */
+            /* 按钮 */
             div.stButton > button {
-                width: 100%; height: 48px;
+                width: 100%; height: 45px;
                 background: linear-gradient(90deg, #2563eb, #3b82f6);
                 color: white; border: none; border-radius: 8px; font-weight: 600;
             }
             div.stButton > button:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(37,99,235,0.4); }
 
-            /* 7. Tab 样式 */
+            /* Tab 样式 */
             .stTabs [data-baseweb="tab-list"] { gap: 20px; border-bottom: 1px solid #e2e8f0 !important; margin-bottom: 20px; }
             .stTabs [data-baseweb="tab"] { height: 45px; color: #64748b; font-weight: 600; font-size: 15px; }
             .stTabs [aria-selected="true"] { color: #2563eb !important; border-bottom: 2px solid #2563eb !important; }
 
-            /* 隐藏侧边栏 */
             [data-testid="stSidebar"] { display: none; }
         </style>
         """, unsafe_allow_html=True)
 
-    # ============================================================
-    # 💠 系统内页样式 (完美版保留)
-    # ============================================================
+    # 3. 系统内页样式 (浅色 + 悬浮控制台)
     elif mode == "app":
         st.markdown("""
         <style>
@@ -111,7 +106,7 @@ def inject_css(mode="app"):
             }
             @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
 
-            /* 纯白一体化控制台 (您最满意的设计) */
+            /* 纯白一体化控制台 */
             .creation-console {
                 background: white; border-radius: 24px; padding: 40px;
                 box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); 
@@ -151,10 +146,17 @@ def inject_css(mode="app"):
             div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; }
             div[role="radiogroup"] label[aria-checked="true"] { background-color: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe; font-weight: 600 !important; }
             div[role="radiogroup"] > label > div:first-child { display: none !important; }
+            
+            /* 公告卡片 */
+            .ann-card { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 12px 15px; margin-bottom: 10px; display: flex; align-items: start; gap: 10px; font-size: 14px; color: #9a3412; }
+            
+            /* 转化提示 */
+            .conversion-tip { margin-top: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 10px 15px; border-radius: 10px; font-size: 13px; display: flex; align-items: center; gap: 10px; }
         </style>
         """, unsafe_allow_html=True)
 
-# --- 组件函数 (确保所有函数都在，防止报错) ---
+# --- 组件函数 (全部找回) ---
+
 def render_sidebar_user_card(username, vip_info):
     status_bg = "#eff6ff" if "VIP" in vip_info or "管理员" in vip_info else "#f1f5f9"
     st.sidebar.markdown(f"""<div style="background: {status_bg}; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 20px;"><div style="display:flex; align-items:center; margin-bottom: 8px;"><div style="width: 32px; height: 32px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 10px; border: 1px solid #e2e8f0;">👤</div><div style="font-weight: 700; color: #0f172a; font-size: 14px; overflow: hidden; text-overflow: ellipsis;">{username}</div></div><div style="background: white; padding: 6px 10px; border-radius: 6px; font-size: 12px; color: #2563eb; font-weight: 600; border: 1px solid #e2e8f0; text-align: center;">{vip_info}</div></div>""", unsafe_allow_html=True)
@@ -164,7 +166,7 @@ def render_tech_support_btn(wx_id):
 
 def render_copy_btn(text, key_suffix):
     safe_text = text.replace("`", "\`").replace("'", "\\'")
-    html = f"""<script>function copy_{key_suffix}(){{navigator.clipboard.writeText(`{safe_text}`);}}</script><button onclick="copy_{key_suffix}();this.innerText='✅ 已复制';setTimeout(()=>this.innerText='📋 一键复制',2000)" style="width:100%; height:40px; background:#0f172a; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:600; font-family:'Inter';">📋 一键复制</button>"""
+    html = f"""<script>function copy_{key_suffix}(){{navigator.clipboard.writeText(`{safe_text}`);}}</script><button onclick="copy_{key_suffix}();this.innerText='✅ 已复制';setTimeout(()=>this.innerText='📋 一键复制',2000)" style="width:100%; height:40px; background:#0f172a; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:600; font-family:'Inter'; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">📋 一键复制</button>"""
     components.html(html, height=50)
 
 def render_wechat_pill(label, wx_id):
@@ -175,4 +177,13 @@ def render_cta_wechat(wx_id):
     components.html(html, height=100)
 
 def render_home_project_card(icon, title, desc, tag):
-    return f"""<div style="background:white;border-radius:12px;padding:20px;border:1px solid #e2e8f0;height:100%;display:flex;flex-direction:
+    return f"""<div style="background:white;border-radius:12px;padding:20px;border:1px solid #e2e8f0;height:100%;display:flex;flex-direction:column;"><div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:8px;"><span style="margin-right:8px;">{icon}</span>{title}</div><div style="font-size:12px;color:#64748b;line-height:1.5;flex-grow:1;">{desc}</div><div style="font-size:11px;padding:3px 8px;border-radius:10px;background:#f8fafc;color:#475569;margin-top:15px;width:fit-content;border:1px solid #e2e8f0;">{tag}</div></div>"""
+
+def render_page_banner(title, desc):
+    st.markdown(f"""<div class="page-banner"><div class="banner-title">{title}</div><div class="banner-desc">{desc}</div></div>""", unsafe_allow_html=True)
+
+def render_conversion_tip():
+    st.markdown("""<div class="conversion-tip"><span>💰</span><span><b>商业化建议：</b> 已自动植入私域钩子，预计提升 30% 导流效率。</span></div>""", unsafe_allow_html=True)
+
+def render_feature_card_home(icon, title, desc):
+    return f"""<div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:15px;text-align:center;height:100px;display:flex;flex-direction:column;justify-content:center;align-items:center;"><div style="font-size:24px;margin-bottom:5px;">{icon}</div><div style="font-weight:700;color:#0f172a;">{title}</div></div>"""

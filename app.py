@@ -41,7 +41,7 @@ def init_db():
 
 init_db()
 
-# --- CSS 样式 ---
+# --- CSS 样式 (融合版：保留主页样式，更新侧边栏) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -57,18 +57,27 @@ st.markdown("""
     
     /* 按钮全局优化 */
     div.stButton > button { border-radius: 10px; font-weight: 600; height: 48px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); width: 100%; font-size: 15px; }
-    div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border: none; color: white !important; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2); }
-    div.stButton > button[kind="primary"]:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4); background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); }
+    
+    /* 主按钮 */
+    div.stButton > button[kind="primary"] { 
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
+        border: none; color: white !important; 
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+    }
+    div.stButton > button[kind="primary"]:hover { 
+        transform: translateY(-2px); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    }
+    
+    /* 次级按钮 */
     div.stButton > button[kind="secondary"] { background-color: #f1f5f9; color: #475569; border: 1px solid transparent; }
     div.stButton > button[kind="secondary"]:hover { background-color: #e2e8f0; color: #1e293b; border-color: #cbd5e1; }
 
-    /* 🔥 侧边栏终极美化 🔥 */
+    /* --- 🔥 侧边栏美化 (v6.2新增) 🔥 --- */
     [data-testid="stSidebar"] {
-        background-color: #f8fafc; /* 极淡的灰蓝色背景 */
+        background-color: #f8fafc;
         border-right: 1px solid #e2e8f0;
     }
-    
-    /* 用户身份卡片 */
     .sidebar-user-card {
         background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; 
         display: flex; align-items: center; margin-bottom: 20px;
@@ -79,18 +88,16 @@ st.markdown("""
     .user-name { font-weight: 700; font-size: 14px; color: #1e293b; }
     .user-role { font-size: 11px; color: #d97706; font-weight: 600; background: #fffbeb; padding: 2px 6px; border-radius: 4px; border: 1px solid #fcd34d; margin-top: 2px; width: fit-content; }
     
-    /* 侧边栏导航条改造 (Radio) */
+    /* 侧边栏导航条改造 */
     .stRadio > div { gap: 0px; }
     .stRadio > div > label {
         background: transparent; padding: 10px 12px; border-radius: 8px; margin-bottom: 2px;
         color: #475569; font-weight: 500; transition: all 0.2s; cursor: pointer; border: 1px solid transparent;
     }
     .stRadio > div > label:hover { background: #f1f5f9; color: #1e293b; }
-    /* 选中态 */
     .stRadio > div > label[data-checked="true"] {
         background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; font-weight: 600;
     }
-    /* 隐藏原生圆圈 */
     .stRadio div[role="radiogroup"] > label > div:first-child { display: none; }
 
     /* 侧边栏项目卡片 */
@@ -109,23 +116,51 @@ st.markdown("""
         font-size: 12px; color: #475569; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;
     }
     .contact-pill:hover { border-color: #3b82f6; color: #2563eb; background: #eff6ff; }
-    .pill-label { font-weight: 600; }
     
-    /* 主内容区样式保持不变 */
-    .home-card-box { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center; background: #fff; height: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 15px; transition: all 0.3s ease; }
-    .home-card-box:hover { border-color: #bfdbfe; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-    .home-card-title { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
-    .home-card-sub { font-size: 12px; color: #94a3b8; font-weight: 400; }
+    /* --- 🔥 首页功能卡片样式 (保持不变) 🔥 --- */
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        border-radius: 16px !important;
+        border: 1px solid #e2e8f0 !important;
+        background-color: #ffffff;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 24px !important;
+    }
+    [data-testid="stVerticalBlockBorderWrapper"]:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px -5px rgba(59, 130, 246, 0.15);
+        border-color: #bfdbfe !important;
+    }
+    .card-icon-box {
+        width: 56px; height: 56px;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 28px; margin: 0 auto 15px auto;
+        color: #2563eb;
+    }
+    .card-title { font-size: 18px; font-weight: 800; color: #1e293b; text-align: center; margin-bottom: 6px; }
+    .card-desc { font-size: 13px; color: #64748b; text-align: center; margin-bottom: 20px; min-height: 40px; line-height: 1.5; }
+    
+    /* 海报 Banner */
     .poster-hero-container { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.05); border: 1px solid #edf2f7; display: flex; align-items: center; margin-bottom: 25px; position: relative; overflow: hidden; }
     .poster-hero-container::before { content: ''; position: absolute; top: -50%; right: -10%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(167, 139, 250, 0.15) 0%, rgba(255,255,255,0) 70%); border-radius: 50%; z-index: 0; pointer-events: none; }
     .hero-icon-wrapper { width: 68px; height: 68px; background: linear-gradient(135deg, #c4b5fd, #818cf8); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 34px; margin-right: 24px; box-shadow: 0 10px 20px -5px rgba(129, 140, 248, 0.5); z-index: 1; color: white; }
     .hero-title { font-size: 22px; font-weight: 800; color: #1e293b; margin: 0 0 8px 0; letter-spacing: -0.5px; z-index: 1; position: relative; }
     .hero-desc { font-size: 15px; color: #64748b; margin: 0; font-weight: 500; z-index: 1; position: relative; }
+
+    /* 教程 */
     .step-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 12px; display: flex; align-items: flex-start; transition: transform 0.2s; }
     .step-card:hover { border-color: #bfdbfe; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.05); transform: translateX(5px); }
     .step-icon { background: #eff6ff; color: #2563eb; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px; flex-shrink: 0; }
     .step-content h4 { margin: 0 0 4px; font-size: 15px; color: #1e293b; font-weight: 700; }
     .step-content p { margin: 0; font-size: 13px; color: #64748b; }
+
+    /* 通用 */
+    .footer-legal { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 12px; }
+    .footer-links a { color: #64748b; text-decoration: none; margin: 0 10px; transition: color 0.2s; }
+    .auth-title { text-align: center; font-weight: 800; font-size: 24px; color: #1e293b; margin-bottom: 20px; }
+    .login-spacer { height: 5vh; }
     .info-box-aligned { height: 45px !important; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1e40af; display: flex; align-items: center; padding: 0 16px; font-size: 14px; font-weight: 500; width: 100%; box-sizing: border-box; }
     .empty-state-box { height: 200px; background-image: repeating-linear-gradient(45deg, #f8fafc 25%, transparent 25%, transparent 75%, #f8fafc 75%, #f8fafc), repeating-linear-gradient(45deg, #f8fafc 25%, #ffffff 25%, #ffffff 75%, #f8fafc 75%, #f8fafc); background-size: 20px 20px; border: 2px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-weight: 500; flex-direction: column; gap: 10px; }
 </style>
@@ -157,7 +192,7 @@ def send_mock_sms(phone): return str(random.randint(1000, 9999))
 def render_footer():
     st.markdown("""<div class="footer-legal"><div class="footer-links"><a href="#">用户协议</a> | <a href="#">隐私政策</a> | <a href="#">免责声明</a> | <a href="#">关于我们</a></div><div style="margin-top: 10px;">© 2026 爆款工场 Pro | 鄂ICP备2024XXXXXX号-1 | 违法和不良信息举报：TG777188</div><div style="font-size: 11px; color: #cbd5e1; margin-top: 5px;">本站仅提供技术工具，请勿用于任何非法用途，用户生成内容文责自负。</div></div>""", unsafe_allow_html=True)
 
-def render_hover_copy_box(text, label="点击复制"):
+def render_hover_copy_box(text, label):
     safe = text.replace("`", "\`").replace("'", "\\'")
     html = f"""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');body{{margin:0;padding:0;background:transparent;overflow:hidden;font-family:'Inter';}}.contact-pill{{display:flex;align-items:center;justify-content:space-between;background:white;border:1px solid #e2e8f0;border-radius:8px;padding:0 12px;height:36px;font-size:12px;color:#475569;cursor:pointer;transition:all 0.2s;box-sizing:border-box;}}.contact-pill:hover{{border-color:#3b82f6;color:#2563eb;background:#eff6ff;}}.lbl{{font-weight:600;}}</style></head><body><div class="contact-pill" onclick="copyText(this)"><span class="lbl">{label}</span><span id="txt">{safe}</span></div><script>function copyText(e){{const t=`{safe}`,s=e.querySelector(".lbl"),o=e.querySelector("#txt");navigator.clipboard.writeText(t).then(()=>{{e.style.background="#ecfdf5";e.style.borderColor="#10b981";e.style.color="#047857";const old=s.innerText;s.innerText="✅ 已复制";setTimeout(()=>{{e.style.background="";e.style.borderColor="";e.style.color="";s.innerText=old;}},1500)}})}}</script></body></html>"""
     components.html(html, height=40)
@@ -302,7 +337,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 2. 导航菜单 (使用 CSS 美化后的 Radio)
+    # 2. 导航菜单 (美化 Radio)
     ops = ["🏠 首页", "📝 文案改写", "💡 爆款选题库", "🎨 海报生成", "🏷️ 账号起名", "👤 个人中心"]
     if IS_ADMIN: ops.append("🕵️‍♂️ 管理后台")
     
@@ -337,25 +372,29 @@ with st.sidebar:
 
 menu = st.session_state['nav_menu']
 
-# --- 首页 ---
+# --- 首页 (完美功能) ---
 def page_home():
     st.markdown("## 💠 抖音爆款工场 Pro")
     st.caption("专为素人 KOC 打造的 AI 提效神器 | 文案 · 选题 · 海报 · 变现")
     st.markdown("---")
     
     c1, c2, c3, c4 = st.columns(4)
+    
     with c1:
         with st.container(border=True):
             st.markdown("""<div class="card-icon-box">📝</div><div class="card-title">文案改写</div><div class="card-desc">5路并发 · 爆款重组<br>解决文案枯竭</div>""", unsafe_allow_html=True)
             st.button("立即使用 ➜", key="h_btn1", on_click=go_to, args=("📝 文案改写",), type="primary", use_container_width=True)
+            
     with c2:
         with st.container(border=True):
             st.markdown("""<div class="card-icon-box">💡</div><div class="card-title">爆款选题</div><div class="card-desc">流量焦虑 · 一键解决<br>精准击中痛点</div>""", unsafe_allow_html=True)
             st.button("立即使用 ➜", key="h_btn2", on_click=go_to, args=("💡 爆款选题库",), type="primary", use_container_width=True)
+            
     with c3:
         with st.container(border=True):
             st.markdown("""<div class="card-icon-box">🎨</div><div class="card-title">海报生成</div><div class="card-desc">小提大作 · 影视质感<br>好莱坞级光影</div>""", unsafe_allow_html=True)
             st.button("立即使用 ➜", key="h_btn3", on_click=go_to, args=("🎨 海报生成",), type="primary", use_container_width=True)
+            
     with c4:
         with st.container(border=True):
             st.markdown("""<div class="card-icon-box">🏷️</div><div class="card-title">账号起名</div><div class="card-desc">AI 算命 · 爆款玄学<br>赛道垂直定制</div>""", unsafe_allow_html=True)

@@ -3,7 +3,7 @@ import streamlit as st
 from database import login_user, register_user
 
 def view_auth():
-    # --- 1. 【核心锁定】背景纯白、单边框、悬浮动效 ---
+    # --- 1. 【核心锁定 + 消除重叠】CSS 补丁 ---
     st.markdown("""
 <style>
     [data-testid="stFormInstructions"] { display: none !important; }
@@ -14,18 +14,17 @@ def view_auth():
         color: #475569 !important;
     }
 
-    /* 2. 【归位锁定】背景强制纯白，消除断层与重影 */
+    /* 2. 【单边框锁定】背景强制纯白，消除重叠的关键逻辑 */
     [data-testid="stTextInput"] div[data-baseweb="input"],
-    [data-testid="stPasswordInput"] div[data-baseweb="input"],
-    [data-baseweb="input"] > div {
-        background-color: #FFFFFF !important; /* 绝对纯白，不准再变 */
-        border: 1px solid #E2E8F0 !important; /* 单层边框 */
+    [data-testid="stPasswordInput"] div[data-baseweb="input"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important; /* 唯一的边框 */
         border-radius: 8px !important;
         box-shadow: none !important;
         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
     }
 
-    /* 3. 悬浮效果保留 */
+    /* 3. 【悬浮动效】向上浮动并增加柔和阴影 */
     [data-testid="stTextInput"] div[data-baseweb="input"]:hover,
     [data-testid="stPasswordInput"] div[data-baseweb="input"]:hover {
         border-color: #1E3A8A !important;
@@ -33,16 +32,18 @@ def view_auth():
         box-shadow: 0 6px 16px rgba(30, 58, 138, 0.08) !important;
     }
 
-    /* 4. 内部透明化与字号对齐 */
+    /* 4. 【消除重叠核心】强行掐断所有内层元素的边框、轮廓和默认阴影 */
     [data-testid="stTextInput"] input, 
     [data-testid="stPasswordInput"] input,
-    [data-testid="stPasswordInput"] button {
+    [data-testid="stPasswordInput"] button,
+    [data-baseweb="input"] > div {
         background-color: transparent !important;
-        border: none !important;
+        border: none !important;      /* 掐断内层边框 */
+        outline: none !important;     /* 掐断聚焦时的原生边框 */
+        box-shadow: none !important;  /* 掐断聚焦时的蓝色光晕 */
         color: #1E3A8A !important;
         font-size: 14px !important;
         height: 40px !important;
-        box-shadow: none !important;
     }
 
     /* 5. Placeholder 样式对齐 */
@@ -74,7 +75,7 @@ def view_auth():
         with st.container(border=True):
             col_l, col_r = st.columns([1.1, 1.4], gap="large")
 
-            # --- 左侧：爆款工厂PRO 大师级排版（保留位移） ---
+            # --- 左侧：爆款工厂PRO 大师级排版 ---
             with col_l:
                 brand_html = """
                 <div style="padding-left: 35px; padding-top: 15px;">
@@ -108,7 +109,7 @@ def view_auth():
                 t1, t2 = st.tabs(["安全登录", "快速注册"])
                 
                 with t1:
-                    with st.form("f_login_final_locked", border=False):
+                    with st.form("f_login_single_border", border=False):
                         u = st.text_input("A", placeholder="手机号 / 邮箱", label_visibility="collapsed", key="v_log_u")
                         p = st.text_input("P", type="password", placeholder="请输入密码", label_visibility="collapsed", key="v_log_p")
                         if st.form_submit_button("立 即 登 录", use_container_width=True):
@@ -120,7 +121,7 @@ def view_auth():
                                 else: st.error(msg)
 
                 with t2:
-                    with st.form("f_reg_final_locked", border=False):
+                    with st.form("f_reg_single_border", border=False):
                         ru = st.text_input("RA", placeholder="手机号 / 邮箱", label_visibility="collapsed", key="v_reg_ru")
                         rp = st.text_input("RP1", type="password", placeholder="设置登录密码", label_visibility="collapsed", key="v_reg_rp1")
                         rp2 = st.text_input("RP2", type="password", placeholder="再次确认密码", label_visibility="collapsed", key="v_reg_rp2")
@@ -131,6 +132,5 @@ def view_auth():
                                 res, msg = register_user(ru, rp, ri)
                                 if res: st.success("成功！请登录")
 
-    # --- 3. 底部声明 ---
     st.write("\n" * 4)
     st.markdown("<center style='color:#CBD5E1; font-size:11px; letter-spacing: 2px;'>© 2026 VIRAL FACTORY PRO. ALL RIGHTS RESERVED.</center>", unsafe_allow_html=True)

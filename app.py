@@ -9,6 +9,7 @@ import uuid
 import hashlib
 import random
 import pandas as pd
+import re # 引入正则用于提取天数
 
 # ==========================================
 # 0. 核心配置
@@ -41,7 +42,7 @@ def init_db():
 
 init_db()
 
-# --- CSS 样式 ---
+# --- CSS 样式 (v6.6 紧凑版) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -73,26 +74,43 @@ st.markdown("""
     div.stButton > button[kind="secondary"] { background-color: #f1f5f9; color: #475569; border: 1px solid transparent; }
     div.stButton > button[kind="secondary"]:hover { background-color: #e2e8f0; color: #1e293b; border-color: #cbd5e1; }
 
-    /* --- 🔥 侧边栏美化 🔥 --- */
+    /* --- 🔥 侧边栏极致紧凑美化 (v6.6) 🔥 --- */
     [data-testid="stSidebar"] {
         background-color: #f8fafc;
         border-right: 1px solid #e2e8f0;
     }
-    .sidebar-user-card {
-        background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; 
-        display: flex; align-items: center; margin-bottom: 20px;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+    /* 压缩侧边栏顶部留白 */
+    [data-testid="stSidebar"] .block-container {
+        padding-top: 2rem !important;
+        padding-bottom: 1rem !important;
     }
-    .user-avatar { font-size: 24px; margin-right: 12px; background: #eff6ff; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    .user-info { display: flex; flex-direction: column; }
-    .user-name { font-weight: 700; font-size: 14px; color: #1e293b; }
-    .user-role { font-size: 11px; color: #d97706; font-weight: 600; background: #fffbeb; padding: 2px 6px; border-radius: 4px; border: 1px solid #fcd34d; margin-top: 2px; width: fit-content; }
     
-    /* 侧边栏导航条改造 */
+    /* 用户身份卡片 (紧凑型 + 充值入口) */
+    .sidebar-user-card {
+        background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; 
+        display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;
+        box-shadow: 0 2px 4px -1px rgba(0,0,0,0.02);
+    }
+    .user-left { display: flex; align-items: center; }
+    .user-avatar { font-size: 20px; margin-right: 10px; background: #eff6ff; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .user-info { display: flex; flex-direction: column; }
+    .user-name { font-weight: 700; font-size: 13px; color: #1e293b; line-height: 1.2; }
+    .user-role { font-size: 10px; color: #d97706; font-weight: 600; background: #fffbeb; padding: 1px 5px; border-radius: 4px; border: 1px solid #fcd34d; margin-top: 2px; width: fit-content; }
+    
+    /* 侧边栏购买按钮 */
+    .buy-btn-sidebar {
+        text-decoration: none; background: #10b981; color: white !important; 
+        font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 6px; 
+        transition: all 0.2s; white-space: nowrap;
+    }
+    .buy-btn-sidebar:hover { background: #059669; transform: translateY(-1px); box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2); }
+
+    /* 侧边栏导航条改造 (更紧凑) */
     .stRadio > div { gap: 0px; }
     .stRadio > div > label {
-        background: transparent; padding: 10px 12px; border-radius: 8px; margin-bottom: 2px;
+        background: transparent; padding: 8px 10px; border-radius: 6px; margin-bottom: 1px;
         color: #475569; font-weight: 500; transition: all 0.2s; cursor: pointer; border: 1px solid transparent;
+        font-size: 14px !important;
     }
     .stRadio > div > label:hover { background: #f1f5f9; color: #1e293b; }
     .stRadio > div > label[data-checked="true"] {
@@ -100,14 +118,14 @@ st.markdown("""
     }
     .stRadio div[role="radiogroup"] > label > div:first-child { display: none; }
 
-    /* 侧边栏项目卡片 */
+    /* 侧边栏项目卡片 (紧凑) */
     .sidebar-project-card {
-        background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 10px;
-        border-left: 4px solid #3b82f6; transition: all 0.2s;
+        background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 8px;
+        border-left: 3px solid #3b82f6; transition: all 0.2s; cursor: default;
     }
-    .sidebar-project-card:hover { transform: translateX(3px); box-shadow: 0 4px 10px rgba(0,0,0,0.03); border-color: #cbd5e1; }
-    .sp-title { font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 4px; }
-    .sp-desc { font-size: 11px; color: #64748b; line-height: 1.3; }
+    .sidebar-project-card:hover { transform: translateX(2px); box-shadow: 0 2px 8px rgba(0,0,0,0.03); border-color: #cbd5e1; }
+    .sp-title { font-weight: 700; font-size: 12px; color: #334155; margin-bottom: 2px; }
+    .sp-desc { font-size: 10px; color: #94a3b8; line-height: 1.3; }
 
     /* --- 🔥 首页功能卡片样式 🔥 --- */
     [data-testid="stVerticalBlockBorderWrapper"] {
@@ -184,7 +202,7 @@ def send_mock_sms(phone): return str(random.randint(1000, 9999))
 def render_footer():
     st.markdown("""<div class="footer-legal"><div class="footer-links"><a href="#">用户协议</a> | <a href="#">隐私政策</a> | <a href="#">免责声明</a> | <a href="#">关于我们</a></div><div style="margin-top: 10px;">© 2026 爆款工场 Pro | 鄂ICP备2024XXXXXX号-1 | 违法和不良信息举报：TG777188</div><div style="font-size: 11px; color: #cbd5e1; margin-top: 5px;">本站仅提供技术工具，请勿用于任何非法用途，用户生成内容文责自负。</div></div>""", unsafe_allow_html=True)
 
-# 🔥 全新微信组件：标签左对齐，图标+ID右对齐，带Logo 🔥
+# 🔥 全新微信组件 🔥
 def render_wechat_box(label, wx_id):
     html = f"""
     <!DOCTYPE html><html><head><style>
@@ -192,25 +210,23 @@ def render_wechat_box(label, wx_id):
     body{{margin:0;padding:0;background:transparent;overflow:hidden;font-family:'Inter',sans-serif;}}
     .wx-pill{{
         display:flex;align-items:center;justify-content:space-between;
-        background:white;border:1px solid #e2e8f0;border-radius:10px;
-        padding:0 12px;height:40px;cursor:pointer;transition:all 0.2s;
-        box-sizing:border-box;color:#334155;
+        background:white;border:1px solid #e2e8f0;border-radius:8px; /* 紧凑圆角 */
+        padding:0 10px;height:36px; /* 紧凑高度 */
+        cursor:pointer;transition:all 0.2s;box-sizing:border-box;color:#334155;
     }}
     .wx-pill:hover{{border-color:#07c160;background:#07c160;}}
     .wx-pill:hover .label{{color:white;}}
     .wx-pill:hover .right-part{{color:white;}}
     .wx-pill:hover svg{{fill:white;}}
-    
-    .label{{font-size:13px;font-weight:600;transition:0.2s;}}
-    .right-part{{display:flex;align-items:center;gap:6px;font-family:monospace;font-weight:500;font-size:13px;transition:0.2s;color:#07c160;}}
-    .copied-msg{{display:none;font-size:12px;font-weight:bold;color:white;}}
+    .label{{font-size:12px;font-weight:600;transition:0.2s;}}
+    .right-part{{display:flex;align-items:center;gap:4px;font-family:monospace;font-weight:500;font-size:12px;transition:0.2s;color:#07c160;}}
+    .copied-msg{{display:none;font-size:11px;font-weight:bold;color:white;}}
     .wx-pill:hover .copied-msg{{color:white;}}
-    
     </style></head><body>
     <div class="wx-pill" onclick="copyText(this)">
         <span class="label" id="lbl">{label}</span>
         <div class="right-part" id="val">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="#07c160" xmlns="http://www.w3.org/2000/svg"><path d="M8.5 13.5L11 15L10 17.5C10 17.5 10.5 17.5 12.5 15C15 15 17 13 17 10.5C17 8 15 6 12.5 6C10 6 8 8 8 10.5C8 12 8.5 13.5 8.5 13.5ZM16.5 5.5C14 5.5 12 7 12 9C12 11 14 12.5 16.5 12.5C17 12.5 17.5 12.5 18 12L19.5 13L19 11C20 10.5 20.5 9.5 20.5 9C20.5 7 18.5 5.5 16.5 5.5Z" fill="currentColor"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#07c160" xmlns="http://www.w3.org/2000/svg"><path d="M8.5 13.5L11 15L10 17.5C10 17.5 10.5 17.5 12.5 15C15 15 17 13 17 10.5C17 8 15 6 12.5 6C10 6 8 8 8 10.5C8 12 8.5 13.5 8.5 13.5ZM16.5 5.5C14 5.5 12 7 12 9C12 11 14 12.5 16.5 12.5C17 12.5 17.5 12.5 18 12L19.5 13L19 11C20 10.5 20.5 9.5 20.5 9C20.5 7 18.5 5.5 16.5 5.5Z" fill="currentColor"/></svg>
             <span>{wx_id}</span>
         </div>
         <span class="copied-msg" id="msg">✅ 已复制</span>
@@ -221,27 +237,18 @@ def render_wechat_box(label, wx_id):
         const lbl = document.getElementById('lbl');
         const val = document.getElementById('val');
         const msg = document.getElementById('msg');
-        
         const textArea = document.createElement("textarea");
         textArea.value = id;
         document.body.appendChild(textArea);
         textArea.select();
         document.execCommand('copy');
         document.body.removeChild(textArea);
-        
-        lbl.style.display = 'none';
-        val.style.display = 'none';
-        msg.style.display = 'block';
-        
-        setTimeout(()=>{{
-            lbl.style.display = 'block';
-            val.style.display = 'flex';
-            msg.style.display = 'none';
-        }}, 1500);
+        lbl.style.display = 'none'; val.style.display = 'none'; msg.style.display = 'block';
+        setTimeout(()=>{{ lbl.style.display = 'block'; val.style.display = 'flex'; msg.style.display = 'none'; }}, 1500);
     }}
     </script></body></html>
     """
-    components.html(html, height=45)
+    components.html(html, height=40)
 
 def render_copy_button_html(text, k):
     safe = text.replace("`", "\`").replace("'", "\\'")
@@ -297,7 +304,9 @@ def get_user_vip_status(phone):
     rows = c.fetchall(); conn.close()
     if not rows: return False, "未开通会员"
     max_expire = max([datetime.datetime.strptime(str(r[0]).split('.')[0], '%Y-%m-%d %H:%M:%S') for r in rows])
-    if max_expire > now: return True, f"VIP 有效期至：{max_expire.strftime('%Y-%m-%d')} (剩余 {(max_expire - now).days} 天)"
+    if max_expire > now:
+        days_left = (max_expire - now).days
+        return True, f"VIP (剩{days_left}天)" # 🔥 简化显示，用于侧边栏提取
     return False, "会员已过期"
 
 def submit_feedback(phone, content):
@@ -357,29 +366,35 @@ def go_to(page):
     st.session_state['nav_menu'] = page
     st.session_state['sb_radio'] = page
 
-# --- 侧边栏 ---
+# --- 侧边栏 (终极紧凑 + 商业化) ---
 with st.sidebar:
-    # 1. 用户身份
-    status_label = "👑 尊贵VIP" if IS_VIP else "🌑 普通用户"
+    # 1. 用户身份卡片 (带充值按钮)
+    shop_url = get_setting("shop_url")
+    buy_btn_html = f"""<a href="{shop_url}" target="_blank" class="buy-btn-sidebar">💎 充值</a>""" if shop_url else ""
+    
+    # 提取 VIP 天数信息
+    role_display = VIP_MSG if IS_VIP else "🌑 普通用户"
+    
     st.markdown(f"""
     <div class="sidebar-user-card">
-        <div class="user-avatar">👤</div>
-        <div class="user-info">
-            <div class="user-name">{CURRENT_USER[:3]}****{CURRENT_USER[-4:]}</div>
-            <div class="user-role">{status_label}</div>
+        <div class="user-left">
+            <div class="user-avatar">👤</div>
+            <div class="user-info">
+                <div class="user-name">{CURRENT_USER[:3]}****{CURRENT_USER[-4:]}</div>
+                <div class="user-role">{role_display}</div>
+            </div>
         </div>
+        {buy_btn_html}
     </div>
     """, unsafe_allow_html=True)
     
     if not IS_VIP:
         with st.expander("🔑 激活卡密", expanded=True):
-            c = st.text_input("输入卡密", type="password", key="side_cd", label_visibility="collapsed", placeholder="输入卡密...")
+            c = st.text_input("卡密", type="password", key="side_cd", label_visibility="collapsed", placeholder="输入卡密...")
             if st.button("立即激活", use_container_width=True):
                 s, m = activate_code(CURRENT_USER, c)
                 if s: st.success(m); time.sleep(1); st.rerun()
                 else: st.error(m)
-    else:
-        st.markdown(f"<div style='font-size:12px;color:#10b981;margin-bottom:15px;padding:0 5px;'>{VIP_MSG.split('(')[0]}</div>", unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -395,8 +410,8 @@ with st.sidebar:
 
     st.markdown("---")
     
-    # 3. 商业推广区 (变现矩阵)
-    st.markdown("<div style='font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:10px;'>🔥 热门变现项目</div>", unsafe_allow_html=True)
+    # 3. 热门变现项目 (紧凑卡片)
+    st.markdown("<div style='font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:8px;'>🔥 热门变现项目</div>", unsafe_allow_html=True)
     st.markdown("""
     <div class="sidebar-project-card">
         <div class="sp-title">📹 素人 KOC 孵化</div>
@@ -412,11 +427,11 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("<div style='height:15px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
     
     # 4. 变现咨询 (微信组件)
     render_wechat_box("💰 变现咨询", "W7774X")
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
     
     # 5. 技术合作 (辅助)
     render_wechat_box("🛠️ 技术合作", "TG777188")
@@ -426,7 +441,7 @@ with st.sidebar:
 
 menu = st.session_state['nav_menu']
 
-# --- 首页 ---
+# --- 首页 (Embedded Button Design) ---
 def page_home():
     st.markdown("## 💠 抖音爆款工场 Pro")
     st.caption("专为素人 KOC 打造的 AI 提效神器 | 文案 · 选题 · 海报 · 变现")
@@ -529,7 +544,6 @@ def page_poster():
     .invite-code{font-size:28px;font-weight:800;color:#4f46e5;letter-spacing:1px;}
     .invite-hint{font-size:12px;color:#94a3b8;margin-top:5px;opacity:0;transition:0.2s;}
     .invite:hover .invite-hint{opacity:1;color:#6366f1;}
-    /* 极致阴影微调 */
     .jump{flex:1.5;background:linear-gradient(135deg,#4f46e5,#7c3aed);text-decoration:none;box-shadow:0 4px 15px rgba(124,58,237,0.1);border:1px solid rgba(255,255,255,0.15);}
     .jump:hover{transform:translateY(-5px);box-shadow:0 8px 20px rgba(124,58,237,0.25);filter:brightness(1.05);}
     .jump-title{color:#fff;font-size:24px;font-weight:800;margin-bottom:4px;text-shadow:0 2px 4px rgba(0,0,0,0.1);}

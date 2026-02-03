@@ -12,9 +12,17 @@ def hash_password(password):
 def generate_invite_code():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
-# --- 全局样式注入 (严格隔离 + 深度修复) ---
-def inject_css(mode="app"):
-    # 1. 基础通用
+# ==============================================================================
+# 🎨 页面级样式隔离系统 (CSS Router)
+# ==============================================================================
+
+def inject_css(page_id="auth"):
+    """
+    根据 page_id 加载完全独立的 CSS，杜绝样式污染。
+    page_id 选项: 'auth', 'home', 'rewrite', 'general'
+    """
+    
+    # 1. 全局基础重置 (仅字体和隐藏无关组件)
     base_css = """
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -23,112 +31,79 @@ def inject_css(mode="app"):
         #MainMenu { visibility: hidden; }
         [data-testid="stSidebarCollapsedControl"] { display: none; }
         [data-testid="InputInstructions"] { display: none !important; }
+        
+        /* 侧边栏通用美化 */
+        [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
+        div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; }
+        div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; }
+        div[role="radiogroup"] label[aria-checked="true"] { background-color: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe; font-weight: 600 !important; }
+        div[role="radiogroup"] > label > div:first-child { display: none !important; }
     </style>
     """
     st.markdown(base_css, unsafe_allow_html=True)
 
-    # ============================================================
-    # 🔒 登录页样式 (LOCKED: 不要改动)
-    # 修复内容：输入框高度、双边框去除、眼睛图标遮挡修复
-    # ============================================================
-    if mode == "auth":
+    # ----------------------------------------------------------------
+    # 🔒 [已锁定] 登录页样式 (Auth) - 绝对不改动
+    # 特征：深色极光背景 + 居中大白卡 + 内部分栏 + 输入框完美修复
+    # ----------------------------------------------------------------
+    if page_id == "auth":
         st.markdown("""
         <style>
-            /* 1. 背景：深色极光流光 */
+            /* A. 背景：深色极光流光 */
             .stApp {
                 background: linear-gradient(-45deg, #020617, #0f172a, #1e3a8a, #172554);
-                background-size: 400% 400%;
-                animation: authGradient 15s ease infinite;
+                background-size: 400% 400%; animation: authGradient 15s ease infinite;
             }
             @keyframes authGradient { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
 
-            /* 2. 核心卡片：大白卡绝对居中 */
+            /* B. 核心卡片：大白卡绝对居中 */
             div.block-container {
-                background-color: rgba(255, 255, 255, 0.98);
-                border-radius: 24px;
+                background-color: rgba(255, 255, 255, 0.98); border-radius: 24px;
                 box-shadow: 0 30px 80px rgba(0,0,0,0.6);
-                padding: 60px 50px !important;
-                max-width: 1100px !important;
-                margin: auto;
-                position: absolute; /* 绝对居中 */
-                top: 50%; left: 50%;
-                transform: translate(-50%, -50%);
-                overflow: hidden;
+                padding: 60px 50px !important; max-width: 1100px !important;
+                margin: auto; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); overflow: hidden;
             }
-
-            /* 3. 左侧文案区修饰 */
-            .auth-left-decor {
-                border-right: 1px solid #f1f5f9;
-                padding-right: 40px;
-                height: 100%;
-                display: flex; flex-direction: column; justify-content: center;
-            }
+            
+            /* C. 登录页专用布局类 */
+            .auth-left-decor { border-right: 1px solid #f1f5f9; padding-right: 40px; height: 100%; display: flex; flex-direction: column; justify-content: center; }
             .hero-title { font-size: 42px; font-weight: 800; color: #0f172a; line-height: 1.2; margin-bottom: 20px; letter-spacing: -1px; }
             .hero-sub { font-size: 16px; color: #64748b; line-height: 1.6; margin-bottom: 30px; }
             .hero-tags { display: flex; gap: 10px; }
             .tag-pill { background: #eff6ff; color: #2563eb; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
 
-            /* --- 👇 登录页输入框终极修复 (Fix Double Border) 👇 --- */
-            
-            /* 外层壳：负责灰色背景和边框 */
+            /* D. 登录页专用输入框修复 (Fix Double Border & Height) */
+            /* 外壳：负责边框和背景 */
             .stTextInput div[data-baseweb="input"] {
-                background-color: #f8fafc !important;
-                border: 1px solid #cbd5e1 !important;
-                border-radius: 8px !important;
-                height: 48px !important; /* 强制高度，解决显示不全 */
-                padding: 0 !important;
+                background-color: #f8fafc !important; border: 1px solid #cbd5e1 !important;
+                border-radius: 8px !important; height: 48px !important; padding: 0 !important;
             }
-            
-            /* 内层输入：透明背景，去边框 */
-            .stTextInput input {
-                background-color: transparent !important;
-                border: none !important;
-                color: #1e293b !important;
-                height: 48px !important;
-                padding: 0 15px !important;
-            }
-            
-            /* 聚焦高亮 */
-            .stTextInput div[data-baseweb="input"]:focus-within {
-                border-color: #3b82f6 !important;
-                background-color: #ffffff !important;
-                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
-            }
-            
-            /* 修复密码框眼睛图标背景 */
-            .stTextInput div[data-baseweb="input"] > div {
-                background-color: transparent !important;
-            }
-            /* --- 👆 修复结束 👆 --- */
-            
-            /* 5. 按钮 */
-            div.stButton > button {
-                width: 100%; height: 48px; background: linear-gradient(90deg, #2563eb, #3b82f6);
-                color: white; border: none; border-radius: 8px; font-weight: 600;
-            }
-            div.stButton > button:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(37,99,235,0.3); }
+            /* 内胆：透明，去边框 */
+            .stTextInput input { background-color: transparent !important; border: none !important; color: #1e293b !important; height: 48px !important; padding: 0 15px !important; }
+            /* 聚焦 */
+            .stTextInput div[data-baseweb="input"]:focus-within { border-color: #3b82f6 !important; background-color: #ffffff !important; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important; }
+            /* 图标背景修复 */
+            .stTextInput div[data-baseweb="input"] > div { background-color: transparent !important; }
 
-            /* 6. Tabs */
+            div.stButton > button { width: 100%; height: 48px; background: linear-gradient(90deg, #2563eb, #3b82f6); color: white; border: none; border-radius: 8px; font-weight: 600; }
+            div.stButton > button:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(37,99,235,0.3); }
+            
             .stTabs [data-baseweb="tab-list"] { gap: 20px; border-bottom: 1px solid #f1f5f9 !important; margin-bottom: 25px; }
             .stTabs [data-baseweb="tab"] { height: 45px; color: #64748b; font-weight: 600; }
             .stTabs [aria-selected="true"] { color: #2563eb !important; border-bottom: 3px solid #2563eb !important; }
-
-            /* 隐藏侧边栏 */
             [data-testid="stSidebar"] { display: none; }
         </style>
         """, unsafe_allow_html=True)
 
-    # ============================================================
-    # 💠 系统内页样式 (APP MODE) - 您的完美流光版
-    # ============================================================
-    elif mode == "app":
+    # ----------------------------------------------------------------
+    # 🏠 [独立] 首页样式 (Home)
+    # ----------------------------------------------------------------
+    elif page_id == "home":
         st.markdown("""
         <style>
             .stApp { background-color: #f8fafc; }
-            [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
-            div.block-container { max-width: 1400px !important; padding: 0 40px 50px 40px !important; }
+            div.block-container { max-width: 1200px !important; padding: 0 40px 50px 40px !important; }
 
-            /* 文案改写页专用：浅色悬浮极光 Banner */
+            /* 首页流光 Header */
             .flowing-header {
                 background: linear-gradient(-45deg, #1e3a8a, #2563eb, #3b82f6, #0ea5e9);
                 background-size: 400% 400%; animation: gradientBG 10s ease infinite;
@@ -138,15 +113,58 @@ def inject_css(mode="app"):
                 box-shadow: 0 20px 50px rgba(37, 99, 235, 0.3); position: relative; z-index: 0;
             }
             @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
+            .header-title { font-size: 42px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+            .header-sub { font-size: 15px; opacity: 0.95; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 30px; backdrop-filter: blur(10px); display: inline-block; border: 1px solid rgba(255,255,255,0.2); }
 
-            /* 纯白一体化控制台 */
+            /* 首页白卡 */
+            .creation-console {
+                background: white; border-radius: 24px; padding: 40px;
+                box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); 
+                border: 1px solid #e2e8f0; position: relative; z-index: 10; margin-top: 20px;
+            }
+            
+            /* 首页专用按钮 (隐形铺满) */
+            div.stButton button { width: 100%; border:none; background:transparent; color:transparent; height:100px; position:absolute; top:0; left:0; z-index:2; }
+            div.stButton button:hover { background:rgba(0,0,0,0.02); }
+            
+            /* 标签 */
+            .custom-label { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 20px; border-left: 4px solid #3b82f6; padding-left: 10px; }
+            
+            /* 公告 */
+            .ann-card { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 12px 15px; margin-bottom: 10px; display: flex; align-items: start; gap: 10px; font-size: 14px; color: #9a3412; }
+        </style>
+        """, unsafe_allow_html=True)
+
+    # ----------------------------------------------------------------
+    # 📝 [独立] 文案改写页样式 (Rewrite)
+    # ----------------------------------------------------------------
+    elif page_id == "rewrite":
+        st.markdown("""
+        <style>
+            .stApp { background-color: #f8fafc; }
+            div.block-container { max-width: 1400px !important; padding: 0 40px 50px 40px !important; }
+
+            /* 文案页悬浮流光 Header (更宽) */
+            .flowing-header {
+                background: linear-gradient(-45deg, #1e3a8a, #2563eb, #3b82f6, #0ea5e9);
+                background-size: 400% 400%; animation: gradientBG 10s ease infinite;
+                border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
+                padding: 50px 40px 100px 40px; color: white; text-align: center;
+                margin-bottom: -70px; margin-left: -40px; margin-right: -40px;
+                box-shadow: 0 20px 50px rgba(37, 99, 235, 0.3); position: relative; z-index: 0;
+            }
+            @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
+            .header-title { font-size: 42px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+            .header-sub { font-size: 15px; opacity: 0.95; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 30px; backdrop-filter: blur(10px); display: inline-block; border: 1px solid rgba(255,255,255,0.2); }
+
+            /* 文案页一体化控制台 */
             .creation-console {
                 background: white; border-radius: 24px; padding: 40px;
                 box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); 
                 border: 1px solid #e2e8f0; position: relative; z-index: 10; margin-top: 20px;
             }
 
-            /* 内页输入框 (无叠影，白底) */
+            /* 文案页专用输入框 (纯白无叠影) */
             .stTextArea > div { border: none !important; box-shadow: none !important; background: transparent !important; }
             .stTextArea > label { display: none !important; }
             .stTextArea textarea {
@@ -155,8 +173,12 @@ def inject_css(mode="app"):
             }
             .stTextArea textarea:focus { border-color: #3b82f6 !important; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important; }
 
-            /* 按钮与标签 */
+            /* 组件对齐 */
             .custom-label { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: block; }
+            
+            /* 强制组件高度一致 */
+            div[data-baseweb="select"] > div { height: 48px !important; border-radius: 10px !important; background-color: #f8fafc; }
+            
             div.stButton button[kind="primary"] {
                 width: 100%; height: 48px !important; border: none !important;
                 background: linear-gradient(90deg, #2563eb, #3b82f6) !important;
@@ -164,31 +186,44 @@ def inject_css(mode="app"):
                 box-shadow: 0 8px 20px -5px rgba(37, 99, 235, 0.4) !important;
             }
             div.stButton button[kind="primary"]:hover { transform: translateY(-2px); }
-            div.stButton button[kind="secondary"] { height: 48px !important; border: 1px solid #e2e8f0 !important; background: white !important; color: #64748b !important; font-weight: 600 !important; }
             
-            /* 矩阵模式对齐 Info Box */
+            div.stButton button[kind="secondary"] {
+                height: 48px !important; border: 1px solid #e2e8f0 !important;
+                background: white !important; color: #64748b !important; font-weight: 600 !important;
+            }
+            
             .info-box { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 0 20px; border-radius: 10px; font-size: 15px; display: flex; align-items: center; gap: 10px; height: 48px; }
-            
-            /* 通用 Banner */
-            .page-banner { background: linear-gradient(120deg, #2563eb, #1d4ed8); color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4); }
-            .banner-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
-            .banner-desc { font-size: 15px; opacity: 0.9; line-height: 1.5; }
-            
-            /* 侧边栏菜单 */
-            div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; }
-            div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; }
-            div[role="radiogroup"] label[aria-checked="true"] { background-color: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe; font-weight: 600 !important; }
-            div[role="radiogroup"] > label > div:first-child { display: none !important; }
-            
-            /* 公告卡片 */
-            .ann-card { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 12px 15px; margin-bottom: 10px; display: flex; align-items: start; gap: 10px; font-size: 14px; color: #9a3412; }
-            
-            /* 转化提示 */
             .conversion-tip { margin-top: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 10px 15px; border-radius: 10px; font-size: 13px; display: flex; align-items: center; gap: 10px; }
         </style>
         """, unsafe_allow_html=True)
 
-# --- 组件函数 (全部保留，防止报错) ---
+    # ----------------------------------------------------------------
+    # 📄 [独立] 通用页面样式 (General)
+    # ----------------------------------------------------------------
+    elif page_id == "general":
+        st.markdown("""
+        <style>
+            .stApp { background-color: #f8fafc; }
+            div.block-container { max-width: 1200px !important; padding: 2rem 40px 50px 40px !important; }
+            
+            /* 通用 Banner */
+            .page-banner {
+                background: linear-gradient(120deg, #2563eb, #1d4ed8);
+                color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px;
+                box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+            }
+            .banner-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
+            .banner-desc { font-size: 15px; opacity: 0.9; line-height: 1.5; }
+            
+            /* 通用卡片容器 */
+            div[data-testid="stVerticalBlock"] > div {
+                background: transparent;
+            }
+            .stButton > button { border-radius: 8px; font-weight: 600; border: none; }
+        </style>
+        """, unsafe_allow_html=True)
+
+# --- 组件函数 (全部保留) ---
 def render_sidebar_user_card(username, vip_info):
     status_bg = "#eff6ff" if "VIP" in vip_info or "管理员" in vip_info else "#f1f5f9"
     st.sidebar.markdown(f"""<div style="background: {status_bg}; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 20px;"><div style="display:flex; align-items:center; margin-bottom: 8px;"><div style="width: 32px; height: 32px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 10px; border: 1px solid #e2e8f0;">👤</div><div style="font-weight: 700; color: #0f172a; font-size: 14px; overflow: hidden; text-overflow: ellipsis;">{username}</div></div><div style="background: white; padding: 6px 10px; border-radius: 6px; font-size: 12px; color: #2563eb; font-weight: 600; border: 1px solid #e2e8f0; text-align: center;">{vip_info}</div></div>""", unsafe_allow_html=True)

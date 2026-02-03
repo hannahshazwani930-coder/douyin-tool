@@ -37,7 +37,7 @@ def inject_css(page_id="auth"):
     st.markdown(base_css, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 登录页 (Auth) - 绝对不动
+    # 🔒 [LOCKED] 登录页
     # ----------------------------------------------------------------
     if page_id == "auth":
         st.markdown("""
@@ -64,7 +64,7 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ============================================================
-    # 🏠 [LOCKED] 首页悬浮岛设计 - V3 (长按钮+乱码修复)
+    # 🏠 [NEW] 首页 V3 (强制刷新缓存版)
     # ============================================================
     elif page_id == "home":
         st.markdown("""
@@ -72,78 +72,72 @@ def inject_css(page_id="auth"):
             .stApp { background-color: #f8fafc; }
             div.block-container { max-width: 1200px !important; padding: 1rem 40px 50px 40px !important; }
 
-            /* 1. 悬浮岛头图 */
-            .home-header-card {
+            /* 头图 V3 */
+            .header-card-v3 {
                 background: linear-gradient(120deg, #2563eb, #1d4ed8);
                 border-radius: 20px; padding: 50px 40px; text-align: center; color: white;
                 box-shadow: 0 15px 40px -10px rgba(37, 99, 235, 0.4); 
                 margin-bottom: 30px; position: relative; overflow: hidden;
             }
-            .home-header-card::before {
-                content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-                background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
-                animation: rotateLight 20s linear infinite;
-            }
-            @keyframes rotateLight { from {transform: rotate(0deg);} to {transform: rotate(360deg);} }
-            .header-title { font-size: 36px; font-weight: 800; margin-bottom: 10px; position: relative; z-index: 2; }
-            .header-sub { font-size: 15px; opacity: 0.95; font-weight: 400; position: relative; z-index: 2; }
+            .header-title-v3 { font-size: 36px; font-weight: 800; margin-bottom: 10px; position: relative; z-index: 2; }
+            .header-sub-v3 { font-size: 15px; opacity: 0.95; font-weight: 400; position: relative; z-index: 2; }
 
-            /* 2. 通用 */
-            .section-label { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-            .section-label::before { content: ""; display: block; width: 4px; height: 18px; background: #3b82f6; border-radius: 2px; }
-
-            /* 3. 核心功能卡片 (优化点击层级) */
-            .feature-card-pro {
+            /* 核心功能 V3 */
+            .feature-box-v3 {
                 background: white; border: 1px solid #e2e8f0; border-radius: 16px;
                 padding: 25px 20px; text-align: center; height: 160px;
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
                 transition: all 0.3s ease; position: relative; overflow: hidden;
             }
-            .feature-card-pro:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); border-color: #bfdbfe; }
-            .feat-icon { font-size: 32px; margin-bottom: 12px; }
-            .feat-title { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
-            .feat-desc { font-size: 12px; color: #64748b; line-height: 1.4; }
+            .feature-box-v3:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); border-color: #bfdbfe; }
+            .feat-icon-v3 { font-size: 32px; margin-bottom: 12px; } 
+            .feat-title-v3 { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
+            .feat-desc-v3 { font-size: 12px; color: #64748b; line-height: 1.4; }
 
-            /* 4. 公告 */
-            .news-container {
-                background: white; border: 1px solid #fed7aa; border-radius: 12px;
-                padding: 12px 15px; display: flex; align-items: center; gap: 15px;
-                box-shadow: 0 4px 10px -2px rgba(249, 115, 22, 0.1); margin-bottom: 30px;
-            }
-            .news-badge { background: #fff7ed; color: #ea580c; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 4px; border: 1px solid #ffedd5; flex-shrink: 0; }
-            .news-content { font-size: 14px; color: #334155; font-weight: 500; }
-
-            /* 5. 变现任务卡片 (V2: 恢复简单结构 + 长按钮) */
-            .monetize-card {
+            /* 变现卡片 V3 */
+            .project-card-v3 {
                 background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px;
                 padding: 20px; height: 100%; display: flex; flex-direction: column;
                 transition: all 0.3s;
             }
-            .monetize-card:hover { border-color: #cbd5e1; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.06); }
+            .project-card-v3:hover { border-color: #cbd5e1; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.06); }
             
-            .mon-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-            .mon-icon { font-size: 24px; } /* 恢复默认字体，解决乱码 */
-            .mon-title { font-size: 15px; font-weight: 700; color: #0f172a; }
-            .mon-desc { font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 20px; flex-grow: 1; }
+            .proj-head-v3 { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+            .proj-icon-v3 { font-size: 24px; }
+            .proj-title-v3 { font-size: 15px; font-weight: 700; color: #0f172a; }
+            .proj-desc-v3 { font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 20px; flex-grow: 1; }
             
-            /* 长条复制按钮 */
-            .long-copy-btn {
-                background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0;
-                width: 100%; padding: 8px 0; border-radius: 8px;
+            /* 长条复制按钮 V3 (深绿色，醒目) */
+            .copy-btn-v3 {
+                background: #16a34a; color: white; /* 纯深绿背景，白字 */
+                width: 100%; padding: 10px 0; border-radius: 8px;
                 text-align: center; font-size: 13px; font-weight: 600;
                 cursor: pointer; transition: all 0.2s;
+                box-shadow: 0 4px 6px rgba(22, 163, 74, 0.2);
             }
-            .long-copy-btn:hover { background: #16a34a; color: white; border-color: #16a34a; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.2); }
-            .long-copy-btn:active { transform: scale(0.98); }
+            .copy-btn-v3:hover { background: #15803d; transform: translateY(-1px); box-shadow: 0 6px 12px rgba(22, 163, 74, 0.3); }
+            .copy-btn-v3:active { transform: scale(0.98); }
 
-            /* 隐形跳转按钮 (覆盖核心功能) */
+            /* 通用 */
+            .section-title-v3 { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+            .section-title-v3::before { content: ""; display: block; width: 4px; height: 18px; background: #3b82f6; border-radius: 2px; }
+            
+            /* 公告 */
+            .news-box-v3 {
+                background: white; border: 1px solid #fed7aa; border-radius: 12px;
+                padding: 12px 15px; display: flex; align-items: center; gap: 15px;
+                box-shadow: 0 4px 10px -2px rgba(249, 115, 22, 0.1); margin-bottom: 30px;
+            }
+            .news-tag-v3 { background: #fff7ed; color: #ea580c; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 4px; border: 1px solid #ffedd5; flex-shrink: 0; }
+            .news-text-v3 { font-size: 14px; color: #334155; font-weight: 500; }
+
             div.stButton button { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: transparent; color: transparent; border: none; z-index: 10; }
             div.stButton button:hover { background: transparent; }
         </style>
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 文案改写页 (Rewrite) - 绝对不动
+    # 🔒 [LOCKED] 文案页
     # ----------------------------------------------------------------
     elif page_id == "rewrite":
         st.markdown("""
@@ -180,7 +174,7 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 其他页面 (General) - 绝对不动
+    # 🔒 [LOCKED] 其他页面
     # ----------------------------------------------------------------
     elif page_id == "general":
         st.markdown("""
@@ -196,7 +190,7 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [LOCKED] 管理后台 (Admin) - 绝对不动
+    # 🔒 [LOCKED] 后台
     # ----------------------------------------------------------------
     elif page_id == "admin":
         st.markdown("""

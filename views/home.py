@@ -4,16 +4,13 @@ from utils import render_cta_wechat
 from database import get_active_announcements
 
 def view_home():
-    # 1. 沉浸式头图
+    # 1. 悬浮岛头图 (Card Style Header)
     st.markdown("""
-    <div class="flowing-header">
+    <div class="home-header-card">
         <div class="header-title">抖音爆款工场 Pro</div>
         <div class="header-sub">全流程 AI 创作工作台 · 赋能内容生产 · 连接商业变现</div>
     </div>
     """, unsafe_allow_html=True)
-    
-    # 2. 悬浮中控台
-    st.markdown('<div class="creation-console">', unsafe_allow_html=True)
     
     # === A. 核心功能区 (悬浮微交互卡片) ===
     st.markdown('<div class="section-label">🚀 核心创作引擎</div>', unsafe_allow_html=True)
@@ -36,23 +33,25 @@ def view_home():
                 <div class="feat-desc">{desc}</div>
             </div>
             """, unsafe_allow_html=True)
+            
+            # 隐形点击层
             if st.button(f"nav_home_{i}", key=f"feat_btn_{i}", use_container_width=True):
                 st.session_state['nav_menu_selection'] = target
                 st.rerun()
 
-    # === B. 系统公告 (静态胶囊) ===
+    # === B. 系统公告 (静态居中) ===
     st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
     anns = get_active_announcements()
     latest_ann = anns[0][0] if anns else "暂无最新系统公告，请留意后续更新。"
     
     st.markdown(f"""
     <div class="news-container">
-        <div class="news-badge">NEW</div>
+        <div class="news-badge">🔔 NEW</div>
         <div class="news-content">{latest_ann}</div>
     </div>
     """, unsafe_allow_html=True)
 
-    # === C. 热门变现任务 (微信徽章交互) ===
+    # === C. 热门变现任务 (交互徽章) ===
     st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
     st.markdown('<div class="section-label">🔥 热门变现项目</div>', unsafe_allow_html=True)
     
@@ -75,11 +74,10 @@ def view_home():
                 <div class="mon-desc">{desc}</div>
                 
                 <div class="wechat-badge" onclick="navigator.clipboard.writeText('W7774X'); alert('✅ 微信 W7774X 已复制！\\n请添加微信并备注【资料】领取内部白皮书。')">
-                    <span style="font-family: monospace;">W7774X</span>
-                    <span>🔗</span>
+                    <span style="font-size:14px; color:#10b981;">💬</span>
+                    <span>W7774X</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
     st.markdown("<div style='height:40px'></div>", unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True) # End Console

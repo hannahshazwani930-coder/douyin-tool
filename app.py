@@ -13,7 +13,7 @@ import string
 import re
 
 # ==========================================
-# 1. 核心配置
+# 0. 核心配置
 # ==========================================
 st.set_page_config(
     page_title="抖音爆款工场 Pro", 
@@ -56,102 +56,123 @@ def init_db():
 init_db()
 
 # ==========================================
-# 2. 全局 CSS (样式隔离)
+# 1. 全局 CSS (样式隔离 + 终极美化)
 # ==========================================
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     
+    /* 全局重置 */
     .stApp { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
     header { visibility: hidden; }
     [data-testid="stSidebarCollapsedControl"] { display: none; }
     div.block-container { max-width: 1200px !important; padding: 2rem !important; }
 
-    /* --- 功能页美化 (只针对主区域) --- */
+    /* =========================================
+       ✨ 核心：功能页高级质感 (Main Area)
+       ========================================= */
+    
+    /* 卡片容器：半透明磨砂 + 柔光阴影 */
     section.main [data-testid="stVerticalBlockBorderWrapper"] {
         border-radius: 16px !important;
-        border: 1px solid rgba(255, 255, 255, 0.6) !important;
-        background: rgba(255, 255, 255, 0.8) !important;
-        backdrop-filter: blur(12px) !important;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05) !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #ffffff !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02) !important;
         padding: 24px !important;
-        transition: all 0.3s ease !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     section.main [data-testid="stVerticalBlockBorderWrapper"]:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 40px -5px rgba(59, 130, 246, 0.15) !important;
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px -5px rgba(59, 130, 246, 0.1) !important;
         border-color: #bfdbfe !important;
     }
-    
-    /* 输入框美化 */
+
+    /* 输入框：实心白底 (修复透明看不清问题) */
     section.main .stTextInput > div > div > input,
-    section.main .stTextArea > div > div > textarea {
-        background-color: rgba(248, 250, 252, 0.8) !important;
+    section.main .stTextArea > div > div > textarea,
+    section.main .stSelectbox > div > div {
+        background-color: #ffffff !important;
         border: 1px solid #cbd5e1 !important;
-        border-radius: 10px !important;
         color: #1e293b !important;
+        border-radius: 10px !important;
+        padding: 10px 12px !important;
+        font-size: 14px !important;
+        box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05) !important;
+    }
+    
+    /* 聚焦光效 */
+    section.main .stTextInput > div > div > input:focus,
+    section.main .stTextArea > div > div > textarea:focus {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
     }
 
-    /* 按钮 */
-    div.stButton > button { border-radius: 8px; font-weight: 600; height: 44px; border: none; transition: 0.2s; }
-    div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white !important; }
-    div.stButton > button[kind="primary"]:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+    /* 按钮系统 */
+    div.stButton > button { border-radius: 8px; font-weight: 600; height: 44px; width: 100%; font-size: 14px; border: none; transition: 0.2s; }
+    div.stButton > button[kind="primary"] { 
+        background: linear-gradient(135deg, #0f172a 0%, #334155 100%); 
+        color: white !important; box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15); 
+    }
+    div.stButton > button[kind="primary"]:hover { background: #334155; transform: translateY(-1px); }
+    div.stButton > button[kind="secondary"] { background: white; border: 1px solid #cbd5e1; color: #475569; }
+    div.stButton > button[kind="secondary"]:hover { border-color: #94a3b8; background: #f8fafc; color: #0f172a; }
 
-    /* --- 侧边栏 --- */
+    /* =========================================
+       🎨 首页 Hero 样式
+       ========================================= */
+    .hero-container {
+        background: white; border-radius: 20px; padding: 45px; text-align: center;
+        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 40px;
+        position: relative; overflow: hidden;
+    }
+    .hero-container::before {
+        content: ''; position: absolute; top: -50%; right: -10%; width: 300px; height: 300px;
+        background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%); pointer-events: none;
+    }
+    .hero-title {
+        font-size: 42px; font-weight: 900; color: #1e293b; margin-bottom: 12px; letter-spacing: -1px;
+    }
+    .hero-sub { font-size: 16px; color: #64748b; font-weight: 500; }
+
+    .home-card-inner { text-align: center; padding: 10px; }
+    .home-card-icon {
+        width: 64px; height: 64px; margin: 0 auto 15px auto;
+        background: linear-gradient(135deg, #f0f9ff 0%, #dbeafe 100%);
+        border-radius: 18px; display: flex; align-items: center; justify-content: center;
+        font-size: 30px; color: #0284c7;
+    }
+    .home-card-title { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
+    .home-card-desc { font-size: 13px; color: #64748b; line-height: 1.5; min-height: 40px; }
+
+    /* =========================================
+       🚪 侧边栏 (稳定紧凑)
+       ========================================= */
     [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; }
     .sidebar-user-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
     .user-left { display: flex; align-items: center; }
     .user-avatar { font-size: 18px; margin-right: 10px; background: white; border: 1px solid #e2e8f0; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    .user-info { display: flex; flex-direction: column; }
     .user-name { font-weight: 700; font-size: 13px; color: #1e293b; }
     .user-role { font-size: 10px; color: #d97706; font-weight: 600; background: #fffbeb; padding: 1px 5px; border-radius: 4px; margin-top: 2px; }
     .buy-btn-sidebar { text-decoration: none; background: #0f172a; color: white !important; font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 6px; }
     
     .stRadio > div { gap: 0px; }
-    .stRadio label { background: transparent; padding: 8px 12px; border-radius: 6px; margin-bottom: 2px; color: #64748b; font-weight: 500; transition: all 0.2s; border: none; }
+    .stRadio label { background: transparent; padding: 8px 12px; border-radius: 6px; margin-bottom: 2px; color: #64748b; font-weight: 500; transition: all 0.2s; border: none; font-size: 14px !important; }
     .stRadio label:hover { background: #f1f5f9; color: #0f172a; }
     .stRadio label[data-checked="true"] { background: #eff6ff; color: #2563eb; font-weight: 600; }
     .stRadio div[role="radiogroup"] > label > div:first-child { display: none; }
     
     .sidebar-project-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 8px; border-left: 3px solid #3b82f6; cursor: default; }
-    .sp-title { font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 2px; }
-    .sp-desc { font-size: 11px; color: #94a3b8; line-height: 1.4; }
+    .sp-title { font-weight: 700; font-size: 12px; color: #334155; margin-bottom: 2px; }
+    .sp-desc { font-size: 10px; color: #94a3b8; line-height: 1.3; }
 
-    /* 首页 Hero */
-    .hero-container { background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border-radius: 24px; padding: 50px 40px; text-align: center; border: 1px solid #e2e8f0; margin-bottom: 40px; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); }
-    .hero-title { font-size: 46px; font-weight: 900; background: linear-gradient(120deg, #1e293b, #2563eb, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
-    .hero-sub { font-size: 17px; color: #64748b; }
-    
-    .home-card-inner { text-align: center; padding: 10px; }
-    .home-card-icon { width: 68px; height: 68px; margin: 0 auto 15px auto; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #2563eb; }
-    .home-card-title { font-size: 19px; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
-    .home-card-desc { font-size: 13px; color: #64748b; line-height: 1.5; min-height: 40px; }
-    
+    /* 其他组件 */
+    .referral-box { background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border: 1px solid #fed7aa; border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 20px; }
+    .referral-code-display { font-family: monospace; font-size: 32px; font-weight: 800; color: #ea580c; background: rgba(255,255,255,0.6); padding: 10px 30px; border-radius: 12px; border: 2px dashed #f97316; display: inline-block; margin: 10px 0; cursor: pointer; }
     .footer-legal { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 12px; }
 </style>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# 3. 关键组件函数 (定义在 Main 之前！)
-# ==========================================
-def render_footer():
-    st.markdown("""<div class="footer-legal">© 2026 抖音爆款工场 Pro | 鄂ICP备2024XXXXXX号-1</div>""", unsafe_allow_html=True)
-
-def render_wechat_box(label, wx_id):
-    html = f"""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');body{{margin:0;padding:0;background:transparent;font-family:'Inter',sans-serif;}}.pill{{display:flex;align-items:center;justify-content:space-between;background:white;border:1px solid #e2e8f0;border-radius:8px;padding:0 10px;height:36px;cursor:pointer;transition:all 0.2s;color:#334155;}}.pill:hover{{border-color:#07c160;background:#07c160;color:white;}}.right{{display:flex;align-items:center;gap:4px;font-family:monospace;font-weight:500;font-size:12px;color:#07c160;}}.pill:hover .right{{color:white;}}.msg{{display:none;font-size:11px;font-weight:bold;color:white;}}.pill:hover .msg{{color:white;}}</style></head><body><div class="pill" onclick="cp()"><span style="font-size:12px;font-weight:600;">{label}</span><div class="right" id="v"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right:2px;"><path d="M8.5 13.5L11 15L10 17.5C10 17.5 10.5 17.5 12.5 15C15 15 17 13 17 10.5C17 8 15 6 12.5 6C10 6 8 8 8 10.5C8 12 8.5 13.5 8.5 13.5ZM16.5 5.5C14 5.5 12 7 12 9C12 11 14 12.5 16.5 12.5C17 12.5 17.5 12.5 18 12L19.5 13L19 11C20 10.5 20.5 9.5 20.5 9C20.5 7 18.5 5.5 16.5 5.5Z"/></svg><span>{wx_id}</span></div><span class="msg" id="m">✅ 已复制</span></div><script>function cp(){{navigator.clipboard.writeText('{wx_id}');document.getElementById('v').style.display='none';document.getElementById('m').style.display='block';setTimeout(()=>{{document.getElementById('v').style.display='flex';document.getElementById('m').style.display='none';}},1500);}}</script></body></html>"""
-    components.html(html, height=40)
-
-def render_copy_button_html(text, k):
-    safe = text.replace("`", "\`").replace("'", "\\'")
-    html = f"""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap');body{{margin:0;padding:0;background:transparent;overflow:hidden;}}.btn{{width:100%;height:42px;background:#0f172a;color:#fff;border:none;border-radius:8px;font-family:'Inter';font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}}.btn:hover{{background:#334155;}}.btn:active{{transform:translateY(0);}}.btn.ok{{background:#10b981;}}</style></head><body><button class="btn" onclick="cp(this)">📋 一键复制</button><script>function cp(e){{navigator.clipboard.writeText(`{safe}`).then(()=>{{e.classList.add("ok");e.innerText="✅ 成功";setTimeout(()=>{{e.classList.remove("ok");e.innerText="📋 一键复制"}},2000)}})}}</script></body></html>"""
-    components.html(html, height=50)
-
-def render_hover_copy_box(text, label="点击复制"):
-    safe = text.replace("`", "\`").replace("'", "\\'")
-    html = f"""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');body{{margin:0;padding:0;background:transparent;overflow:hidden;font-family:'Inter';}}.box{{display:flex;align-items:center;justify-content:space-between;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;padding:0 10px;height:36px;cursor:pointer;transition:0.2s;color:#1e293b;font-size:13px;}}.box:hover{{border-color:#3b82f6;background:#fff;}}.hint{{font-size:12px;color:#94a3b8;}}.box:hover .hint{{color:#3b82f6;}}.box.ok{{background:#ecfdf5;border-color:#10b981;color:#065f46;}}</style></head><body><div class="box" onclick="c(this)"><span>{safe}</span><span class="hint" id="s">{label}</span></div><script>function c(e){{navigator.clipboard.writeText(`{safe}`);e.classList.add("ok");const s=e.querySelector("#s");const o=s.innerText;s.innerText="✅";setTimeout(()=>{{e.classList.remove("ok");s.innerText=o}},1500)}}</script></body></html>"""
-    components.html(html, height=40)
-
-# --- 业务逻辑函数 ---
+# --- 辅助函数 (UI组件) ---
 def get_setting(key):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     c.execute("SELECT value FROM settings WHERE key=?", (key,))
@@ -175,6 +196,24 @@ def get_remote_ip():
 def generate_invite_code():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
+def render_footer():
+    st.markdown("""<div class="footer-legal">© 2026 抖音爆款工场 Pro | 鄂ICP备2024XXXXXX号-1</div>""", unsafe_allow_html=True)
+
+def render_wechat_box(label, wx_id):
+    html = f"""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');body{{margin:0;padding:0;background:transparent;font-family:'Inter',sans-serif;}}.pill{{display:flex;align-items:center;justify-content:space-between;background:white;border:1px solid #e2e8f0;border-radius:8px;padding:0 10px;height:36px;cursor:pointer;transition:all 0.2s;color:#334155;}}.pill:hover{{border-color:#07c160;background:#07c160;color:white;}}.right{{display:flex;align-items:center;gap:4px;font-family:monospace;font-weight:500;font-size:12px;color:#07c160;}}.pill:hover .right{{color:white;}}.msg{{display:none;font-size:11px;font-weight:bold;color:white;}}.pill:hover .msg{{color:white;}}</style></head><body><div class="pill" onclick="cp()"><span style="font-size:12px;font-weight:600;">{label}</span><div class="right" id="v"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right:2px;"><path d="M8.5 13.5L11 15L10 17.5C10 17.5 10.5 17.5 12.5 15C15 15 17 13 17 10.5C17 8 15 6 12.5 6C10 6 8 8 8 10.5C8 12 8.5 13.5 8.5 13.5ZM16.5 5.5C14 5.5 12 7 12 9C12 11 14 12.5 16.5 12.5C17 12.5 17.5 12.5 18 12L19.5 13L19 11C20 10.5 20.5 9.5 20.5 9C20.5 7 18.5 5.5 16.5 5.5Z"/></svg><span>{wx_id}</span></div><span class="msg" id="m">✅ 已复制</span></div><script>function cp(){{navigator.clipboard.writeText('{wx_id}');document.getElementById('v').style.display='none';document.getElementById('m').style.display='block';setTimeout(()=>{{document.getElementById('v').style.display='flex';document.getElementById('m').style.display='none';}},1500);}}</script></body></html>"""
+    components.html(html, height=40)
+
+def render_copy_button_html(text, k):
+    safe = text.replace("`", "\`").replace("'", "\\'")
+    html = f"""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap');body{{margin:0;padding:0;background:transparent;overflow:hidden;}}.btn{{width:100%;height:42px;background:#0f172a;color:#fff;border:none;border-radius:8px;font-family:'Inter';font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}}.btn:hover{{background:#334155;}}.btn:active{{transform:translateY(0);}}.btn.ok{{background:#10b981;}}</style></head><body><button class="btn" onclick="cp(this)">📋 一键复制</button><script>function cp(e){{navigator.clipboard.writeText(`{safe}`).then(()=>{{e.classList.add("ok");e.innerText="✅ 成功";setTimeout(()=>{{e.classList.remove("ok");e.innerText="📋 一键复制"}},2000)}})}}</script></body></html>"""
+    components.html(html, height=50)
+
+def render_hover_copy_box(text, label="点击复制"):
+    safe = text.replace("`", "\`").replace("'", "\\'")
+    html = f"""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');body{{margin:0;padding:0;background:transparent;overflow:hidden;font-family:'Inter';}}.box{{display:flex;align-items:center;justify-content:space-between;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;padding:0 10px;height:36px;cursor:pointer;transition:0.2s;color:#1e293b;font-size:13px;}}.box:hover{{border-color:#3b82f6;background:#fff;}}.hint{{font-size:12px;color:#94a3b8;}}.box:hover .hint{{color:#3b82f6;}}.box.ok{{background:#ecfdf5;border-color:#10b981;color:#065f46;}}</style></head><body><div class="box" onclick="c(this)"><span>{safe}</span><span class="hint" id="s">{label}</span></div><script>function c(e){{navigator.clipboard.writeText(`{safe}`);e.classList.add("ok");const s=e.querySelector("#s");const o=s.innerText;s.innerText="✅";setTimeout(()=>{{e.classList.remove("ok");s.innerText=o}},1500)}}</script></body></html>"""
+    components.html(html, height=40)
+
+# --- 业务逻辑 ---
 def add_vip_days(account, days, source="system"):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     c.execute("SELECT expire_at FROM access_codes WHERE bind_user=? AND status='active'", (account,))
@@ -288,12 +327,12 @@ def submit_feedback(phone, content):
     conn.commit(); conn.close()
 
 # ==========================================
-# 4. 页面视图 (View Functions)
+# 4. 视图层 (View Layer)
 # ==========================================
 
-# --- 登录页 (隔离样式) ---
+# --- 登录页 (修复版) ---
 def view_auth():
-    # 登录页专属 CSS
+    # 登录页专属CSS (隔离)
     st.markdown("""
     <style>
         .stApp {
@@ -303,21 +342,34 @@ def view_auth():
         @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
         [data-testid="stSidebarCollapsedControl"] { display: none; }
         
-        .login-card {
-            background: rgba(255,255,255,0.9); border-radius: 20px; padding: 40px;
-            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1); border: 1px solid #ffffff; backdrop-filter: blur(10px);
+        /* 登录卡片 (去除白框) */
+        .login-card-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.15);
+            backdrop-filter: blur(10px);
+            margin-top: 20px;
         }
+        
         .lp-header { font-size: 32px; font-weight: 800; color: #ffffff; letter-spacing: -1px; margin-bottom: 8px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .lp-sub { font-size: 16px; color: rgba(255,255,255,0.9); margin-bottom: 30px; }
         .lp-feature { display: flex; align-items: center; margin-bottom: 20px; color: white; font-weight: 500; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .lp-icon { width: 28px; height: 28px; background: rgba(255,255,255,0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center; margin-right: 12px; }
-        .stTextInput > div > div > input { background-color: #ffffff !important; color: #0f172a !important; }
         .wx-invite-box { background: #f0fdf4; border: 1px dashed #22c55e; border-radius: 8px; padding: 12px; text-align: center; color: #15803d; font-size: 13px; margin-bottom: 10px; }
+        
+        /* 登录页输入框 (实心白底) */
+        .stTextInput > div > div > input {
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #0f172a !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
     st.markdown("<div style='height: 8vh;'></div>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns([1, 8, 1])
+    
     with c2:
         col_l, col_r = st.columns([1.2, 1], gap="large")
         with col_l:
@@ -325,28 +377,32 @@ def view_auth():
             st.markdown("<div class='lp-header'>抖音爆款工场 Pro</div>", unsafe_allow_html=True)
             st.markdown("<div class='lp-sub'>全网首个 AI + KOC 商业变现操作系统</div>", unsafe_allow_html=True)
             st.markdown("""<div class='lp-feature'><div class='lp-icon'>🚀</div>5路并发 · 极速文案清洗改写</div><div class='lp-feature'><div class='lp-icon'>💡</div>爆款选题 · 击穿流量焦虑</div><div class='lp-feature'><div class='lp-icon'>🎨</div>海报生成 · 影视级光影质感</div><div class='lp-feature'><div class='lp-icon'>💰</div>裂变系统 · 邀请好友免费续杯</div>""", unsafe_allow_html=True)
+        
         with col_r:
-            st.markdown('<div class="login-card">', unsafe_allow_html=True)
+            st.markdown('<div class="login-card-container">', unsafe_allow_html=True)
             t1, t2, t3 = st.tabs(["登录", "注册", "找回"])
+            
             with t1:
+                st.write("")
                 with st.form("login_form"):
-                    acc = st.text_input("账号", placeholder="手机号/邮箱", label_visibility="collapsed")
-                    pw = st.text_input("密码", type="password", placeholder="密码", label_visibility="collapsed")
-                    st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+                    acc = st.text_input("账号", placeholder="手机号 或 邮箱", label_visibility="collapsed")
+                    pw = st.text_input("密码", type="password", placeholder="请输入密码", label_visibility="collapsed")
+                    st.markdown("<div style='height:15px'></div>", unsafe_allow_html=True)
                     if st.form_submit_button("立即登录", type="primary", use_container_width=True):
                         s, m = login_user(acc, pw)
                         if s: st.session_state['user_phone'] = acc; st.rerun()
                         else: st.error(m)
+            
             with t2:
-                st.info(f"🎁 注册即送 {REWARD_DAYS_NEW_USER} 天 VIP")
-                acc = st.text_input("账号", key="r_acc", placeholder="手机号/邮箱", label_visibility="collapsed")
+                st.info(f"🎁 新人注册即送 {REWARD_DAYS_NEW_USER} 天 VIP")
+                acc = st.text_input("账号", key="r_acc", placeholder="手机号 或 邮箱", label_visibility="collapsed")
                 pw1 = st.text_input("密码", type="password", key="r_p1", placeholder="设置密码", label_visibility="collapsed")
                 pw2 = st.text_input("确认", type="password", key="r_p2", placeholder="确认密码", label_visibility="collapsed")
                 with st.expander("❓ 获取邀请码"):
                     st.markdown(f"<div class='wx-invite-box'>添加客服 <b>W7774X</b> 回复“注册”获取</div>", unsafe_allow_html=True)
                     render_hover_copy_box("W7774X", "点击复制微信号")
                 invite_code = st.text_input("邀请码", key="r_invite", placeholder="邀请码 (必填)", label_visibility="collapsed")
-                st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+                st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
                 if st.button("立即注册", type="primary", use_container_width=True):
                     if pw1 != pw2: st.error("密码不一致")
                     elif not invite_code: st.error("请输入邀请码")
@@ -362,12 +418,19 @@ def view_auth():
                             s, m = register_user(acc, pw1, invite_code)
                             if s: st.success(m); st.balloons(); time.sleep(2); st.session_state['user_phone'] = acc; st.rerun()
                             else: st.error(m)
-                        else: st.error("无效邀请码")
+                        else: st.error("❌ 邀请码无效")
+            
             with t3:
-                st.warning("🔒 仅支持邮箱找回")
-                st.text_input("注册邮箱")
-                st.button("发送重置邮件", use_container_width=True)
+                st.write("")
+                st.warning("🔒 仅支持通过邮箱找回密码")
+                email = st.text_input("注册邮箱", placeholder="name@example.com", label_visibility="collapsed")
+                st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+                if st.button("发送重置邮件", use_container_width=True):
+                    if "@" in email: st.success(f"重置链接已发送至 {email}")
+                    else: st.error("邮箱格式错误")
+            
             st.markdown('</div>', unsafe_allow_html=True)
+    render_footer()
 
 # --- 首页 ---
 def view_home():
@@ -410,7 +473,7 @@ def view_rewrite():
         if st.button("🚀 5路并发执行", type="primary", use_container_width=True):
             tasks, indices = [], []
             for i in range(1, 6):
-                val = st.session_state.get(f"input_{i}", "")
+                val = st.session_state.get(f"in_{i}", "")
                 if val.strip(): tasks.append(val); indices.append(i)
             if not tasks: st.toast("请至少输入一条文案", icon="⚠️")
             else:
@@ -455,7 +518,7 @@ def view_poster():
     cmd_text = "将原图剧名：[原剧名] 改为：[你的新剧名]"
     components.html(f"""<!DOCTYPE html><html><head><style>@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@500&display=swap');body{{margin:0;padding:20px;font-family:'Fira Code',monospace;overflow:hidden;background:transparent;}}.terminal{{background:#0f172a;border-radius:12px;border:1px solid #334155;overflow:hidden;cursor:pointer;transition:0.3s;box-shadow:0 5px 15px rgba(0,0,0,0.1);}}.terminal:hover{{border-color:#6366f1;transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.15);}}.header{{background:#1e293b;padding:10px 16px;display:flex;align-items:center;border-bottom:1px solid #334155;}}.dots{{display:flex;gap:6px;margin-right:12px;}}.dot{{width:10px;height:10px;border-radius:50%;}}.red{{background:#ef4444;}}.yellow{{background:#f59e0b;}}.green{{background:#22c55e;}}.title{{color:#64748b;font-size:12px;}}.body{{padding:20px;color:#e2e8f0;font-size:14px;display:flex;align-items:center;}}.prompt{{color:#22c55e;margin-right:10px;}}.hl{{color:#a78bfa;font-weight:bold;}}.success-overlay{{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(16,185,129,0.95);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:16px;opacity:0;pointer-events:none;transition:0.2s;}}.terminal:active .success-overlay{{opacity:1;}}</style></head><body><div class="terminal" onclick="copyCmd()"><div class="header"><div class="dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><div class="title">root@ai-generator ~ % (点击复制)</div></div><div class="body"><span class="prompt">➜</span><span>将原图剧名：<span class="hl">[原剧名]</span> 改为：<span class="hl">[你的新剧名]</span></span></div><div class="success-overlay" id="overlay">✅ 指令已复制到剪贴板</div></div><script>function copyCmd(){{const text=`{cmd_text}`;const textArea=document.createElement("textarea");textArea.value=text;document.body.appendChild(textArea);textArea.select();document.execCommand('copy');document.body.removeChild(textArea);const overlay=document.getElementById('overlay');overlay.style.opacity='1';setTimeout(()=>{{overlay.style.opacity='0';}},1500);}}</script></body></html>""", height=160) 
 
-# --- 其他功能 ---
+# --- 选题 ---
 def view_brainstorm():
     st.markdown("## 💡 爆款选题灵感库"); st.markdown("---")
     client = OpenAI(api_key=st.secrets.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com")
@@ -474,6 +537,7 @@ def view_brainstorm():
         st.text_area("灵感列表", value=res, height=400, label_visibility="collapsed")
         render_copy_button_html(res, "brain_copy_btn")
 
+# --- 起名 ---
 def view_naming():
     st.markdown("## 🏷️ 账号/IP 起名大师"); st.markdown("---")
     client = OpenAI(api_key=st.secrets.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com")
@@ -493,6 +557,7 @@ def view_naming():
         st.text_area("结果", value=res, height=400, label_visibility="collapsed")
         render_copy_button_html(res, "name_copy_btn")
 
+# --- 个人中心 ---
 def view_account():
     st.markdown("## 👤 个人中心"); st.markdown("---")
     t1, t2, t3 = st.tabs(["🎁 邀请有礼", "💳 账户", "💬 反馈"])
@@ -533,43 +598,71 @@ def view_account():
                 st.caption(f"📅 {t}"); st.write(f"**我**: {c}")
                 if r: st.write(f"**回复**: :green[{r}]")
 
+# --- 后台 ---
 def view_admin():
-    st.markdown("## 🕵️‍♂️ 管理后台"); 
-    pwd = st.text_input("二级密码", type="password")
-    if pwd == ADMIN_INIT_PASSWORD:
-        t1, t2, t3 = st.tabs(["设置", "卡密", "反馈"])
+    st.markdown("## 🕵️‍♂️ 管理后台")
+    if 'admin_unlocked' not in st.session_state: st.session_state['admin_unlocked'] = False
+    if not st.session_state['admin_unlocked']:
+        pwd = st.text_input("请输入管理员密码", type="password")
+        if pwd == ADMIN_INIT_PASSWORD:
+            st.session_state['admin_unlocked'] = True
+            st.rerun()
+    else:
+        st.success("✅ 已登录管理员权限")
+        t1, t2, t3 = st.tabs(["待处理反馈", "历史记录", "系统设置"])
         with t1:
-            st.write("#### 系统设置")
-            url = st.text_input("发卡网链接", value=get_setting("shop_url"))
-            if st.button("保存设置"): update_setting("shop_url", url); st.success("已保存")
+            conn = sqlite3.connect(DB_FILE)
+            pending = pd.read_sql("SELECT * FROM feedbacks WHERE status='pending'", conn)
+            conn.close()
+            if pending.empty: st.info("暂无待处理反馈")
+            else:
+                for i, r in pending.iterrows():
+                    with st.container(border=True):
+                        st.write(f"**用户**: {r['user_phone']} | **时间**: {r['create_time']}")
+                        st.info(f"内容: {r['content']}")
+                        reply = st.text_input("回复内容", key=f"rep_{r['id']}")
+                        if st.button("发送回复", key=f"send_{r['id']}"):
+                            conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+                            c.execute("UPDATE feedbacks SET reply=?, status='replied' WHERE id=?", (reply, r['id']))
+                            conn.commit(); conn.close(); st.success("已回复"); time.sleep(1); st.rerun()
         with t2:
+            conn = sqlite3.connect(DB_FILE)
+            history = pd.read_sql("SELECT * FROM feedbacks WHERE status='replied' ORDER BY create_time DESC", conn)
+            conn.close()
+            for i, r in history.iterrows():
+                with st.expander(f"已回复: {r['user_phone']} - {str(r['create_time'])[:10]}"):
+                    st.write(f"**用户内容**: {r['content']}")
+                    st.write(f"**当前回复**: :green[{r['reply']}]")
+                    c1, c2 = st.columns([3, 1])
+                    new_reply = c1.text_input("修改回复", value=r['reply'], key=f"edit_rep_{r['id']}")
+                    if c1.button("更新回复", key=f"upd_{r['id']}"):
+                        conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+                        c.execute("UPDATE feedbacks SET reply=? WHERE id=?", (new_reply, r['id']))
+                        conn.commit(); conn.close(); st.success("更新成功"); st.rerun()
+                    if c2.button("🗑️ 删除记录", key=f"del_{r['id']}"):
+                        conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+                        c.execute("DELETE FROM feedbacks WHERE id=?", (r['id'],))
+                        conn.commit(); conn.close(); st.warning("已删除"); st.rerun()
+        with t3:
+            st.write("#### 卡密生成")
             q = st.number_input("数量", 1, 100, 10); d = st.number_input("天数", 1, 365, 30)
-            if st.button("生成卡密"):
+            if st.button("一键生成"):
                 conn = sqlite3.connect(DB_FILE); c = conn.cursor()
-                codes = []
                 for _ in range(q):
                     code = "VIP-" + str(uuid.uuid4())[:8].upper()
                     c.execute("INSERT INTO access_codes (code, duration_days, status, create_time) VALUES (?, ?, ?, ?)", (code, d, 'unused', datetime.datetime.now()))
-                    codes.append(code)
                 conn.commit(); conn.close(); st.success(f"已生成 {q} 个")
             conn = sqlite3.connect(DB_FILE)
-            df = pd.read_sql("SELECT * FROM access_codes ORDER BY create_time DESC", conn)
+            df = pd.read_sql("SELECT * FROM access_codes ORDER BY create_time DESC LIMIT 50", conn)
             st.dataframe(df, height=300)
-            st.download_button("下载 CSV", df.to_csv(index=False).encode('utf-8'), "codes.csv", "text/csv")
+            st.download_button("下载所有卡密", df.to_csv(index=False).encode('utf-8'), "codes.csv", "text/csv")
             conn.close()
-        with t3:
-            conn = sqlite3.connect(DB_FILE); pending = pd.read_sql("SELECT * FROM feedbacks WHERE status='pending'", conn); conn.close()
-            for i, r in pending.iterrows():
-                with st.container(border=True):
-                    st.write(f"用户: {r['user_phone']} | 内容: {r['content']}")
-                    reply = st.text_input("回复", key=f"rep_{r['id']}")
-                    if st.button("发送", key=f"send_{r['id']}"):
-                        conn = sqlite3.connect(DB_FILE); c = conn.cursor()
-                        c.execute("UPDATE feedbacks SET reply=?, status='replied' WHERE id=?", (reply, r['id']))
-                        conn.commit(); conn.close(); st.rerun()
+            st.markdown("---")
+            url = st.text_input("发卡网链接", value=get_setting("shop_url"))
+            if st.button("保存链接"): update_setting("shop_url", url); st.success("已保存")
 
 # ==========================================
-# 5. 主程序入口 (Main Router)
+# 5. 主程序 (Main)
 # ==========================================
 def main():
     if 'user_phone' not in st.session_state:
@@ -580,7 +673,7 @@ def main():
             is_vip, msg = get_user_vip_status(st.session_state['user_phone'])
             display = st.session_state['user_phone']
             if len(display)>7: display = display[:3]+"****"+display[-4:]
-            st.markdown(f"""<div class="sidebar-user-card"><div class="user-left"><div class="user-avatar">👤</div><div class="user-info"><div class="user-name">{display}</div><div class="user-role">{'👑 VIP' if is_vip else '🌑 普通'}</div></div></div></div>""", unsafe_allow_html=True)
+            st.markdown(f"""<div class="sidebar-user-card"><div class="user-left"><div class="user-avatar">👤</div><div class="user-info"><div class="user-name">{display}</div><div class="user-role">{msg.split('(')[0]}</div></div></div></div>""", unsafe_allow_html=True)
             ops = ["🏠 首页", "📝 文案改写", "💡 爆款选题库", "🎨 海报生成", "🏷️ 账号起名", "👤 个人中心"]
             if st.session_state['user_phone'] == ADMIN_ACCOUNT: ops.append("🕵️‍♂️ 管理后台")
             if 'nav_menu' not in st.session_state: st.session_state['nav_menu'] = ops[0]
@@ -590,7 +683,7 @@ def main():
             if selected != st.session_state['nav_menu']: st.session_state['nav_menu'] = selected; st.rerun()
             st.markdown("---")
             st.markdown("<div style='font-size:12px;font-weight:bold;color:#94a3b8;margin-bottom:5px'>🔥 热门项目</div>", unsafe_allow_html=True)
-            st.markdown("""<div class="sidebar-project-card"><div class="sp-title">📹 KOC 孵化</div><div class="sp-desc">真人出镜 · 0基础陪跑</div></div>""", unsafe_allow_html=True)
+            st.markdown("""<div class="sidebar-project-card"><div class="sp-title">📹 KOC 孵化</div><div class="sp-desc">真人出镜 · 0基础陪跑</div></div><div class="sidebar-project-card" style="border-left-color:#8b5cf6"><div class="sp-title">🎨 御灵 AI 动漫</div><div class="sp-desc">小说转动漫 · 端原生流量</div></div>""", unsafe_allow_html=True)
             st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
             render_wechat_box("🎁 领取资料", "W7774X")
             st.markdown("<div style='height:5px'></div>", unsafe_allow_html=True)
@@ -607,7 +700,7 @@ def main():
         elif menu == "🏷️ 账号起名": view_naming()
         elif menu == "👤 个人中心": view_account()
         elif menu == "🕵️‍♂️ 管理后台": view_admin()
-        else: st.info(f"🚧 {menu} 功能升级中...")
+        
         render_footer()
 
 if __name__ == "__main__":

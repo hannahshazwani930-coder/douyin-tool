@@ -57,20 +57,21 @@ def view_auth():
 
     st.write("\n" * 3)
 
-    # --- 2. 布局逻辑 ---
-    _, card_container, _ = st.columns([1.2, 3, 1.2])
+    # --- 2. 布局逻辑：缩短间距 ---
+    # 比例调整为 [1.2, 2.6, 1.2]，中心更聚合
+    _, card_container, _ = st.columns([1.2, 2.6, 1.2])
 
     with card_container:
         with st.container(border=True):
-            col_l, col_r = st.columns([1.1, 1.4], gap="large")
+            # 将 gap 从 large 缩减为 small，显著缩短左右间距
+            col_l, col_r = st.columns([1, 1.3], gap="small")
 
-            # --- 左侧：爆款工厂PRO [零缩进防乱码版] ---
+            # --- 左侧：品牌信息 [锁定对齐] ---
             with col_l:
-                # 注意：此处 HTML 字符串故意不使用缩进，防止解析器误判为代码块
                 brand_content = """<div style="padding-left: 35px; padding-top: 32px;">
 <div style="margin-bottom: 22px;">
 <h1 style="color: #1E3A8A; font-size: 28px; margin: 0; font-weight: 800; line-height: 1.2;">爆款工厂<span style="color: #3B82F6; font-size: 16px; font-weight: 400; margin-left: 5px;">PRO</span></h1>
-<div style="width: 24px; height: 3px; background: #1E3A8A; margin: 12px 0;"></div>
+<div style="width: 24px; height: 3px; background: #1E3A8A; margin: 10px 0;"></div>
 <p style="color: #64748B; font-size: 13px; margin: 0; line-height: 1.5;">AI 驱动的全链路创作决策系统</p>
 </div>
 <div style="margin-bottom: 15px;">
@@ -88,11 +89,11 @@ def view_auth():
 </div>"""
                 st.markdown(brand_content, unsafe_allow_html=True)
 
-            # --- 右侧：[锁定不动] ---
+            # --- 右侧：登录/注册 [已锁定] ---
             with col_r:
                 t1, t2 = st.tabs(["安全登录", "快速注册"])
                 with t1:
-                    with st.form("f_login_v17", border=False):
+                    with st.form("f_login_v18", border=False):
                         u = st.text_input("A", placeholder="手机号 / 邮箱", label_visibility="collapsed", key="v_log_u")
                         p = st.text_input("P", type="password", placeholder="请输入密码", label_visibility="collapsed", key="v_log_p")
                         if st.form_submit_button("立 即 登 录", use_container_width=True):
@@ -103,7 +104,7 @@ def view_auth():
                                     st.rerun()
                                 else: st.error(msg)
                 with t2:
-                    with st.form("f_reg_v17", border=False):
+                    with st.form("f_reg_v18", border=False):
                         ru = st.text_input("RA", placeholder="手机号 / 邮箱", label_visibility="collapsed", key="v_reg_ru")
                         rp = st.text_input("RP1", type="password", placeholder="设置密码", label_visibility="collapsed", key="v_reg_rp1")
                         rp2 = st.text_input("RP2", type="password", placeholder="确认密码", label_visibility="collapsed", key="v_reg_rp2")

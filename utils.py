@@ -54,37 +54,36 @@ def inject_css(mode="app"):
         div.block-container {
             padding-top: 2rem !important;
             padding-bottom: 2rem !important;
-            max-width: 1000px; /* 限制整体最大宽度，防止在大屏太散 */
+            max-width: 1000px;
         }
         
-        /* 核心修复：输入框样式 (解决文字显示不全问题) */
+        /* 核心修复：输入框样式 */
         .stTextInput input, .stTextInput div[data-baseweb="input"] {
             background-color: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 8px !important;
             color: #334155 !important;
-            height: 42px !important;     /* 固定高度，不要太高 */
+            height: 42px !important;
             min-height: 42px !important;
-            padding: 0 12px !important;  /* 两侧内边距 */
+            padding: 0 12px !important;
             font-size: 14px !important;
-            line-height: 40px !important; /* 确保文字垂直居中 */
+            line-height: 40px !important;
         }
-        /* 去除输入框外层的怪异黑线/阴影 */
         .stTextInput > div > div { box-shadow: none !important; }
         .stTextInput input:focus {
             border-color: #3b82f6 !important;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
         }
 
-        /* 登录表单容器：玻璃态卡片，小而精 */
+        /* 登录表单容器 */
         [data-testid="stForm"] {
             background-color: rgba(255, 255, 255, 0.98) !important;
-            padding: 30px 25px !important; /* 减小内边距 */
+            padding: 30px 25px !important;
             border-radius: 16px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(255,255,255,0.1);
-            max-width: 380px !important; /* 强制限制宽度！小而精的关键 */
-            margin: 0 auto; /* 居中 */
+            max-width: 380px !important;
+            margin: 0 auto;
         }
 
         /* 左侧文字样式 */
@@ -139,6 +138,25 @@ def inject_css(mode="app"):
     st.markdown(base_css, unsafe_allow_html=True)
     if mode == "auth": st.markdown(auth_css, unsafe_allow_html=True)
     else: st.markdown(app_css, unsafe_allow_html=True)
+
+# 👇👇👇 [这是刚才补回来的关键函数] 👇👇👇
+def render_copy_btn(text, key_suffix):
+    """渲染一键复制按钮"""
+    safe_text = text.replace("`", "\`").replace("'", "\\'")
+    html = f"""
+    <script>
+    function copy_{key_suffix}() {{
+        navigator.clipboard.writeText(`{safe_text}`);
+        document.getElementById('btn_{key_suffix}').innerHTML = '✅ 已复制';
+        setTimeout(() => {{ document.getElementById('btn_{key_suffix}').innerHTML = '📋 一键复制'; }}, 2000);
+    }}
+    </script>
+    <button id="btn_{key_suffix}" onclick="copy_{key_suffix}()" style="
+        width:100%; height:40px; background:#0f172a; color:white; 
+        border:none; border-radius:8px; cursor:pointer; font-weight:600; font-family:'Inter';
+    ">📋 一键复制</button>
+    """
+    components.html(html, height=50)
 
 def render_wechat_pill(label, wx_id):
     """渲染微信复制胶囊"""

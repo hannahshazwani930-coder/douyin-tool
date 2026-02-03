@@ -1,6 +1,6 @@
 # views/poster.py
 import streamlit as st
-from utils import render_copy_btn, render_page_banner
+from utils import load_isolated_css
 import streamlit.components.v1 as components
 
 def view_poster():
@@ -45,3 +45,4 @@ def view_poster():
             > `将海报剧名：'原剧名' 改成：'你的新剧名'`
         6.  **开始生成**：点击生成按钮，等待 AI 处理即可。
         """)
+

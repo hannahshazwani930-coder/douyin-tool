@@ -17,22 +17,17 @@ def generate_invite_code():
 # ==============================================================================
 
 def inject_css(page_id="auth"):
-    """
-    根据 page_id 加载完全独立的 CSS，杜绝样式污染。
-    page_id 选项: 'auth', 'home', 'rewrite', 'general'
-    """
-    
-    # 1. 全局基础重置 (仅字体和隐藏无关组件)
+    # 1. 全局基础
     base_css = """
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         html, body, [class*="css"] { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-        header[data-testid="stHeader"] { visibility: hidden; height: 0; }
-        #MainMenu { visibility: hidden; }
+        /* 彻底隐藏 Streamlit 原生 Header 占位 */
+        header[data-testid="stHeader"] { display: none !important; height: 0 !important; visibility: hidden !important; }
+        #MainMenu { display: none !important; }
         [data-testid="stSidebarCollapsedControl"] { display: none; }
-        [data-testid="InputInstructions"] { display: none !important; }
         
-        /* 侧边栏通用美化 */
+        /* 侧边栏 */
         [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; padding-top: 1rem; }
         div[role="radiogroup"] label { padding: 10px 12px !important; border-radius: 8px !important; margin-bottom: 4px; border: 1px solid transparent; }
         div[role="radiogroup"] label:hover { background-color: #f1f5f9 !important; }
@@ -43,7 +38,7 @@ def inject_css(page_id="auth"):
     st.markdown(base_css, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🔒 [已锁定] 登录页样式 (Auth) - 绝对不改动
+    # 🔒 [LOCKED] 登录页样式 (绝对不动)
     # ----------------------------------------------------------------
     if page_id == "auth":
         st.markdown("""
@@ -60,7 +55,6 @@ def inject_css(page_id="auth"):
                 padding: 60px 50px !important; max-width: 1100px !important;
                 margin: auto; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); overflow: hidden;
             }
-            
             .auth-left-decor { border-right: 1px solid #f1f5f9; padding-right: 40px; height: 100%; display: flex; flex-direction: column; justify-content: center; }
             .hero-title { font-size: 42px; font-weight: 800; color: #0f172a; line-height: 1.2; margin-bottom: 20px; letter-spacing: -1px; }
             .hero-sub { font-size: 16px; color: #64748b; line-height: 1.6; margin-bottom: 30px; }
@@ -86,92 +80,106 @@ def inject_css(page_id="auth"):
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 🏠 [独立] 首页样式 (Home) - 修复白框
+    # 🏠 [独立] 首页样式 - 负边距暴力覆盖
     # ----------------------------------------------------------------
     elif page_id == "home":
         st.markdown("""
         <style>
             .stApp { background-color: #f8fafc; }
             
-            /* 🔴 去除容器顶部 padding，消灭白框根源 */
+            /* 1. 强制去除容器顶部间距 */
             div.block-container { 
                 max-width: 1200px !important; 
-                padding: 0 40px 50px 40px !important; 
+                padding: 0 40px 50px 40px !important;
+                margin-top: 0 !important;
             }
 
-            /* 首页流光 Header - 加深下探距离 */
+            /* 2. Header：底部加高，准备被覆盖 */
             .flowing-header {
                 background: linear-gradient(-45deg, #1e3a8a, #2563eb, #3b82f6, #0ea5e9);
                 background-size: 400% 400%; animation: gradientBG 10s ease infinite;
                 border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
-                padding: 50px 40px 140px 40px; /* 底部留白加深 */
+                
+                /* 关键：底部留出 120px 的空间 */
+                padding: 60px 40px 120px 40px; 
                 color: white; text-align: center;
-                margin-bottom: -120px; /* 🔴 负边距加大，强制吸附 */
                 margin-left: -40px; margin-right: -40px;
+                margin-top: -60px; /* 抵消掉 block-container 可能残留的顶部边距 */
+                
                 box-shadow: 0 20px 50px rgba(37, 99, 235, 0.3); position: relative; z-index: 0;
             }
             @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
             .header-title { font-size: 42px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             .header-sub { font-size: 15px; opacity: 0.95; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 30px; backdrop-filter: blur(10px); display: inline-block; border: 1px solid rgba(255,255,255,0.2); }
 
-            /* 首页白卡 - 向上重叠 */
+            /* 3. 白色控制台：强力向上吸附 */
             .creation-console {
                 background: white; border-radius: 24px; padding: 40px;
                 box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); 
                 border: 1px solid #e2e8f0; 
                 position: relative; z-index: 10; 
-                margin-top: 0px; /* 紧贴 Header */
+                
+                /* 🔴 核心：负边距上移，直接压住 Header 底部 */
+                margin-top: -60px; 
             }
             
-            /* 按钮 */
+            /* 隐形按钮 */
             div.stButton button { width: 100%; border:none; background:transparent; color:transparent; height:100px; position:absolute; top:0; left:0; z-index:2; }
             div.stButton button:hover { background:rgba(0,0,0,0.02); }
             
-            /* 标签 */
             .custom-label { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 20px; border-left: 4px solid #3b82f6; padding-left: 10px; }
             .ann-card { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 12px 15px; margin-bottom: 10px; display: flex; align-items: start; gap: 10px; font-size: 14px; color: #9a3412; }
         </style>
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 📝 [独立] 文案改写页样式 (Rewrite) - 修复白框
+    # 📝 [独立] 文案改写页样式 - 负边距暴力覆盖
     # ----------------------------------------------------------------
     elif page_id == "rewrite":
         st.markdown("""
         <style>
             .stApp { background-color: #f8fafc; }
-            
-            /* 🔴 去除容器顶部 padding */
             div.block-container { 
                 max-width: 1400px !important; 
                 padding: 0 40px 50px 40px !important; 
+                margin-top: 0 !important;
             }
 
-            /* 文案页悬浮流光 Header (加深) */
+            /* Header */
             .flowing-header {
                 background: linear-gradient(-45deg, #1e3a8a, #2563eb, #3b82f6, #0ea5e9);
                 background-size: 400% 400%; animation: gradientBG 10s ease infinite;
                 border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
-                padding: 50px 40px 140px 40px; /* 底部空间加大，容纳按钮 */
+                
+                /* 预留 140px 高度给悬浮按钮 */
+                padding: 60px 40px 140px 40px;
                 color: white; text-align: center;
-                margin-bottom: -100px; /* 🔴 负边距加大 */
                 margin-left: -40px; margin-right: -40px;
+                margin-top: -60px;
+                
                 box-shadow: 0 20px 50px rgba(37, 99, 235, 0.3); position: relative; z-index: 0;
             }
             @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
             .header-title { font-size: 42px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
             .header-sub { font-size: 15px; opacity: 0.95; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 30px; backdrop-filter: blur(10px); display: inline-block; border: 1px solid rgba(255,255,255,0.2); }
 
-            /* 文案页一体化控制台 - 向上重叠 */
+            /* 悬浮切换按钮 (位于 Header 和 Console 之间) */
+            div.stButton button[kind="primary"], div.stButton button[kind="secondary"] {
+                position: relative; z-index: 20; /* 保证按钮在最上层 */
+            }
+
+            /* 控制台：向上吸附 */
             .creation-console {
                 background: white; border-radius: 24px; padding: 40px;
                 box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); 
                 border: 1px solid #e2e8f0; 
                 position: relative; z-index: 10; 
-                margin-top: 0px; 
+                
+                /* 🔴 核心：负边距上移，压住 Header 底部空隙 */
+                margin-top: -50px; 
             }
 
-            /* 输入框纯白 */
+            /* 文案页输入框 */
             .stTextArea > div { border: none !important; box-shadow: none !important; background: transparent !important; }
             .stTextArea > label { display: none !important; }
             .stTextArea textarea {
@@ -180,10 +188,7 @@ def inject_css(page_id="auth"):
             }
             .stTextArea textarea:focus { border-color: #3b82f6 !important; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important; }
 
-            /* 组件对齐 */
             .custom-label { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: block; }
-            
-            /* 强制组件高度一致 */
             div[data-baseweb="select"] > div { height: 48px !important; border-radius: 10px !important; background-color: #f8fafc; }
             
             div.stButton button[kind="primary"] {
@@ -193,27 +198,20 @@ def inject_css(page_id="auth"):
                 box-shadow: 0 8px 20px -5px rgba(37, 99, 235, 0.4) !important;
             }
             div.stButton button[kind="primary"]:hover { transform: translateY(-2px); }
-            
-            div.stButton button[kind="secondary"] {
-                height: 48px !important; border: 1px solid #e2e8f0 !important;
-                background: white !important; color: #64748b !important; font-weight: 600 !important;
-            }
-            
+            div.stButton button[kind="secondary"] { height: 48px !important; border: 1px solid #e2e8f0 !important; background: white !important; color: #64748b !important; font-weight: 600 !important; }
             .info-box { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 0 20px; border-radius: 10px; font-size: 15px; display: flex; align-items: center; gap: 10px; height: 48px; }
             .conversion-tip { margin-top: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 10px 15px; border-radius: 10px; font-size: 13px; display: flex; align-items: center; gap: 10px; }
         </style>
         """, unsafe_allow_html=True)
 
     # ----------------------------------------------------------------
-    # 📄 [独立] 通用页面样式 (General)
+    # 📄 [独立] 通用页
     # ----------------------------------------------------------------
     elif page_id == "general":
         st.markdown("""
         <style>
             .stApp { background-color: #f8fafc; }
             div.block-container { max-width: 1200px !important; padding: 2rem 40px 50px 40px !important; }
-            
-            /* 通用 Banner */
             .page-banner {
                 background: linear-gradient(120deg, #2563eb, #1d4ed8);
                 color: white; padding: 30px; border-radius: 16px; margin-bottom: 30px;
@@ -221,16 +219,12 @@ def inject_css(page_id="auth"):
             }
             .banner-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
             .banner-desc { font-size: 15px; opacity: 0.9; line-height: 1.5; }
-            
-            /* 通用卡片容器 */
-            div[data-testid="stVerticalBlock"] > div {
-                background: transparent;
-            }
+            div[data-testid="stVerticalBlock"] > div { background: transparent; }
             .stButton > button { border-radius: 8px; font-weight: 600; border: none; }
         </style>
         """, unsafe_allow_html=True)
 
-# --- 组件函数 (全部保留) ---
+# --- 组件函数 ---
 def render_sidebar_user_card(username, vip_info):
     status_bg = "#eff6ff" if "VIP" in vip_info or "管理员" in vip_info else "#f1f5f9"
     st.sidebar.markdown(f"""<div style="background: {status_bg}; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 20px;"><div style="display:flex; align-items:center; margin-bottom: 8px;"><div style="width: 32px; height: 32px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 10px; border: 1px solid #e2e8f0;">👤</div><div style="font-weight: 700; color: #0f172a; font-size: 14px; overflow: hidden; text-overflow: ellipsis;">{username}</div></div><div style="background: white; padding: 6px 10px; border-radius: 6px; font-size: 12px; color: #2563eb; font-weight: 600; border: 1px solid #e2e8f0; text-align: center;">{vip_info}</div></div>""", unsafe_allow_html=True)

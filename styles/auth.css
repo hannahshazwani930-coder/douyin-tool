@@ -1,87 +1,96 @@
-/* * 🔐 [ULTRA-PRO PRODUCTION - FINAL ALIGNMENT] 
- * 核心原理：组件层级强制锁定 + 背景模拟
+/* * 🔐 [ULTRA-PRO PRODUCTION - FINAL SUCCESS] 
+ * 锁定目标：解决所有截图中的偏移、溢出和白块问题。
  */
 
-/* 1. 彻底屏蔽原生顶部、侧边和页眉干扰 */
+/* 1. 屏蔽一切原生 UI 杂项 */
 header, [data-testid="stHeader"], [data-testid="stSidebar"], [data-testid="stToolbar"] { 
     display: none !important; 
 }
 
-/* 2. 背景层：极暗科技蓝背景 */
+/* 2. 全局背景：深邃星空蓝 */
 .stApp {
     background: #050a18 !important;
-}
-
-/* 3. 核心修正：锁定主容器大小并居中 */
-div.block-container {
-    max-width: 850px !important;
-    min-height: 520px !important;
-    padding: 0 !important;
-    margin: auto !important;
-    position: absolute !important;
-    top: 50% !important; 
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    background: white !important; /* 强制背景为白 */
-    border-radius: 32px !important;
-    box-shadow: 0 50px 100px rgba(0,0,0,0.8) !important;
     overflow: hidden !important;
 }
 
-/* 4. 模拟左侧蓝色品牌区 (使用伪元素确保不偏移) */
+/* 3. 根容器改造成 850x520 的白卡片 (强制居中) */
+div.block-container {
+    max-width: 850px !important;
+    height: 520px !important;
+    padding: 0 !important;
+    margin: auto !important;
+    position: fixed !important;
+    top: 50% !important; left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    background: white !important;
+    border-radius: 32px !important;
+    box-shadow: 0 50px 100px rgba(0,0,0,0.8) !important;
+    display: flex !important;
+    z-index: 999;
+}
+
+/* 4. 左侧蓝色面板 (CSS 伪元素实现，永不偏移) */
 div.block-container::before {
     content: "";
     position: absolute;
     left: 0; top: 0;
-    width: 360px; /* 锁死左侧宽度 */
+    width: 350px; /* 品牌区宽度 */
     height: 100%;
     background: linear-gradient(135deg, #2563eb, #1e3a8a);
-    z-index: 1;
+    z-index: 1000;
 }
 
-/* 5. 强制把右侧 Streamlit 组件推到正确位置 (360px 之后) */
-[data-testid="stVerticalBlock"] > div {
-    margin-left: 360px !important; /* 核心：这是解决组件跑偏的唯一办法 */
-    padding: 10px 45px !important;
-}
-
-/* 6. 品牌文字定位：必须使用 absolute 并配合 z-index 浮在伪元素上 */
-.brand-overlay-content {
+/* 5. 品牌内容覆盖 */
+.brand-overlay-lock {
     position: absolute;
     left: 0; top: 0;
-    width: 360px;
-    height: 100%;
+    width: 350px;
+    height: 520px;
     padding: 60px 45px;
     color: white;
-    z-index: 2;
+    z-index: 1001;
     pointer-events: none;
 }
 
-/* 7. 输入框与按钮：专业化大气设计 */
+/* 6. 核心：强制把 Streamlit 所有表单组件“压”入右侧 500px 区域 */
+[data-testid="stVerticalBlock"] {
+    gap: 0 !important;
+}
+
+/* 针对所有表单和输入框的物理偏移 */
+[data-testid="stForm"], [data-testid="stMarkdownContainer"], .stTextInput, .stButton {
+    margin-left: 350px !important; /* 物理推移：避开左侧蓝色区 */
+    padding-left: 50px !important;
+    padding-right: 50px !important;
+    width: 850px !important; /* 保持总宽一致防止拉伸 */
+}
+
+/* 7. 输入框美化 */
 .stTextInput input {
-    height: 45px !important;
-    border-radius: 10px !important;
+    height: 48px !important;
+    border-radius: 12px !important;
     border: 1px solid #e2e8f0 !important;
     background: #f8fafc !important;
 }
 
+/* 8. 登录按钮 */
 div.stButton > button {
     width: 100% !important;
-    height: 48px !important;
+    height: 50px !important;
     background: #1e3a8a !important;
     color: white !important;
-    border-radius: 10px !important;
+    border-radius: 12px !important;
     font-weight: 700 !important;
     border: none !important;
 }
 
-/* 8. 外部免责声明 */
-.fixed-footer {
+/* 9. 底部免责声明 (独立于卡片) */
+.footer-disclaimer-fixed {
     position: fixed;
-    bottom: 30px; 
+    bottom: 30px;
     width: 100%;
     text-align: center;
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 11px;
-    z-index: 999;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 12px;
+    z-index: 9999;
 }

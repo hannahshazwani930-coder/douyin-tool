@@ -44,30 +44,29 @@ def inject_css(mode="app"):
     </style>
     """
     
-    # 2. 登录页专用样式 (大卡片悬浮风格)
+# 2. 登录页专用样式 (修复 Tab 双横线问题)
     auth_css = """
     <style>
-        /* 背景：时尚的深色渐变 (Issue 5) */
+        /* 背景：时尚的深色渐变 */
         .stApp {
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
             background-attachment: fixed;
         }
         
-        /* 核心布局：将整个内容区变成一个大卡片 (Issue 5) */
+        /* 核心布局：大卡片悬浮 */
         div.block-container {
-            background-color: rgba(255, 255, 255, 0.98); /* 卡片背景 */
+            background-color: rgba(255, 255, 255, 0.98);
             border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); /* 深度投影 */
-            padding: 60px 50px !important; /* 内部留白 */
-            max-width: 960px; /* 限制最大宽度 */
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 60px 50px !important;
+            max-width: 960px;
             margin: auto;
             position: absolute;
             top: 50%; left: 50%;
-            transform: translate(-50%, -50%); /* 绝对垂直水平居中 */
-            overflow: hidden; /* 防止溢出 */
+            transform: translate(-50%, -50%);
+            overflow: hidden;
         }
         
-        /* 移动端适配：取消绝对定位 */
         @media (max-width: 768px) {
             div.block-container {
                 position: relative; top: 0; left: 0; transform: none;
@@ -75,26 +74,24 @@ def inject_css(mode="app"):
             }
         }
 
-        /* 输入框修复：去除重复边框 (Issue 1) */
+        /* 输入框样式 */
         .stTextInput div[data-baseweb="input"] {
             background-color: #f8fafc !important;
-            border: 1px solid #cbd5e1 !important; /* 统一边框颜色 */
+            border: 1px solid #cbd5e1 !important;
             border-radius: 8px !important;
             color: #1e293b !important;
             height: 44px !important;
-            box-shadow: none !important; /* 去除外发光防止重影 */
+            box-shadow: none !important;
         }
-        /* 去除 Streamlit 默认外层包裹的边框 */
         .stTextInput > div { border: none !important; box-shadow: none !important; }
         
-        /* 焦点状态 */
         .stTextInput div[data-baseweb="input"]:focus-within {
             border-color: #3b82f6 !important;
             background-color: #ffffff !important;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
         }
 
-        /* Form 样式重置：因为外层已经是卡片了，里层不需要再有卡片样式 */
+        /* Form 样式重置 */
         [data-testid="stForm"] {
             background: transparent !important;
             padding: 0 !important;
@@ -102,52 +99,50 @@ def inject_css(mode="app"):
             box-shadow: none !important;
         }
 
-        /* Tab 样式优化 (Issue 3) */
+        /* --- 👇 重点修改区域：Tab 样式修复 --- */
+        
+        /* 1. 清除 Tab 容器的所有默认底部边框和阴影 */
         .stTabs [data-baseweb="tab-list"] { 
-            gap: 20px; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; 
-        }
-        .stTabs [data-baseweb="tab"] {
-            height: 40px; 
-            color: #64748b; /* 未选中状态：深灰色，更醒目 */
-            font-weight: 500;
-            font-size: 15px;
-        }
-        .stTabs [aria-selected="true"] {
-            color: #2563eb !important; /* 选中状态：蓝色 */
-            font-weight: 700 !important;
-            border-bottom-color: #2563eb !important;
+            gap: 20px; 
+            border-bottom: 0px solid transparent !important; /* 强制去除底线 */
+            box-shadow: none !important; /* 强制去除阴影 */
+            padding-bottom: 0px !important;
+            margin-bottom: 20px; 
         }
 
-        /* 左侧装饰线 */
+        /* 2. 定义单个 Tab 的基础样式 */
+        .stTabs [data-baseweb="tab"] {
+            height: 40px; 
+            color: #64748b; 
+            font-weight: 500;
+            font-size: 15px;
+            background-color: transparent !important;
+            border: none !important; /* 确保未选中的 Tab 没有任何边框 */
+            outline: none !important;
+        }
+
+        /* 3. 定义选中状态：只保留这一条下划线 */
+        .stTabs [aria-selected="true"] {
+            color: #2563eb !important; 
+            font-weight: 700 !important;
+            border-bottom: 3px solid #2563eb !important; /* 只有这里有边框 */
+        }
+        /* --- 👆 修改结束 --- */
+
+        /* 左侧装饰 */
         .hero-decoration {
             width: 60px; height: 6px; background: #3b82f6; border-radius: 3px; margin-bottom: 25px;
         }
         .hero-title { font-size: 42px; font-weight: 800; color: #0f172a; line-height: 1.2; margin-bottom: 15px; letter-spacing: -0.5px; }
         .hero-subtitle { font-size: 16px; color: #64748b; margin-bottom: 40px; line-height: 1.6; }
         
-        /* 底部版权声明样式 */
+        /* 底部版权 */
         .auth-footer {
             margin-top: 40px; border-top: 1px solid #f1f5f9; padding-top: 20px;
             text-align: center; color: #94a3b8; font-size: 12px;
         }
         .auth-footer a { color: #64748b; text-decoration: none; margin: 0 10px; transition: 0.2s; }
         .auth-footer a:hover { color: #3b82f6; }
-    </style>
-    """
-    
-    # 3. 系统内页样式 (保持原样)
-    app_css = """
-    <style>
-        .stApp { background-color: #f8fafc; }
-        [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; }
-        div.block-container { padding-top: 2rem; max-width: 1200px; }
-        
-        .announcement-box {
-            background: linear-gradient(90deg, #eff6ff, #ffffff);
-            border: 1px solid #bfdbfe; color: #1e40af;
-            padding: 10px 15px; border-radius: 8px; margin-bottom: 25px;
-            display: flex; align-items: center; font-size: 14px;
-        }
     </style>
     """
     
@@ -181,3 +176,4 @@ def render_wechat_pill(label, wx_id):
         <span style="color:#059669;font-family:monospace;background:#ecfdf5;padding:2px 6px;border-radius:4px;">📋 {wx_id}</span>
     </div>
     """, height=45)
+

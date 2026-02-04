@@ -1,3 +1,11 @@
+import sys
+import os
+
+# 确保当前目录在 Python 搜索路径中
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+import streamlit as st
+# ... 之后的导入语句
 import streamlit as st
 from views.auth import view_auth
 # 导入各个独立页面模块
@@ -66,3 +74,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
